@@ -60,8 +60,8 @@ const Header = () => {
                 ) : (
                     showLogin && (
                         <div style={{ display: "flex", gap: "10px" }}>
-                            <button onClick={() => auth.login("GuestUser", "user")} style={styles.loginBtn}>Login as User</button>
-                            <button onClick={() => auth.login("AdminUser", "admin")} style={styles.loginBtn}>Login as Admin</button>
+                            <button onClick={() => auth.login("Guest", "user")} style={styles.loginBtn}>Login as User</button>
+                            <button onClick={() => auth.login("Admin", "admin")} style={styles.loginBtn}>Login as Admin</button>
                         </div>
                     )
                 )}

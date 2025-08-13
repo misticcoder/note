@@ -1,7 +1,5 @@
-import {useContext, useEffect, useState} from "react";
-import {AuthContext} from "./AuthContext";
-import { useNavigate } from "react-router-dom";
-
+import { useEffect, useState, useContext } from "react";
+import { AuthContext } from "./AuthContext";
 
 function Dashboard() {
     const [threads, setThreads] = useState([]);
@@ -9,21 +7,23 @@ function Dashboard() {
     const [matches, setMatches] = useState([]);
     const [events, setEvents] = useState([]);
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-
     const { user } = useContext(AuthContext);
+
+    // Modal state
+    const [showThreadModal, setShowThreadModel] = useState(false);
+    const [newThread, setNewThread] = useState({ title: "", content: "" });
 
     useEffect(() => {
         fetch("/api/threads").then(res => res.json()).then(setThreads);
         fetch("/api/news").then(res => res.json()).then(setNews);
-        fetch("/api/matches").then(res => res.json()).then(data => {
-            if (Array.isArray(data)) {
-                setMatches(data);
-            } else if (data.content) {
-                setMatches(data.content);
-            } else {
-                setMatches([]);
-            }
-        }).catch(() => setMatches([]));
+        fetch("/api/matches")
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) setMatches(data);
+                else if (data.content) setMatches(data.content);
+                else setMatches([]);
+            })
+            .catch(() => setMatches([]));
         fetch("/api/events").then(res => res.json()).then(setEvents);
 
         function handleResize() {
@@ -33,20 +33,39 @@ function Dashboard() {
         return () => window.removeEventListener("resize", handleResize);
     }, []);
 
-    const hideThreads = windowWidth < 1000; // Hide threads if width < 1000px
-    const hideEvents = windowWidth < 800;  // Hide events if width < 800px
+    const hideThreads = windowWidth < 1000;
+    const hideEvents = windowWidth < 800;
 
-    // Width adjustments
     const newsWidth = hideThreads ? (hideEvents ? "70%" : "50%") : "40%";
     const matchesWidth = hideThreads ? (hideEvents ? "30%" : "25%") : "20%";
     const threadsWidth = "20%";
     const eventsWidth = hideThreads ? "25%" : "20%";
 
-    // Head News logic
     const headNews = news.length > 0 ? news[0] : null;
     const otherNews = news.length > 1 ? news.slice(1) : [];
 
-    const handleAdd = (type) => alert('New $(type)');
+    // Thread modal handlers
+    const handleThreadChange = (e) => {
+        const { name, value } = e.target;
+        setNewThread(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleThreadSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await fetch("/api/threads", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newThread),
+            });
+            const savedThread = await res.json();
+            setThreads(prev => [savedThread, ...prev]); // add to dashboard
+            setNewThread({ title: "", content: "" });
+            setShowThreadModel(false);
+        } catch (err) {
+            console.error("Failed to save thread", err);
+        }
+    };
 
     return (
         <main style={styles.Dashboard}>
@@ -54,15 +73,17 @@ function Dashboard() {
                 <div style={styles.flexRow}>
                     {!hideThreads && (
                         <div style={{ width: threadsWidth }}>
-                            <h3>Threads</h3>
+                            <h3>
+                                Threads
+                            </h3>
                             {user?.role === "admin" && (
-                                <button style={styles.addBtn} onClick={() => handleAdd("Thread")}>Add Thread</button>
+                                <button style={styles.addBtn} onClick={() => setShowThreadModel(true)}>Add Thread</button>
                             )}
                             {threads.map((thread, idx) => (
                                 <div
                                     style={styles.Threads}
                                     key={idx}
-                                    onClick={() => navigate(`/thread/&{idx}`)}
+                                    onClick={() => alert(`Clicked thread: ${thread.title}`)}
                                 >
                                     {thread.title}
                                 </div>
@@ -73,29 +94,19 @@ function Dashboard() {
                     <div style={{ width: newsWidth }}>
                         <h3>News</h3>
                         {user?.role === "admin" && (
-                            <button style={styles.addBtn} onClick={() => handleAdd("News")}>Add News</button>
+                            <button style={styles.addBtn} onClick={() => setShowThreadModel(true)}>Add News</button>
                         )}
-
-                        {/* Head News */}
                         {headNews && (
                             <div
                                 style={styles.HeadNews}
                                 onClick={() => alert(`Clicked head news: ${headNews.headline}`)}
                             >
-                                {headNews.imageUrl && (
-                                    <img
-                                        src={headNews.imageUrl}
-                                        alt={headNews.headline}
-                                        style={styles.HeadNewsImage}
-                                    />
-                                )}
+                                {headNews.imageUrl && <img src={headNews.imageUrl} alt={headNews.headline} style={styles.HeadNewsImage} />}
                                 <div style={styles.HeadNewsOverlay}>
                                     <h4 style={{ margin: 0 }}>{headNews.headline}</h4>
                                 </div>
                             </div>
                         )}
-
-                        {/* Other News */}
                         {otherNews.map((item, idx) => (
                             <div
                                 key={idx}
@@ -110,7 +121,7 @@ function Dashboard() {
                     <div style={{ width: matchesWidth }}>
                         <h3>Matches</h3>
                         {user?.role === "admin" && (
-                            <button style={styles.addBtn} onClick={() => handleAdd("Matches")}>Add Matches</button>
+                            <button style={styles.addBtn} onClick={() => setShowThreadModel(true)}>Add Match</button>
                         )}
                         {matches.map((match, idx) => (
                             <div
@@ -128,7 +139,7 @@ function Dashboard() {
                         <div style={{ width: eventsWidth }}>
                             <h3>Events</h3>
                             {user?.role === "admin" && (
-                                <button style={styles.addBtn} onClick={() => handleAdd("Event")}>Add Event</button>
+                                <button style={styles.addBtn} onClick={() => setShowThreadModel(true)}>Add Event</button>
                             )}
                             {events.map((event, idx) => (
                                 <div
@@ -144,6 +155,35 @@ function Dashboard() {
                     )}
                 </div>
             </div>
+
+            {/* Thread Modal */}
+            {showThreadModal && (
+                <div style={styles.modalOverlay}>
+                    <div style={styles.modalContent}>
+                        <h3>Add New Thread</h3>
+                        <form onSubmit={handleThreadSubmit}>
+                            <input
+                                name="title"
+                                placeholder="Thread Title"
+                                value={newThread.title}
+                                onChange={handleThreadChange}
+                                required
+                                style={styles.input}
+                            />
+                            <textarea
+                                name="content"
+                                placeholder="Thread Content"
+                                value={newThread.content}
+                                onChange={handleThreadChange}
+                                required
+                                style={styles.textarea}
+                            />
+                            <button type="submit" style={styles.submitBtn}>Save Thread</button>
+                            <button type="button" onClick={() => setShowThreadModel(false)} style={styles.cancelBtn}>Cancel</button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }
@@ -158,78 +198,28 @@ const boxBase = {
     display: "flex",
     alignItems: "center",
     backgroundColor: "#fff",
-    transition: "transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease",
+    transition: "transform 0.3s ease, box-shadow 0.3s ease, backgroundColor 0.3s ease",
     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
 };
+
 const styles = {
-    Dashboard: {
-        paddingTop: "60px",
-        height: "100vh",
-        backgroundColor: "gray",
-    },
-    container: {
-        maxWidth: "1200px",
-        margin: "0 auto",
-        padding: "0 20px",
-        height: "100%",
-        backgroundColor: "#D50032",
-    },
-    flexRow: {
-        display: "flex",
-        gap: "20px",
-        height: "calc(100% - 20px)",
-    },
-    Threads: {
-        ...boxBase,
-    },
-    News: {
-        ...boxBase,
-        backgroundColor: "#f9f9f9",
-    },
-    Matches: {
-        ...boxBase,
-        backgroundColor: "#f9f9f9",
-    },
-    Events: {
-        ...boxBase,
-        backgroundColor: "#f9f9f9",
-    },
-    HeadNews: {
-        position: "relative",
-        width: "100%",
-        height: "150px",
-        marginBottom: "15px",
-        borderRadius: "6px",
-        overflow: "hidden",
-        boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
-        cursor: "pointer",
-    },
-    HeadNewsImage: {
-        width: "100%",
-        height: "100%",
-        objectFit: "cover",
-    },
-    HeadNewsOverlay: {
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        background: "rgba(0,0,0,0.6)",
-        color: "#fff",
-        padding: "8px 10px",
-        fontSize: "1rem",
-    },
-    addBtn:{
-        margin: "10px 0px",
-        padding: "5px 10px",
-        fontSize: "0.8rem",
-        borderRadius: "4px",
-        backgroundColor: "#041E42",
-        color: "#D50032",
-        border: "1px solid #D50032",
-        cursor: "pointer",
-        fontfamily: "garamond"
-    },
+    Dashboard: { paddingTop: "60px", height: "100vh", backgroundColor: "gray" },
+    container: { maxWidth: "1200px", margin: "0 auto", padding: "0 20px", height: "100%", backgroundColor: "#D50032" },
+    flexRow: { display: "flex", gap: "20px", height: "calc(100% - 20px)" },
+    Threads: { ...boxBase },
+    News: { ...boxBase, backgroundColor: "#f9f9f9" },
+    Matches: { ...boxBase, backgroundColor: "#f9f9f9" },
+    Events: { ...boxBase, backgroundColor: "#f9f9f9" },
+    HeadNews: { position: "relative", width: "100%", height: "150px", marginBottom: "15px", borderRadius: "6px", overflow: "hidden", boxShadow: "0 4px 10px rgba(0,0,0,0.2)", cursor: "pointer" },
+    HeadNewsImage: { width: "100%", height: "100%", objectFit: "cover" },
+    HeadNewsOverlay: { position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.6)", color: "#fff", padding: "8px 10px", fontSize: "1rem" },
+    addBtn: { margin: "10px 0px", padding: "5px 8px", fontSize: "0.8rem", borderRadius: "4px", backgroundColor: "#041E42", color: "#D50032", border: "1px solid #D50032", cursor: "pointer", fontWeight: "Bold" },
+    modalOverlay: { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center" },
+    modalContent: { backgroundColor: "#fff", padding: "20px", borderRadius: "6px", width: "400px", maxWidth: "90%" },
+    input: { width: "100%", padding: "8px", marginBottom: "10px", borderRadius: "4px", border: "1px solid #ccc" },
+    textarea: { width: "100%", padding: "8px", height: "100px", borderRadius: "4px", border: "1px solid #ccc", marginBottom: "10px" },
+    submitBtn: { padding: "8px 12px", marginRight: "10px", backgroundColor: "#D50032", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" },
+    cancelBtn: { padding: "8px 12px", backgroundColor: "#ccc", color: "#000", border: "none", borderRadius: "4px", cursor: "pointer" },
 };
 
 export default Dashboard;
