@@ -1,4 +1,7 @@
-import { useEffect, useState } from "react";
+import {useContext, useEffect, useState} from "react";
+import {AuthContext} from "./AuthContext";
+import { useNavigate } from "react-router-dom";
+
 
 function Dashboard() {
     const [threads, setThreads] = useState([]);
@@ -6,6 +9,8 @@ function Dashboard() {
     const [matches, setMatches] = useState([]);
     const [events, setEvents] = useState([]);
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+    const { user } = useContext(AuthContext);
 
     useEffect(() => {
         fetch("/api/threads").then(res => res.json()).then(setThreads);
@@ -28,27 +33,36 @@ function Dashboard() {
         return () => window.removeEventListener("resize", handleResize);
     }, []);
 
-    const hideThreads = windowWidth < 1000; // breakpoint to hide Threads
-    const hideEvents = windowWidth < 800;
+    const hideThreads = windowWidth < 1000; // Hide threads if width < 1000px
+    const hideEvents = windowWidth < 800;  // Hide events if width < 800px
 
-    // Extract headNews: Let's take the first news item as headNews if exists
+    // Width adjustments
+    const newsWidth = hideThreads ? (hideEvents ? "70%" : "50%") : "40%";
+    const matchesWidth = hideThreads ? (hideEvents ? "30%" : "25%") : "20%";
+    const threadsWidth = "20%";
+    const eventsWidth = hideThreads ? "25%" : "20%";
+
+    // Head News logic
     const headNews = news.length > 0 ? news[0] : null;
     const otherNews = news.length > 1 ? news.slice(1) : [];
+
+    const handleAdd = (type) => alert('New $(type)');
 
     return (
         <main style={styles.Dashboard}>
             <div style={styles.container}>
-                <div style={{ display: 'flex', gap: '20px' }}>
+                <div style={styles.flexRow}>
                     {!hideThreads && (
-                        <div style={{ width: '20%' }}>
+                        <div style={{ width: threadsWidth }}>
                             <h3>Threads</h3>
+                            {user?.role === "admin" && (
+                                <button style={styles.addBtn} onClick={() => handleAdd("Thread")}>Add Thread</button>
+                            )}
                             {threads.map((thread, idx) => (
                                 <div
                                     style={styles.Threads}
                                     key={idx}
-                                    onClick={() => alert(`Clicked thread: ${thread.title}`)}
-                                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#e0e0e0')}
-                                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#fff')}
+                                    onClick={() => navigate(`/thread/&{idx}`)}
                                 >
                                     {thread.title}
                                 </div>
@@ -56,8 +70,11 @@ function Dashboard() {
                         </div>
                     )}
 
-                    <div style={{ width: hideThreads ? (hideEvents ? '70%' : '50%') : '40%' }}>
+                    <div style={{ width: newsWidth }}>
                         <h3>News</h3>
+                        {user?.role === "admin" && (
+                            <button style={styles.addBtn} onClick={() => handleAdd("News")}>Add News</button>
+                        )}
 
                         {/* Head News */}
                         {headNews && (
@@ -72,9 +89,8 @@ function Dashboard() {
                                         style={styles.HeadNewsImage}
                                     />
                                 )}
-                                <div style={styles.HeadNewsContent}>
+                                <div style={styles.HeadNewsOverlay}>
                                     <h4 style={{ margin: 0 }}>{headNews.headline}</h4>
-                                    {headNews.summary && <p style={{ marginTop: 4 }}>{headNews.summary}</p>}
                                 </div>
                             </div>
                         )}
@@ -85,23 +101,22 @@ function Dashboard() {
                                 key={idx}
                                 onClick={() => alert(`Clicked news: ${item.headline}`)}
                                 style={styles.News}
-                                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#e0e0e0')}
-                                onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#f9f9f9')}
                             >
                                 {item.headline}
                             </div>
                         ))}
                     </div>
 
-                    <div style={{ width: hideThreads ? (hideEvents ? '30%' : '25%') : '20%' }}>
+                    <div style={{ width: matchesWidth }}>
                         <h3>Matches</h3>
+                        {user?.role === "admin" && (
+                            <button style={styles.addBtn} onClick={() => handleAdd("Matches")}>Add Matches</button>
+                        )}
                         {matches.map((match, idx) => (
                             <div
                                 key={idx}
                                 onClick={() => alert(`Clicked match: ${match.teama} vs ${match.teamb}`)}
                                 style={styles.Matches}
-                                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#e0e0e0')}
-                                onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#f9f9f9')}
                             >
                                 {match.teama} vs {match.teamb} <br />
                                 <small>{new Date(match.match_time).toLocaleString()}</small>
@@ -110,15 +125,16 @@ function Dashboard() {
                     </div>
 
                     {!hideEvents && (
-                        <div style={{ width: hideThreads ? '25%' : '20%' }}>
+                        <div style={{ width: eventsWidth }}>
                             <h3>Events</h3>
+                            {user?.role === "admin" && (
+                                <button style={styles.addBtn} onClick={() => handleAdd("Event")}>Add Event</button>
+                            )}
                             {events.map((event, idx) => (
                                 <div
                                     key={idx}
                                     onClick={() => alert(`Clicked event: ${event.name}`)}
                                     style={styles.Events}
-                                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#e0e0e0')}
-                                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#f9f9f9')}
                                 >
                                     {event.name} <br />
                                     <small>{new Date(event.event_date_time).toLocaleString()}</small>
@@ -133,75 +149,86 @@ function Dashboard() {
 }
 
 const boxBase = {
-    border: '1px solid #ccc',
-    padding: '10px',
-    marginBottom: '10px',
-    borderRadius: '0px',
-    cursor: 'pointer',
-    height: '30px', // fixed height for all boxes
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    transition: 'transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease',
+    border: "1px solid #ccc",
+    padding: "10px",
+    marginBottom: "10px",
+    borderRadius: "4px",
+    cursor: "pointer",
+    height: "40px",
+    display: "flex",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    transition: "transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
 };
-
 const styles = {
     Dashboard: {
-        paddingTop: '40px',
-        boxSizing: 'border-box',
-        height: '100vh',
-        backgroundColor: 'gray',
+        paddingTop: "60px",
+        height: "100vh",
+        backgroundColor: "gray",
     },
     container: {
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '0 20px',
-        height: '100vh',
-        backgroundColor: '#D50032',
+        maxWidth: "1200px",
+        margin: "0 auto",
+        padding: "0 20px",
+        height: "100%",
+        backgroundColor: "#D50032",
+    },
+    flexRow: {
+        display: "flex",
+        gap: "20px",
+        height: "calc(100% - 20px)",
     },
     Threads: {
         ...boxBase,
-        backgroundColor: '#fff',
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
     },
     News: {
         ...boxBase,
-        backgroundColor: '#f9f9f9',
+        backgroundColor: "#f9f9f9",
     },
     Matches: {
         ...boxBase,
-        backgroundColor: '#f9f9f9',
+        backgroundColor: "#f9f9f9",
     },
     Events: {
         ...boxBase,
-        backgroundColor: '#f9f9f9',
+        backgroundColor: "#f9f9f9",
     },
     HeadNews: {
-        display: 'flex',
-        gap: '10px',
-        padding: '10px',
-        marginBottom: '15px',
-        backgroundColor: '#fff',
-        cursor: 'pointer',
-        borderRadius: '4px',
-        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-        alignItems: 'flex-start',
-        height: '100px',         // fixed height for entire head news box
-        overflow: 'hidden',
+        position: "relative",
+        width: "100%",
+        height: "150px",
+        marginBottom: "15px",
+        borderRadius: "6px",
+        overflow: "hidden",
+        boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
+        cursor: "pointer",
     },
     HeadNewsImage: {
-        width: '120px',
-        height: '80px',
-        objectFit: 'cover',
-        borderRadius: '4px',
-        flexShrink: 0,
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
     },
-    HeadNewsContent: {
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
+    HeadNewsOverlay: {
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: "rgba(0,0,0,0.6)",
+        color: "#fff",
+        padding: "8px 10px",
+        fontSize: "1rem",
+    },
+    addBtn:{
+        margin: "10px 0px",
+        padding: "5px 10px",
+        fontSize: "0.8rem",
+        borderRadius: "4px",
+        backgroundColor: "#041E42",
+        color: "#D50032",
+        border: "1px solid #D50032",
+        cursor: "pointer",
+        fontfamily: "garamond"
     },
 };
 
