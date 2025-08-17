@@ -12,6 +12,7 @@ public class News {
     private Long id;
 
     private String headline;
+    private String body;
 
     // Getters and setters
     public Long getId() { return id; }
@@ -19,4 +20,7 @@ public class News {
 
     public String getHeadline() { return headline; }
     public void setHeadline(String headline) { this.headline = headline; }
+
+    public String getBody() { return body; }
+    public void setBody(String body) { this.body = body; }
 }

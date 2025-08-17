@@ -13,6 +13,7 @@ public class Event {
     private Long id;
 
     private String name;
+    private String description;
     private LocalDateTime eventDateTime;
 
     // Getters and setters
@@ -21,6 +22,9 @@ public class Event {
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
     public LocalDateTime getEventDateTime() { return eventDateTime; }
     public void setEventDateTime(LocalDateTime eventDateTime) { this.eventDateTime = eventDateTime; }
