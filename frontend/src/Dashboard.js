@@ -158,8 +158,8 @@ function Dashboard() {
 
             {/* Thread Modal */}
             {showThreadModal && (
-                <div style={styles.modalOverlay}>
-                    <div style={styles.modalContent}>
+                <div style={styles.ThreadWindow}>
+                    <div style={styles.ThreadContent}>
                         <h3>Add New Thread</h3>
                         <form onSubmit={handleThreadSubmit}>
                             <input
@@ -214,8 +214,8 @@ const styles = {
     HeadNewsImage: { width: "100%", height: "100%", objectFit: "cover" },
     HeadNewsOverlay: { position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.6)", color: "#fff", padding: "8px 10px", fontSize: "1rem" },
     addBtn: { margin: "10px 0px", padding: "5px 8px", fontSize: "0.8rem", borderRadius: "4px", backgroundColor: "#041E42", color: "#D50032", border: "1px solid #D50032", cursor: "pointer", fontWeight: "Bold" },
-    modalOverlay: { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center" },
-    modalContent: { backgroundColor: "#fff", padding: "20px", borderRadius: "6px", width: "400px", maxWidth: "90%" },
+    ThreadWindow: { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center" },
+    ThreadContent: { backgroundColor: "#fff", padding: "20px", borderRadius: "6px", width: "400px", maxWidth: "90%" },
     input: { width: "100%", padding: "8px", marginBottom: "10px", borderRadius: "4px", border: "1px solid #ccc" },
     textarea: { width: "100%", padding: "8px", height: "100px", borderRadius: "4px", border: "1px solid #ccc", marginBottom: "10px" },
     submitBtn: { padding: "8px 12px", marginRight: "10px", backgroundColor: "#D50032", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" },

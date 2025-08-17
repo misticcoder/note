@@ -1,18 +1,36 @@
 import React, { useState, useEffect, useContext } from "react";
-import { AuthContext } from "./AuthContext"; // Make sure this is your AuthContext
+import { AuthContext } from "./AuthContext";
 
 const Header = () => {
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+    const { user, login, logout, signup } = useContext(AuthContext);
+    const [showModal, setShowModal] = useState(false);
+    const [form, setForm] = useState({ email: "", password: "", username: "" });
+    const [isSignup, setIsSignup] = useState(false);
+    const [error, setError] = useState("");
 
-    // Use context safely
-    const auth = useContext(AuthContext);
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setForm((prev) => ({ ...prev, [name]: value }));
+    };
 
-    if (!auth) {
-        console.error("Authentication context is missing. Did you wrap your app in <Authentication.Provider>?");
-        return null; // Prevent crash
-    }
-
-    const { user, logout } = auth;
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+        if (isSignup) {
+            const result = await signup(form.email, form.password, form.username);
+            if (!result.success) setError(result.message);
+            else setShowModal(false);
+        } else {
+            const result = await login(form.email, form.password);
+            if (!result.success) {
+                if (result.newUser) setIsSignup(true);
+                else setError(result.message);
+            } else {
+                setShowModal(false);
+            }
+        }
+    };
 
     useEffect(() => {
         const handleResize = () => setWindowWidth(window.innerWidth);
@@ -20,12 +38,18 @@ const Header = () => {
         return () => window.removeEventListener("resize", handleResize);
     }, []);
 
-    // Breakpoints for showing navigation items
     const showLogin = windowWidth > 800;
     const showTalks = windowWidth > 700;
     const showForms = windowWidth > 600;
     const showClubs = windowWidth > 500;
     const showEvents = windowWidth > 400;
+
+    const openModal = () => {
+        setError("");
+        setForm({ email: "", password: "", username: "" });
+        setIsSignup(false);
+        setShowModal(true);
+    };
 
     return (
         <header style={styles.header}>
@@ -42,30 +66,66 @@ const Header = () => {
                     {showClubs && <a href="#clubs" style={styles.navLink}>Clubs</a>}
                     {showForms && <a href="#forms" style={styles.navLink}>Forms</a>}
                     {showTalks && <a href="#talks" style={styles.navLink}>Talks</a>}
-
-                    {/* Admin-only link */}
-                    {user?.role === "admin" && (
-                        <a href="/admin" style={styles.navLink}>Admin Panel</a>
-                    )}
                 </nav>
 
-                {/* Auth Section */}
+                {/* User Buttons */}
                 {user ? (
-                    <div style={styles.userInfo}>
-                        <span style={styles.username}>Hi, {user.username} ({user.role})</span>
-                        {showLogin && (
-                            <button onClick={logout} style={styles.logoutBtn}>Logout</button>
-                        )}
-                    </div>
+                    <button style={styles.logoutBtn} onClick={logout}>Logout</button>
                 ) : (
-                    showLogin && (
-                        <div style={{ display: "flex", gap: "10px" }}>
-                            <button onClick={() => auth.login("Guest", "user")} style={styles.loginBtn}>Login as User</button>
-                            <button onClick={() => auth.login("Admin", "admin")} style={styles.loginBtn}>Login as Admin</button>
-                        </div>
-                    )
+                    showLogin && <button style={styles.loginBtn} onClick={openModal}>Login</button>
                 )}
 
+                {/* Modal */}
+                {showModal && (
+                    <div style={styles.modalOverlay}>
+                        <div style={styles.modalContent}>
+                            <h3>{isSignup ? "Sign Up" : "Login"}</h3>
+                            {error && <p style={{ color: "red" }}>{error}</p>}
+                            <form onSubmit={handleSubmit}>
+                                {isSignup && (
+                                    <input
+                                        name="username"
+                                        placeholder="Username"
+                                        value={form.username}
+                                        onChange={handleChange}
+                                        required
+                                        style={styles.input}
+                                    />
+                                )}
+                                <input
+                                    name="email"
+                                    type="email"
+                                    placeholder="Email"
+                                    value={form.email}
+                                    onChange={handleChange}
+                                    required
+                                    style={styles.input}
+                                />
+                                <input
+                                    name="password"
+                                    type="password"
+                                    placeholder="Password"
+                                    value={form.password}
+                                    onChange={handleChange}
+                                    required
+                                    style={styles.input}
+                                />
+                                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                                    <button type="submit" style={styles.submitBtn}>
+                                        {isSignup ? "Sign Up" : "Login"}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowModal(false)}
+                                        style={styles.cancelBtn}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
             </div>
         </header>
     );
@@ -76,41 +136,31 @@ const styles = {
         position: "fixed",
         top: 0,
         left: 0,
-        width: "100%", // full-width background
+        width: "100%",
         backgroundColor: "#041E42",
         color: "white",
-        boxSizing: "border-box",
         zIndex: 1000,
     },
     container: {
-        maxWidth: "1200px", // same as body max width
+        maxWidth: "1200px",
         margin: "0 auto",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         padding: "10px 20px",
     },
-    logo: {
-        fontWeight: "bold",
-        fontSize: "1.5rem",
-        marginRight: "20px",
-    },
+    logo: { fontWeight: "bold", fontSize: "1.5rem", marginRight: "20px" },
     search: {
         backgroundColor: "#6f7680",
         flexGrow: 1,
-        marginLeft: "20px",
-        marginRight: "20px",
+        margin: "0 20px",
         padding: "5px 10px",
         fontSize: "1rem",
         borderRadius: "4px",
         border: "none",
         color: "white",
     },
-    nav: {
-        display: "flex",
-        gap: "15px",
-        whiteSpace: "nowrap",
-    },
+    nav: { display: "flex", gap: "15px", whiteSpace: "nowrap" },
     navLink: {
         color: "white",
         textDecoration: "none",
@@ -127,7 +177,6 @@ const styles = {
         color: "white",
         border: "none",
         cursor: "pointer",
-        textDecoration: "none",
     },
     logoutBtn: {
         marginLeft: "10px",
@@ -139,14 +188,21 @@ const styles = {
         border: "none",
         cursor: "pointer",
     },
-    userInfo: {
+    modalOverlay: {
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0,0,0,0.5)",
         display: "flex",
+        justifyContent: "center",
         alignItems: "center",
     },
-    username: {
-        marginRight: "10px",
-        fontWeight: "500",
-    },
+    modalContent: { backgroundColor: "#fff", padding: "20px", borderRadius: "6px", width: "400px", maxWidth: "90%" },
+    input: { width: "100%", padding: "8px", marginBottom: "10px", borderRadius: "4px", border: "1px solid #ccc" },
+    submitBtn: { padding: "8px 12px", marginRight: "10px", backgroundColor: "#D50032", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" },
+    cancelBtn: { padding: "8px 12px", backgroundColor: "#ccc", color: "#000", border: "none", borderRadius: "4px", cursor: "pointer" },
 };
 
 export default Header;
