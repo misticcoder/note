@@ -19,13 +19,15 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Enumerated(EnumType.STRING) // store enum name in DB
     @Column(nullable = false)
-    private String role; // e.g., "USER" or "ADMIN"
+    private Role role;// STUDENT or ADMIN
+
 
     // Constructors
     public User() {}
 
-    public User(String username, String email, String password, String role) {
+    public User(String username, String email, String password, Role role) {
         this.username = username;
         this.email = email;
         this.password = password;
@@ -34,12 +36,17 @@ public class User {
 
     // Getters and Setters
     public Long getId() { return id; }
+
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
+
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
+
 }
