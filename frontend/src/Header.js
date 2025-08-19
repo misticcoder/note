@@ -9,6 +9,8 @@ const Header = () => {
     const [isSignup, setIsSignup] = useState(false);
     const [error, setError] = useState("");
 
+    const isAdmin = !!user && String(user.role).toUpperCase() === "ADMIN";
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
@@ -55,7 +57,7 @@ const Header = () => {
         <header style={styles.header}>
             <div style={styles.container}>
                 {/* Logo */}
-                <div style={styles.logo}>MyLogo</div>
+                <a href="#/" style={styles.logo} >MyLogo</a>
 
                 {/* Search Bar */}
                 <input type="text" placeholder="Search..." style={styles.search} />
@@ -66,6 +68,23 @@ const Header = () => {
                     {showClubs && <a href="#clubs" style={styles.navLink}>Clubs</a>}
                     {showForms && <a href="#forms" style={styles.navLink}>Forms</a>}
                     {showTalks && <a href="#talks" style={styles.navLink}>Talks</a>}
+
+                    {isAdmin && (
+                        <a
+                            href="#/admin/users"
+                            style={{
+                                marginLeft: 10,
+                                textDecoration: "none",
+                                border: "1px solid #ccc",
+                                padding: "6px 10px",
+                                borderRadius: 6,
+                                background: "#f8f8f8",
+                                color: "#333"
+                            }}
+                        >
+                            Users
+                        </a>
+                    )}
                 </nav>
 
                 {/* User Buttons */}
@@ -149,7 +168,11 @@ const styles = {
         justifyContent: "space-between",
         padding: "10px 20px",
     },
-    logo: { fontWeight: "bold", fontSize: "1.5rem", marginRight: "20px" },
+    logo: { fontWeight: "bold",
+        fontSize: "20px",
+        color: "#D50032",
+        textDecoration: "none",
+        cursor: "pointer", },
     search: {
         backgroundColor: "#6f7680",
         flexGrow: 1,
@@ -164,8 +187,8 @@ const styles = {
     navLink: {
         color: "white",
         textDecoration: "none",
-        fontWeight: "500",
-        padding: "0 10px",
+        fontWeight: "300",
+        padding: "5px 10px",
         borderRight: "1px solid gray",
     },
     loginBtn: {

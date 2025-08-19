@@ -1,16 +1,42 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import Dashboard from "./Dashboard";
 import Header from "./Header";
-import {AuthProvider} from "./AuthContext";
+import { AuthProvider } from "./AuthContext";
+import AdminUsers from "./AdminUsers";
+
+function App() {
+    const [route, setRoute] = useState(window.location.hash || "#/");
+
+    useEffect(() => {
+        const onHashChange = () => setRoute(window.location.hash || "#/");
+        window.addEventListener("hashchange", onHashChange);
+        // ensure we always have a hash
+        if (!window.location.hash) {
+            window.location.hash = "#/";
+        }
+        return () => window.removeEventListener("hashchange", onHashChange);
+    }, []);
+
+    let Page = Dashboard;
+    if (route === "#/admin/users") {
+        Page = AdminUsers;
+    }
+
+    return (
+        <>
+            <Header />
+            <Page />
+        </>
+    );
+}
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
     <AuthProvider>
-    <React.StrictMode>
-        <Header />
-        <Dashboard/>
-    </React.StrictMode>
+        <React.StrictMode>
+            <App />
+        </React.StrictMode>
     </AuthProvider>
 );

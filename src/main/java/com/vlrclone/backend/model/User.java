@@ -23,15 +23,18 @@ public class User {
     @Column(nullable = false)
     private Role role;// STUDENT or ADMIN
 
+    @Column(nullable = false)
+    private boolean protectedAccount = false;
 
     // Constructors
     public User() {}
 
-    public User(String username, String email, String password, Role role) {
+    public User(String username, String email, String password, Role role, boolean protectedAccount) {
         this.username = username;
         this.email = email;
         this.password = password;
         this.role = role;
+        this.protectedAccount = protectedAccount;
     }
 
     // Getters and Setters
@@ -48,5 +51,8 @@ public class User {
 
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
+
+    public boolean isProtectedAccount() { return protectedAccount; }
+    public void setProtectedAccount(boolean protectedAccount) { this.protectedAccount = protectedAccount; }
 
 }

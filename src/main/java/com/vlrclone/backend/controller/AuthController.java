@@ -85,4 +85,30 @@ public class AuthController {
                 })
                 .orElse(ResponseEntity.status(404).body(Map.of("message", "User not found")));
     }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<?> deleteById(@PathVariable Long id) {
+        return users.findById(id)
+                .map(u -> {
+                    if (u.isProtectedAccount()) {
+                        return ResponseEntity.status(403).body(Map.of("message", "This account is protected and cannot be deleted"));
+                    }
+                    users.delete(u);
+                    return ResponseEntity.ok(Map.of("status", "success"));
+                })
+                .orElse(ResponseEntity.status(404).body(Map.of("message", "User not found")));
+    }
+
+    @DeleteMapping("/users/by-email")
+    public ResponseEntity<?> deleteByEmail(@RequestParam String email) {
+        return users.findByEmail(email)
+                .map(u -> {
+                    if (u.isProtectedAccount()) {
+                        return ResponseEntity.status(403).body(Map.of("message", "This account is protected and cannot be deleted"));
+                    }
+                    users.delete(u);
+                    return ResponseEntity.ok(Map.of("status", "success"));
+                })
+                .orElse(ResponseEntity.status(404).body(Map.of("message", "User not found")));
+    }
 }
