@@ -1,21 +1,31 @@
 package com.vlrclone.backend.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "threads")
 public class Thread {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String title;
 
+    @Column(nullable = false, length = 4000)
     private String content;
 
-    // Getters and setters
+
+    public Thread() {}
+
+    public Thread(String title, String content) {
+        this.title = title;
+        this.content = content;
+    }
+
+    // --- getters and setters ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -24,4 +34,5 @@ public class Thread {
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
+
 }

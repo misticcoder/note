@@ -91,7 +91,7 @@ function Dashboard() {
                                 <div
                                     style={styles.Threads}
                                     key={idx}
-                                    onClick={() => alert(`Clicked thread: ${thread.title}`)}
+                                    onClick={() => { window.location.hash = `#/thread/${thread.id}`; }}
                                 >
                                     {thread.title}
                                 </div>

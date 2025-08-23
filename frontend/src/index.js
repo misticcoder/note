@@ -5,6 +5,8 @@ import Dashboard from "./Dashboard";
 import Header from "./Header";
 import { AuthProvider } from "./AuthContext";
 import AdminUsers from "./AdminUsers";
+import ThreadList from "./ThreadList";
+import ThreadPage from "./ThreadPage";
 
 function App() {
     const [route, setRoute] = useState(window.location.hash || "#/");
@@ -20,9 +22,11 @@ function App() {
     }, []);
 
     let Page = Dashboard;
-    if (route === "#/admin/users") {
-        Page = AdminUsers;
-    }
+    if (route === "#/threads") Page = ThreadList;
+    if (route === "#/admin/users") Page = AdminUsers;
+    if (route === "#/admin/threads") Page = ThreadList;
+    if (route.startsWith("#/thread/")) Page = () => <ThreadPage/>
+
 
     return (
         <>

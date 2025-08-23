@@ -44,7 +44,7 @@ const Header = () => {
     const showTalks = windowWidth > 700;
     const showForms = windowWidth > 600;
     const showClubs = windowWidth > 500;
-    const showEvents = windowWidth > 400;
+    const showThreads = windowWidth > 400;
 
     const openModal = () => {
         setError("");
@@ -64,7 +64,14 @@ const Header = () => {
 
                 {/* Navigation */}
                 <nav style={styles.nav}>
-                    {showEvents && <a href="#events" style={styles.navLink}>Events</a>}
+                    {showThreads && (
+                        <a
+                            href={String(user?.role || '').toUpperCase() === 'ADMIN' ? "#/admin/threads" : "#/threads"}
+                            style={styles.navLink}
+                        >
+                            Threads
+                        </a>
+                    )}
                     {showClubs && <a href="#clubs" style={styles.navLink}>Clubs</a>}
                     {showForms && <a href="#forms" style={styles.navLink}>Forms</a>}
                     {showTalks && <a href="#talks" style={styles.navLink}>Talks</a>}
