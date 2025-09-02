@@ -4,43 +4,46 @@ import { AuthContext } from "./AuthContext";
 function Dashboard() {
     const [threads, setThreads] = useState([]);
     const [news, setNews] = useState([]);
-    const [matches, setMatches] = useState([]);
     const [events, setEvents] = useState([]);
+    const [clubs, setClubs] = useState([]);
+    const [users, setUsers] = useState([]); // for leader dropdown
+
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
     const { user } = useContext(AuthContext);
 
-    // Normalize role check (handles "ADMIN", "admin", etc.)
-    const isAdmin = !!user && String(user.role).toUpperCase() === "ADMIN";
-
-    // Modal state (typo fix: setShowThreadModal)
-    const [showThreadModal, setShowThreadModal] = useState(false);
+    // Thread modal state
+    const [showThreadModal, setShowThreadModel] = useState(false);
     const [newThread, setNewThread] = useState({ title: "", content: "" });
 
-    useEffect(() => {
-        fetch("/api/threads").then(res => res.json()).then(setThreads);
-        fetch("/api/news").then(res => res.json()).then(setNews);
-        fetch("/api/matches")
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data)) setMatches(data);
-                else if (data.content) setMatches(data.content);
-                else setMatches([]);
-            })
-            .catch(() => setMatches([]));
-        fetch("/api/events").then(res => res.json()).then(setEvents);
+    // Club modal state
+    const [showClubModal, setShowClubModal] = useState(false);
+    const [newClub, setNewClub] = useState({ name: "", description: "", leaderUserId: "" });
+    const isAdmin = String(user?.role || "").toUpperCase() === "ADMIN";
 
-        function handleResize() {
-            setWindowWidth(window.innerWidth);
+    useEffect(() => {
+        fetch("/api/threads").then(res => res.json()).then(setThreads).catch(() => setThreads([]));
+        fetch("/api/news").then(res => res.json()).then(setNews).catch(() => setNews([]));
+        fetch("/api/events").then(res => res.json()).then(setEvents).catch(() => setEvents([]));
+        fetch("/api/clubs").then(res => res.json()).then(data => {
+            setClubs(Array.isArray(data) ? data : []);
+        }).catch(() => setClubs([]));
+
+        // preload users for leader dropdown (admins only)
+        if (isAdmin) {
+            fetch("/api/users").then(r => r.json()).then(setUsers).catch(() => setUsers([]));
         }
+
+        function handleResize() { setWindowWidth(window.innerWidth); }
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAdmin]);
 
     const hideThreads = windowWidth < 1000;
     const hideEvents = windowWidth < 800;
 
     const newsWidth = hideThreads ? (hideEvents ? "70%" : "50%") : "40%";
-    const matchesWidth = hideThreads ? (hideEvents ? "30%" : "25%") : "20%";
+    const clubsWidth = hideThreads ? (hideEvents ? "30%" : "25%") : "20%";
     const threadsWidth = "20%";
     const eventsWidth = hideThreads ? "25%" : "20%";
 
@@ -61,14 +64,104 @@ function Dashboard() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(newThread),
             });
-            if (!res.ok) throw new Error("Failed to save thread");
             const savedThread = await res.json();
-            setThreads(prev => [savedThread, ...prev]); // add to dashboard
+            if (!res.ok) {
+                alert(savedThread.message || "Failed to create thread");
+                return;
+            }
+            setThreads(prev => [savedThread, ...prev]);
             setNewThread({ title: "", content: "" });
-            setShowThreadModal(false);
+            setShowThreadModel(false);
         } catch (err) {
             console.error("Failed to save thread", err);
             alert("Failed to save thread");
+        }
+    };
+
+    // Request to join a club
+    const requestJoin = async (clubId, e) => {
+        e.stopPropagation(); // prevent navigating when clicking the button
+        if (!user) {
+            alert("Please log in to request to join.");
+            return;
+        }
+        try {
+            const res = await fetch(`/api/clubs/${clubId}/join?requesterEmail=${encodeURIComponent(user.email)}`, {
+                method: "POST"
+            });
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                alert(body.message || "Failed to send request");
+                return;
+            }
+            alert("Join request sent!");
+        } catch (err) {
+            alert("Failed to send request");
+        }
+    };
+
+    // Club modal handlers
+    const openClubModal = () => {
+        setNewClub({ name: "", description: "", leaderUserId: "" });
+        setShowClubModal(true);
+        // Ensure users list is fresh (in case admin opened later)
+        if (isAdmin && users.length === 0) {
+            fetch("/api/users").then(r => r.json()).then(setUsers).catch(() => setUsers([]));
+        }
+    };
+
+    const handleClubChange = (e) => {
+        const { name, value } = e.target;
+        setNewClub(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleClubSubmit = async (e) => {
+        e.preventDefault();
+        if (!isAdmin) return;
+        if (!newClub.name.trim() || !newClub.description.trim()) {
+            alert("Please fill club name and description.");
+            return;
+        }
+        if (!newClub.leaderUserId) {
+            if (!window.confirm("No leader selected. Create club without a leader?")) return;
+        }
+        try {
+            // 1) Create club
+            const createRes = await fetch(`/api/clubs?requesterEmail=${encodeURIComponent(user.email)}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: newClub.name.trim(), description: newClub.description.trim() })
+            });
+            const created = await createRes.json().catch(() => ({}));
+            if (!createRes.ok) {
+                alert(created.message || "Failed to create club");
+                return;
+            }
+
+            // 2) Optionally assign leader
+            if (newClub.leaderUserId) {
+                const assignRes = await fetch(`/api/clubs/${created.id}/leader?requesterEmail=${encodeURIComponent(user.email)}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userId: Number(newClub.leaderUserId) })
+                });
+                const assignBody = await assignRes.json().catch(() => ({}));
+                if (!assignRes.ok) {
+                    alert(assignBody.message || "Club created, but assigning leader failed");
+                    // We still proceed to add the club to UI
+                }
+            }
+
+            // 3) Update UI and close
+            setClubs(prev => [...prev, created]);
+            setShowClubModal(false);
+            setNewClub({ name: "", description: "", leaderUserId: "" });
+
+            // 4) (Optional) Navigate to club page
+            // window.location.hash = `#/clubs/${created.id}`;
+        } catch (err) {
+            console.error(err);
+            alert("Failed to create club");
         }
     };
 
@@ -80,12 +173,7 @@ function Dashboard() {
                         <div style={{ width: threadsWidth }}>
                             <h3>Threads</h3>
                             {isAdmin && (
-                                <button
-                                    style={styles.addBtn}
-                                    onClick={() => setShowThreadModal(true)}
-                                >
-                                    Add Thread
-                                </button>
+                                <button style={styles.addBtn} onClick={() => setShowThreadModel(true)}>Add Thread</button>
                             )}
                             {threads.map((thread, idx) => (
                                 <div
@@ -102,25 +190,14 @@ function Dashboard() {
                     <div style={{ width: newsWidth }}>
                         <h3>News</h3>
                         {isAdmin && (
-                            <button
-                                style={styles.addBtn}
-                                onClick={() => alert("Open Add News modal")}
-                            >
-                                Add News
-                            </button>
+                            <button style={styles.addBtn} onClick={() => setShowThreadModel(true)}>Add News</button>
                         )}
                         {headNews && (
                             <div
                                 style={styles.HeadNews}
                                 onClick={() => alert(`Clicked head news: ${headNews.headline}`)}
                             >
-                                {headNews.imageUrl && (
-                                    <img
-                                        src={headNews.imageUrl}
-                                        alt={headNews.headline}
-                                        style={styles.HeadNewsImage}
-                                    />
-                                )}
+                                {headNews.imageUrl && <img src={headNews.imageUrl} alt={headNews.headline} style={styles.HeadNewsImage} />}
                                 <div style={styles.HeadNewsOverlay}>
                                     <h4 style={{ margin: 0 }}>{headNews.headline}</h4>
                                 </div>
@@ -137,40 +214,48 @@ function Dashboard() {
                         ))}
                     </div>
 
-                    <div style={{ width: matchesWidth }}>
-                        <h3>Matches</h3>
-                        {isAdmin && (
-                            <button
-                                style={styles.addBtn}
-                                onClick={() => alert("Open Add Match modal")}
-                            >
-                                Add Match
-                            </button>
-                        )}
-                        {matches.map((match, idx) => (
+                    {/* Clubs */}
+                    <div style={{ width: clubsWidth }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <h3 style={{ margin: 0 }}>Clubs</h3>
+                            {isAdmin && (
+                                <button style={styles.addBtn} onClick={openClubModal}>Add Club</button>
+                            )}
+                        </div>
+
+                        {clubs.map((club) => (
                             <div
-                                key={idx}
-                                onClick={() =>
-                                    alert(`Clicked match: ${match.teama} vs ${match.teamb}`)
-                                }
-                                style={styles.Matches}
+                                key={club.id}
+                                onClick={() => { window.location.hash = `#/clubs/${club.id}`; }}
+                                style={styles.Clubs}
+                                title={`Open ${club.name}`}
                             >
-                                {match.teama} vs {match.teamb} <br />
-                                <small>{new Date(match.match_time).toLocaleString()}</small>
+                                <div style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {club.name}
+                                </div>
+
+                                {user && (
+                                    <button
+                                        onClick={(e) => requestJoin(club.id, e)}
+                                        style={{ ...styles.smallBtn, marginLeft: 8 }}
+                                        title="Request to Join"
+                                    >
+                                        Join
+                                    </button>
+                                )}
                             </div>
                         ))}
+
+                        {clubs.length === 0 && (
+                            <div style={{ ...styles.Clubs, justifyContent: "center" }}>No clubs yet.</div>
+                        )}
                     </div>
 
                     {!hideEvents && (
                         <div style={{ width: eventsWidth }}>
                             <h3>Events</h3>
                             {isAdmin && (
-                                <button
-                                    style={styles.addBtn}
-                                    onClick={() => alert("Open Add Event modal")}
-                                >
-                                    Add Event
-                                </button>
+                                <button style={styles.addBtn} onClick={() => setShowThreadModel(true)}>Add Event</button>
                             )}
                             {events.map((event, idx) => (
                                 <div
@@ -179,9 +264,7 @@ function Dashboard() {
                                     style={styles.Events}
                                 >
                                     {event.name} <br />
-                                    <small>
-                                        {new Date(event.event_date_time).toLocaleString()}
-                                    </small>
+                                    <small>{new Date(event.event_date_time).toLocaleString()}</small>
                                 </div>
                             ))}
                         </div>
@@ -211,20 +294,58 @@ function Dashboard() {
                                 required
                                 style={styles.textarea}
                             />
-                            <button type="submit" style={styles.submitBtn}>
-                                Save Thread
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setShowThreadModal(false)}
-                                style={styles.cancelBtn}
-                            >
-                                Cancel
-                            </button>
+                            <button type="submit" style={styles.submitBtn}>Save Thread</button>
+                            <button type="button" onClick={() => setShowThreadModel(false)} style={styles.cancelBtn}>Cancel</button>
                         </form>
                     </div>
                 </div>
             )}
+
+            {/* Club Modal (ADMIN) */}
+            {showClubModal && (
+                <div style={styles.ThreadWindow}>
+                    <div style={styles.ThreadContent}>
+                        <h3>Create Club</h3>
+                        <form onSubmit={handleClubSubmit}>
+                            <input
+                                name="name"
+                                placeholder="Club Name"
+                                value={newClub.name}
+                                onChange={handleClubChange}
+                                required
+                                style={styles.input}
+                            />
+                            <textarea
+                                name="description"
+                                placeholder="Description"
+                                value={newClub.description}
+                                onChange={handleClubChange}
+                                required
+                                style={styles.textarea}
+                            />
+                            <select
+                                name="leaderUserId"
+                                value={newClub.leaderUserId}
+                                onChange={handleClubChange}
+                                style={styles.input}
+                            >
+                                <option value="">(Optional) Select Leader</option>
+                                {users.map(u => (
+                                    <option key={u.id} value={u.id}>
+                                        {u.username} — {u.email}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                                <button type="button" onClick={() => setShowClubModal(false)} style={styles.cancelBtn}>Cancel</button>
+                                <button type="submit" style={styles.submitBtn}>Create</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
         </main>
     );
 }
@@ -239,107 +360,35 @@ const boxBase = {
     display: "flex",
     alignItems: "center",
     backgroundColor: "#fff",
-    transition:
-        "transform 0.3s ease, box-shadow 0.3s ease, backgroundColor 0.3s ease",
+    transition: "transform 0.3s ease, box-shadow 0.3s ease, backgroundColor 0.3s ease",
     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
 };
 
 const styles = {
     Dashboard: { paddingTop: "60px", height: "100vh", backgroundColor: "gray" },
-    container: {
-        maxWidth: "1200px",
-        margin: "0 auto",
-        padding: "0 20px",
-        height: "100%",
-        backgroundColor: "#D50032",
-    },
+    container: { maxWidth: "1200px", margin: "0 auto", padding: "0 20px", height: "100%", backgroundColor: "#D50032" },
     flexRow: { display: "flex", gap: "20px", height: "calc(100% - 20px)" },
+
     Threads: { ...boxBase },
     News: { ...boxBase, backgroundColor: "#f9f9f9" },
-    Matches: { ...boxBase, backgroundColor: "#f9f9f9" },
+    Clubs: { ...boxBase, backgroundColor: "#f9f9f9", justifyContent: "space-between" },
     Events: { ...boxBase, backgroundColor: "#f9f9f9" },
-    HeadNews: {
-        position: "relative",
-        width: "100%",
-        height: "150px",
-        marginBottom: "15px",
-        borderRadius: "6px",
-        overflow: "hidden",
-        boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
-        cursor: "pointer",
-    },
+
+    HeadNews: { position: "relative", width: "100%", height: "150px", marginBottom: "15px", borderRadius: "6px", overflow: "hidden", boxShadow: "0 4px 10px rgba(0,0,0,0.2)", cursor: "pointer" },
     HeadNewsImage: { width: "100%", height: "100%", objectFit: "cover" },
-    HeadNewsOverlay: {
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        background: "rgba(0,0,0,0.6)",
-        color: "#fff",
-        padding: "8px 10px",
-        fontSize: "1rem",
-    },
-    addBtn: {
-        margin: "10px 0px",
-        padding: "5px 8px",
-        fontSize: "0.8rem",
-        borderRadius: "4px",
-        backgroundColor: "#041E42",
-        color: "#D50032",
-        border: "1px solid #D50032",
-        cursor: "pointer",
-        fontWeight: "Bold",
-    },
-    ThreadWindow: {
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "rgba(0,0,0,0.5)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    ThreadContent: {
-        backgroundColor: "#fff",
-        padding: "20px",
-        borderRadius: "6px",
-        width: "400px",
-        maxWidth: "90%",
-    },
-    input: {
-        width: "100%",
-        padding: "8px",
-        marginBottom: "10px",
-        borderRadius: "4px",
-        border: "1px solid #ccc",
-    },
-    textarea: {
-        width: "100%",
-        padding: "8px",
-        height: "100px",
-        borderRadius: "4px",
-        border: "1px solid #ccc",
-        marginBottom: "10px",
-    },
-    submitBtn: {
-        padding: "8px 12px",
-        marginRight: "10px",
-        backgroundColor: "#D50032",
-        color: "#fff",
-        border: "none",
-        borderRadius: "4px",
-        cursor: "pointer",
-    },
-    cancelBtn: {
-        padding: "8px 12px",
-        backgroundColor: "#ccc",
-        color: "#000",
-        border: "none",
-        borderRadius: "4px",
-        cursor: "pointer",
-    },
+    HeadNewsOverlay: { position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.6)", color: "#fff", padding: "8px 10px", fontSize: "1rem" },
+
+    addBtn: { margin: "10px 0px", padding: "5px 8px", fontSize: "0.8rem", borderRadius: "4px", backgroundColor: "#041E42", color: "#D50032", border: "1px solid #D50032", cursor: "pointer", fontWeight: "Bold", textDecoration: "none", display: "inline-block" },
+    smallBtn: { padding: "4px 8px", fontSize: "0.75rem", background: "#0b57d0", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" },
+
+    ThreadWindow: { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 },
+    ThreadContent: { backgroundColor: "#fff", padding: "20px", borderRadius: "6px", width: "420px", maxWidth: "90%" },
+
+    input: { width: "100%", padding: "8px", marginBottom: "10px", borderRadius: "4px", border: "1px solid #ccc" },
+    textarea: { width: "100%", padding: "8px", minHeight: "80px", borderRadius: "4px", border: "1px solid #ccc", marginBottom: "10px", resize: "vertical" },
+
+    submitBtn: { padding: "8px 12px", backgroundColor: "#D50032", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" },
+    cancelBtn: { padding: "8px 12px", backgroundColor: "#ccc", color: "#000", border: "none", borderRadius: "4px", cursor: "pointer" },
 };
 
 export default Dashboard;

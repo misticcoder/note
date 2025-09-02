@@ -7,6 +7,7 @@ import { AuthProvider } from "./AuthContext";
 import AdminUsers from "./AdminUsers";
 import ThreadList from "./ThreadList";
 import ThreadPage from "./ThreadPage";
+import ClubDetail from "./ClubDetail";
 
 function App() {
     const [route, setRoute] = useState(window.location.hash || "#/");
@@ -26,6 +27,8 @@ function App() {
     if (route === "#/admin/users") Page = AdminUsers;
     if (route === "#/admin/threads") Page = ThreadList;
     if (route.startsWith("#/thread/")) Page = () => <ThreadPage/>
+    if (route === "#/clubs") Page = Clubs;
+    if (route.startsWith("#/clubs/")) Page = () => <ClubDetail />
 
 
     return (
