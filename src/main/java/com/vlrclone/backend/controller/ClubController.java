@@ -157,4 +157,51 @@ public class ClubController {
         news.deleteById(newsId);
         return ResponseEntity.ok(Map.of("status","success"));
     }
+
+    // GET /api/clubs/{clubId}/status?requesterEmail=me@example.com
+    @GetMapping("/{clubId}/status")
+    public ResponseEntity<?> myStatus(@PathVariable Long clubId,
+                                      @RequestParam String requesterEmail) {
+        var uOpt = users.findByEmail(requesterEmail);
+        if (uOpt.isEmpty()) return ResponseEntity.status(403).body(Map.of("message","Login required"));
+        var u = uOpt.get();
+        if (!clubs.existsById(clubId)) return ResponseEntity.status(404).body(Map.of("message","Club not found"));
+
+        boolean isMember = members.existsByClubIdAndUserId(clubId, u.getId());
+
+        var jrOpt = requests.findByClubIdAndUserId(clubId, u.getId());
+        boolean hasPending = jrOpt.isPresent() && jrOpt.get().getStatus() == JoinRequest.Status.PENDING;
+        Long requestId = hasPending ? jrOpt.get().getId() : null;
+
+        return ResponseEntity.ok(Map.of(
+                "isMember", isMember,
+                "hasPending", hasPending,
+                "requestId", requestId
+        ));
+    }
+
+    // DELETE /api/clubs/{clubId}/join-requests/{requestId}?requesterEmail=me@example.com
+    @DeleteMapping("/{clubId}/join-requests/{requestId}")
+    public ResponseEntity<?> cancelMine(@PathVariable Long clubId,
+                                        @PathVariable Long requestId,
+                                        @RequestParam String requesterEmail) {
+        var uOpt = users.findByEmail(requesterEmail);
+        if (uOpt.isEmpty()) return ResponseEntity.status(403).body(Map.of("message","Login required"));
+        var u = uOpt.get();
+
+        var jrOpt = requests.findById(requestId);
+        if (jrOpt.isEmpty() || !jrOpt.get().getClubId().equals(clubId))
+            return ResponseEntity.status(404).body(Map.of("message","Request not found"));
+
+        var jr = jrOpt.get();
+        // requester can cancel their own PENDING request; admins/leaders can already manage via your other endpoint
+        boolean isOwner = Objects.equals(jr.getUserId(), u.getId());
+        if (!isOwner) return ResponseEntity.status(403).body(Map.of("message","Not allowed"));
+
+        if (jr.getStatus() != JoinRequest.Status.PENDING)
+            return ResponseEntity.badRequest().body(Map.of("message","Only pending requests can be cancelled"));
+
+        requests.deleteById(requestId);
+        return ResponseEntity.ok(Map.of("status","cancelled"));
+    }
 }

@@ -11,6 +11,9 @@ export default function ClubDetail() {
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
 
+    const [myStatus, setMyStatus] = useState({ isMember: false, hasPending: false, requestId: null });
+
+
     const clubId = (() => {
         const m = (window.location.hash || "").match(/^#\/clubs\/(\d+)/i);
         return m ? Number(m[1]) : null;
@@ -19,49 +22,39 @@ export default function ClubDetail() {
     const isAdmin = String(user?.role || "").toUpperCase() === "ADMIN";
     const isLeader = !!user && members.some(m => m.userId === user.id && m.role === "LEADER");
     const canManage = isAdmin || isLeader;
-    const isMember = !!user && members.some(m => m.userId === user.id);
-    const hasPending = !!user && pending.some(p => p.userId === user.id); // pending list is already PENDING-only
+
 
     const requestJoinClub = async () => {
         if (!user) { alert("Please log in to request to join."); return; }
-        try {
-            const res = await fetch(`/api/clubs/${clubId}/join?requesterEmail=${encodeURIComponent(user.email)}`, {
-                method: "POST"
-            });
-            const body = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                alert(body.message || "Failed to send request");
-                return;
-            }
-            // Optimistically reflect the new pending request in UI
-            setPending(prev => [...prev, { id: body.id ?? Date.now(), userId: user.id }]);
-        } catch {
-            alert("Failed to send request");
-        }
+        const res = await fetch(`/api/clubs/${clubId}/join?requesterEmail=${encodeURIComponent(user.email)}`, { method: "POST" });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) { alert(body.message || "Failed to send request"); return; }
+
+        // Refresh my status (best)…
+        const st = await fetch(`/api/clubs/${clubId}/status?requesterEmail=${encodeURIComponent(user.email)}`).then(r => r.json());
+        setMyStatus(st);
+
+        // …and (optionally) reflect in pending for managers
+        setPending(prev => [...prev, { id: body.id ?? st.requestId ?? Date.now(), userId: user.id }]);
     };
 
     const cancelJoinRequest = async () => {
-        if (!user) return;
-        // find the user's pending request
-        const myReq = pending.find(p => p.userId === user.id);
-        if (!myReq) return;
-
-        try {
-            const res = await fetch(
-                `/api/clubs/${clubId}/join-requests/${myReq.id}?requesterEmail=${encodeURIComponent(user.email)}`,
-                { method: "DELETE" }
-            );
-            if (!res.ok) {
-                const body = await res.json().catch(() => ({}));
-                alert(body.message || "Failed to cancel request");
-                return;
-            }
-            // remove from pending list locally
-            setPending(prev => prev.filter(p => p.userId !== user.id));
-        } catch {
-            alert("Failed to cancel request");
+        if (!user || !myStatus.requestId) return;
+        const res = await fetch(
+            `/api/clubs/${clubId}/join-requests/${myStatus.requestId}?requesterEmail=${encodeURIComponent(user.email)}`,
+            { method: "DELETE" }
+        );
+        if (!res.ok) {
+            const b = await res.json().catch(() => ({}));
+            alert(b.message || "Failed to cancel request");
+            return;
         }
+        // Refresh my status
+        setMyStatus({ isMember: myStatus.isMember, hasPending: false, requestId: null });
+        // Remove from manager view if present
+        setPending(prev => prev.filter(p => p.id !== myStatus.requestId && p.userId !== user.id));
     };
+
 
     // Build a quick lookup: userId -> {username, email, role}
     const userMap = useMemo(() => {
@@ -99,13 +92,32 @@ export default function ClubDetail() {
                 const usersBody = usersRes.ok ? await usersRes.json() : [];
                 setUsers(Array.isArray(usersBody) ? usersBody : (usersBody.content || []));
 
-                // Load pending requests for managers
                 if (user) {
+                    // managers still load full pending list
                     fetch(`/api/clubs/${clubId}/join-requests?requesterEmail=${encodeURIComponent(user.email)}`)
                         .then(r => (r.ok ? r.json() : []))
                         .then(setPending)
                         .catch(() => setPending([]));
+
+                    // everyone can load their own status
+                    fetch(`/api/clubs/${clubId}/status?requesterEmail=${encodeURIComponent(user.email)}`)
+                        .then(r => r.ok ? r.json() : { isMember:false, hasPending:false, requestId:null })
+                        .then(setMyStatus)
+                        .catch(() => setMyStatus({ isMember:false, hasPending:false, requestId:null }));
+
+                    if (canManage) {
+                        fetch(`/api/clubs/${clubId}/join-requests?requesterEmail=${encodeURIComponent(user.email)}`)
+                            .then(r => (r.ok ? r.json() : []))
+                            .then(setPending)
+                            .catch(() => setPending([]));
+                    } else {
+                        setPending([]); // clear for non-managers
+                    }
+                } else {
+                    setMyStatus({ isMember:false, hasPending:false, requestId:null });
+                    setPending([]);
                 }
+
             } catch {
                 // no-op; basic fallback already set
             }
@@ -218,11 +230,11 @@ export default function ClubDetail() {
 
                         {/* Join button logic */}
                         {!canManage && user && (
-                            isMember ? (
+                            myStatus.isMember ? (
                                 <button style={{ ...s.primaryBtn, opacity: 0.6, cursor: "default" }} disabled>
                                     Member
                                 </button>
-                            ) : hasPending ? (
+                            ) : myStatus.hasPending ? (
                                 <button onClick={cancelJoinRequest} style={s.dangerBtn}>
                                     Cancel Request
                                 </button>
@@ -232,6 +244,7 @@ export default function ClubDetail() {
                                 </button>
                             )
                         )}
+
                     </div>
 
                 </div>
