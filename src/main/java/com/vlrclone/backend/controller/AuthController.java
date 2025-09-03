@@ -2,7 +2,7 @@ package com.vlrclone.backend.controller;
 
 
 import com.vlrclone.backend.model.User;
-import com.vlrclone.backend.model.Role;
+import com.vlrclone.backend.model.User.Role;
 import com.vlrclone.backend.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -42,7 +42,7 @@ public class AuthController {
         }
 
         // Default role if none provided
-        Role role = body.getRole() != null ? body.getRole() : Role.STUDENT;
+        Role role = body.getRole() != null ? body.getRole() : User.Role.STUDENT;
         body.setRole(role);
 
         // NOTE: For prototype only; password is plain text.

@@ -2,7 +2,7 @@
 package com.vlrclone.backend.controller;
 
 import com.vlrclone.backend.model.Comment;
-import com.vlrclone.backend.model.Role;
+import com.vlrclone.backend.model.User.Role;
 import com.vlrclone.backend.model.User;
 import com.vlrclone.backend.repository.CommentRepository;
 import com.vlrclone.backend.repository.ThreadRepository;

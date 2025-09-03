@@ -61,6 +61,12 @@ export default function ClubDetail() {
     // NEW: Leave the club if already a member
     const leaveClub = async () => {
         if (!user) return;
+
+        if (isLeader) {
+            alert("You are the club leader. Please transfer leadership to another member before leaving this club.")
+            return;
+        }
+
         if (!window.confirm("Are you sure you want to leave this club?")) return;
 
         // Prevent leaders/admins from using Leave here if you want; otherwise they can leave too.
@@ -148,7 +154,7 @@ export default function ClubDetail() {
                 // no-op; basic fallback already set
             }
         })();
-    }, [clubId, user?.email]);
+    }, [clubId, user?.email, canManage]);
 
     const decide = async (requestId, decision) => {
         const url = `/api/clubs/${clubId}/join-requests/${requestId}/decision?requesterEmail=${encodeURIComponent(
@@ -231,6 +237,49 @@ export default function ClubDetail() {
         .filter(m => m.role === "LEADER")
         .map(m => userLabel(m.userId));
 
+    const makeLeader = async (targetUserId) => {
+        if (!user) return;
+        try {
+            const res = await fetch(
+                `/api/clubs/${clubId}/members/${targetUserId}/make-leader?requesterEmail=${encodeURIComponent(user.email)}`,
+                { method: "POST" }
+            );
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                alert(body.message || "Failed to promote");
+                return;
+            }
+            // update local members list
+            setMembers(prev => prev.map(m =>
+                m.userId === targetUserId ? { ...m, role: "LEADER" } : m
+            ));
+        } catch {
+            alert("Failed to promote");
+        }
+    };
+
+    const makeMember = async (targetUserId) => {
+        if (!user) return;
+        try {
+            const res = await fetch(
+                `/api/clubs/${clubId}/members/${targetUserId}/make-member?requesterEmail=${encodeURIComponent(user.email)}`,
+                { method: "POST" }
+            );
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                alert(body.message || "Failed to demote");
+                return;
+            }
+            // update local members list
+            setMembers(prev => prev.map(m =>
+                m.userId === targetUserId ? { ...m, role: "MEMBER" } : m
+            ));
+        } catch {
+            alert("Failed to demote");
+        }
+    };
+
+
     return (
         <div style={s.page}>
             <a href="#/clubs" style={s.backLink}>
@@ -254,16 +303,27 @@ export default function ClubDetail() {
                             )}
                         </div>
 
+
                         {/* Join/Cancel/Leave button logic */}
                         { /* change '!canManage && user' to 'user' if leaders/admins should also be able to leave */ }
-                        {(!canManage && user) && (
+                        {(user) && (
                             effectiveIsMember ? (
-                                <button onClick={leaveClub} style={s.dangerBtn}>Leave</button>
-                            ) : myStatus.hasPending ? (
-                                <button onClick={cancelJoinRequest} style={s.dangerBtn}>Cancel Request</button>
-                            ) : (
-                                <button onClick={requestJoinClub} style={s.primaryBtn}>Join</button>
-                            )
+                                isLeader ? (
+                                        <button
+                                            style={{...s.dangerBtn, opacity: 0.7, cursor: "not-allowed"}}
+                                            title="You are a leader. Transfer leadership before leaving."
+                                            disabled
+                                        >
+                                            Leader — cannot leave
+                                        </button>
+                                    ):
+                                    < button onClick = {leaveClub} style = {s.dangerBtn} > Leave < /button>
+                        ) : myStatus.hasPending ? (
+                            <button onClick={cancelJoinRequest} style={s.dangerBtn}>Cancel Request
+                    </button>
+                    ) : (
+                    <button onClick={requestJoinClub} style={s.primaryBtn}>Join</button>
+                    )
                         )}
 
 

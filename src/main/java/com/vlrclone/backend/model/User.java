@@ -26,6 +26,12 @@ public class User {
     @Column(nullable = false)
     private boolean protectedAccount = false;
 
+    public enum Role {
+        ADMIN,
+        STUDENT,
+        GUEST
+    }
+
     // Constructors
     public User() {}
 

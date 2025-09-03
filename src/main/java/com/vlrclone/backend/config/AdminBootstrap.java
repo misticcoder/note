@@ -2,7 +2,7 @@
 package com.vlrclone.backend.config;
 
 import com.vlrclone.backend.model.User;
-import com.vlrclone.backend.model.Role;
+import com.vlrclone.backend.model.User.Role;
 import com.vlrclone.backend.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
