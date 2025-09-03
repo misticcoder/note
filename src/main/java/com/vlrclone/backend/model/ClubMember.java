@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 @Entity @Table(name= "club_members")
 public class ClubMember {
-    public enum Role { LEADER, MEMBER}
+    public enum Role { LEADER, CO_LEADER, MEMBER}
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @Column(nullable = false) private Long userId;

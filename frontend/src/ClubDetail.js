@@ -11,7 +11,14 @@ export default function ClubDetail() {
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
 
-    const [myStatus, setMyStatus] = useState({ isMember: false, hasPending: false, requestId: null });
+    const [myStatus, setMyStatus] = useState({
+        isMember: false,
+        hasPending: false,
+        requestId: null,
+    });
+
+    // UI: which member's action menu is open
+    const [openMember, setOpenMember] = useState(null); // userId or null
 
     const clubId = (() => {
         const m = (window.location.hash || "").match(/^#\/clubs\/(\d+)/i);
@@ -19,32 +26,53 @@ export default function ClubDetail() {
     })();
 
     const isAdmin = String(user?.role || "").toUpperCase() === "ADMIN";
-    const isLeader = !!user && members.some(m => m.userId === user.id && m.role === "LEADER");
-    const canManage = isAdmin || isLeader;
+    const isCoLeader =
+        !!user && members.some((m) => m.userId === user.id && m.role === "CO_LEADER");
+    const isLeader =
+        !!user && members.some((m) => m.userId === user.id && m.role === "LEADER");
+
+    // High-level capability flags
+    const canManage = isAdmin || isLeader; // keep if you reference elsewhere
+    const canSeeActionMenu = !!user && (isAdmin || isLeader || isCoLeader);
+
+    const canPostNews = isAdmin || isLeader || isCoLeader; // co-leaders can post
+    const canApproveRequests = isAdmin || isLeader; // pending requests only for admin/leader
 
     // derive membership from both sources (status + members list)
-    const isMemberFromList = !!user && members.some(m => m.userId === user.id);
+    const isMemberFromList = !!user && members.some((m) => m.userId === user.id);
     const effectiveIsMember = myStatus.isMember || isMemberFromList;
 
-
     const requestJoinClub = async () => {
-        if (!user) { alert("Please log in to request to join."); return; }
-        const res = await fetch(`/api/clubs/${clubId}/join?requesterEmail=${encodeURIComponent(user.email)}`, { method: "POST" });
+        if (!user) {
+            alert("Please log in to request to join.");
+            return;
+        }
+        const res = await fetch(
+            `/api/clubs/${clubId}/join?requesterEmail=${encodeURIComponent(user.email)}`,
+            { method: "POST" }
+        );
         const body = await res.json().catch(() => ({}));
-        if (!res.ok) { alert(body.message || "Failed to send request"); return; }
+        if (!res.ok) {
+            alert(body.message || "Failed to send request");
+            return;
+        }
 
-        // Refresh my status (best)…
-        const st = await fetch(`/api/clubs/${clubId}/status?requesterEmail=${encodeURIComponent(user.email)}`).then(r => r.json());
+        const st = await fetch(
+            `/api/clubs/${clubId}/status?requesterEmail=${encodeURIComponent(user.email)}`
+        ).then((r) => r.json());
         setMyStatus(st);
-
-        // …and (optionally) reflect in pending for managers
-        setPending(prev => [...prev, { id: body.id ?? st.requestId ?? Date.now(), userId: user.id }]);
+        setPending((prev) => [
+            ...prev,
+            { id: body.id ?? st.requestId ?? Date.now(), userId: user.id },
+        ]);
     };
 
     const cancelJoinRequest = async () => {
         if (!user || !myStatus.requestId) return;
         const res = await fetch(
-            `/api/clubs/${clubId}/join-requests/${myStatus.requestId}?requesterEmail=${encodeURIComponent(user.email)}`,
+            `/api/clubs/${clubId}/join-requests/${myStatus.requestId}?requesterEmail=${encodeURIComponent(
+                user.email
+            )}`,
             { method: "DELETE" }
         );
         if (!res.ok) {
@@ -52,26 +80,17 @@ export default function ClubDetail() {
             alert(b.message || "Failed to cancel request");
             return;
         }
-        // Refresh my status
         setMyStatus({ isMember: myStatus.isMember, hasPending: false, requestId: null });
-        // Remove from manager view if present
-        setPending(prev => prev.filter(p => p.id !== myStatus.requestId && p.userId !== user.id));
+        setPending((prev) => prev.filter((p) => p.id !== myStatus.requestId && p.userId !== user.id));
     };
 
-    // NEW: Leave the club if already a member
     const leaveClub = async () => {
         if (!user) return;
-
         if (isLeader) {
-            alert("You are the club leader. Please transfer leadership to another member before leaving this club.")
+            alert("You are the club leader. Please transfer leadership to another member before leaving this club.");
             return;
         }
-
         if (!window.confirm("Are you sure you want to leave this club?")) return;
-
-        // Prevent leaders/admins from using Leave here if you want; otherwise they can leave too.
-        // Example guard (optional):
-        // if (isLeader) { alert("Leaders cannot leave. Transfer leadership first."); return; }
 
         const res = await fetch(
             `/api/clubs/${clubId}/leave?requesterEmail=${encodeURIComponent(user.email)}`,
@@ -82,27 +101,26 @@ export default function ClubDetail() {
             alert(body.message || "Failed to leave club");
             return;
         }
-
-        // Update local state: no longer a member
         setMyStatus({ isMember: false, hasPending: false, requestId: null });
-        setMembers(prev => prev.filter(m => m.userId !== user.id));
+        setMembers((prev) => prev.filter((m) => m.userId !== user.id));
     };
 
-    // Build a quick lookup: userId -> {username, email, role}
+    // lookup: userId -> user
     const userMap = useMemo(() => {
         const map = new Map();
-        (users || []).forEach(u => map.set(u.id, u));
+        (users || []).forEach((u) => map.set(u.id, u));
         return map;
     }, [users]);
 
-    // Derived lists: leaders first, then members
+    // Sort: LEADER -> CO_LEADER -> MEMBER
     const sortedMembers = useMemo(() => {
-        const arr = [...members];
-        arr.sort((a, b) => {
-            if (a.role === b.role) return 0;
-            return a.role === "LEADER" ? -1 : 1;
+        const rank = (r) => (r === "LEADER" ? 0 : r === "CO_LEADER" ? 1 : 2);
+        return [...members].sort((a, b) => {
+            const ra = rank(a.role || "MEMBER");
+            const rb = rank(b.role || "MEMBER");
+            if (ra !== rb) return ra - rb;
+            return 0;
         });
-        return arr;
     }, [members]);
 
     useEffect(() => {
@@ -110,51 +128,55 @@ export default function ClubDetail() {
         (async () => {
             try {
                 const [c, n, m] = await Promise.all([
-                    fetch(`/api/clubs/${clubId}`).then(r => r.json()),
-                    fetch(`/api/clubs/${clubId}/news`).then(r => r.json()),
-                    fetch(`/api/clubs/${clubId}/members`).then(r => r.json())
+                    fetch(`/api/clubs/${clubId}`).then((r) => r.json()),
+                    fetch(`/api/clubs/${clubId}/news`).then((r) => r.json()),
+                    fetch(`/api/clubs/${clubId}/members`).then((r) => r.json()),
                 ]).catch(() => [null, [], []]);
 
                 setClub(c);
                 setNews(Array.isArray(n) ? n : []);
                 setMembers(Array.isArray(m) ? m : []);
 
-                // Load users (for names/emails) once
+                // users (for labels)
                 const usersRes = await fetch("/api/users");
                 const usersBody = usersRes.ok ? await usersRes.json() : [];
-                setUsers(Array.isArray(usersBody) ? usersBody : (usersBody.content || []));
+                setUsers(Array.isArray(usersBody) ? usersBody : usersBody.content || []);
 
                 if (user) {
-                    // managers still load full pending list
-                    fetch(`/api/clubs/${clubId}/join-requests?requesterEmail=${encodeURIComponent(user.email)}`)
-                        .then(r => (r.ok ? r.json() : []))
-                        .then(setPending)
-                        .catch(() => setPending([]));
-
-                    // everyone can load their own status
-                    fetch(`/api/clubs/${clubId}/status?requesterEmail=${encodeURIComponent(user.email)}`)
-                        .then(r => r.ok ? r.json() : { isMember:false, hasPending:false, requestId:null })
+                    // status for current user
+                    fetch(
+                        `/api/clubs/${clubId}/status?requesterEmail=${encodeURIComponent(user.email)}`
+                    )
+                        .then((r) =>
+                            r.ok ? r.json() : { isMember: false, hasPending: false, requestId: null }
+                        )
                         .then(setMyStatus)
-                        .catch(() => setMyStatus({ isMember:false, hasPending:false, requestId:null }));
+                        .catch(() =>
+                            setMyStatus({ isMember: false, hasPending: false, requestId: null })
+                        );
 
-                    if (canManage) {
-                        fetch(`/api/clubs/${clubId}/join-requests?requesterEmail=${encodeURIComponent(user.email)}`)
-                            .then(r => (r.ok ? r.json() : []))
+                    // only approvers (admin/leader) can see pending requests
+                    if (canApproveRequests) {
+                        fetch(
+                            `/api/clubs/${clubId}/join-requests?requesterEmail=${encodeURIComponent(
+                                user.email
+                            )}`
+                        )
+                            .then((r) => (r.ok ? r.json() : []))
                             .then(setPending)
                             .catch(() => setPending([]));
                     } else {
-                        setPending([]); // clear for non-managers
+                        setPending([]);
                     }
                 } else {
-                    setMyStatus({ isMember:false, hasPending:false, requestId:null });
+                    setMyStatus({ isMember: false, hasPending: false, requestId: null });
                     setPending([]);
                 }
-
             } catch {
-                // no-op; basic fallback already set
+                // noop
             }
         })();
-    }, [clubId, user?.email, canManage]);
+    }, [clubId, user?.email, canApproveRequests]);
 
     const decide = async (requestId, decision) => {
         const url = `/api/clubs/${clubId}/join-requests/${requestId}/decision?requesterEmail=${encodeURIComponent(
@@ -166,18 +188,18 @@ export default function ClubDetail() {
             alert(body.message || "Failed");
             return;
         }
-        // Refresh members + pending
+
         const [m, p] = await Promise.all([
-            fetch(`/api/clubs/${clubId}/members`).then(r => r.json()),
+            fetch(`/api/clubs/${clubId}/members`).then((r) => r.json()),
             fetch(
                 `/api/clubs/${clubId}/join-requests?requesterEmail=${encodeURIComponent(user.email)}`
-            ).then(r => r.json())
+            ).then((r) => r.json()),
         ]);
         setMembers(Array.isArray(m) ? m : []);
         setPending(Array.isArray(p) ? p : []);
     };
 
-    const postNews = async e => {
+    const postNews = async (e) => {
         e.preventDefault();
         if (!title.trim() || !content.trim()) return;
         const res = await fetch(
@@ -185,7 +207,7 @@ export default function ClubDetail() {
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title: title.trim(), content: content.trim() })
+                body: JSON.stringify({ title: title.trim(), content: content.trim() }),
             }
         );
         const body = await res.json().catch(() => ({}));
@@ -193,12 +215,12 @@ export default function ClubDetail() {
             alert(body.message || "Failed");
             return;
         }
-        setNews(prev => [body, ...prev]);
+        setNews((prev) => [body, ...prev]);
         setTitle("");
         setContent("");
     };
 
-    const deleteNews = async newsId => {
+    const deleteNews = async (newsId) => {
         const res = await fetch(
             `/api/clubs/${clubId}/news/${newsId}?requesterEmail=${encodeURIComponent(user.email)}`,
             { method: "DELETE" }
@@ -208,7 +230,108 @@ export default function ClubDetail() {
             alert(b.message || "Failed");
             return;
         }
-        setNews(prev => prev.filter(n => n.id !== newsId));
+        setNews((prev) => prev.filter((n) => n.id !== newsId));
+    };
+
+    // --- Role changes & moderation ---
+
+    // ADMIN: set target as the single LEADER (others become MEMBER locally)
+    const makeLeader = async (targetUserId) => {
+        if (!user) return;
+        try {
+            const res = await fetch(
+                `/api/clubs/${clubId}/members/${targetUserId}/make-leader?requesterEmail=${encodeURIComponent(
+                    user.email
+                )}`,
+                { method: "POST" }
+            );
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                alert(body.message || "Failed to set leader");
+                return;
+            }
+            setMembers((prev) =>
+                prev.map((m) =>
+                    m.userId === targetUserId ? { ...m, role: "LEADER" } : { ...m.role === "LEADER" ?
+                            { ...m, role: "CO_LEADER" } : { ...m, role: "MEMBER" }}
+                )
+            );
+            setOpenMember(null);
+        } catch {
+            alert("Failed to set leader");
+        }
+    };
+
+    // LEADER/ADMIN: promote MEMBER -> CO_LEADER
+    const makeCoLeader = async (targetUserId) => {
+        if (!user) return;
+        try {
+            const res = await fetch(
+                `/api/clubs/${clubId}/members/${targetUserId}/make-co_leader?requesterEmail=${encodeURIComponent(
+                    user.email
+                )}`,
+                { method: "POST" }
+            );
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                alert(body.message || "Failed to promote");
+                return;
+            }
+            setMembers((prev) =>
+                prev.map((m) => (m.userId === targetUserId ? { ...m, role: "CO_LEADER" } : m))
+            );
+            setOpenMember(null);
+        } catch {
+            alert("Failed to promote");
+        }
+    };
+
+    // DEMOTE to MEMBER (Leader can demote CO_LEADER; Admin can demote CO_LEADER)
+    const makeMember = async (targetUserId) => {
+        if (!user) return;
+        try {
+            const res = await fetch(
+                `/api/clubs/${clubId}/members/${targetUserId}/make-member?requesterEmail=${encodeURIComponent(
+                    user.email
+                )}`,
+                { method: "POST" }
+            );
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                alert(body.message || "Failed to demote");
+                return;
+            }
+            setMembers((prev) =>
+                prev.map((m) => (m.userId === targetUserId ? { ...m, role: "MEMBER" } : m))
+            );
+            setOpenMember(null);
+        } catch {
+            alert("Failed to demote");
+        }
+    };
+
+    // Kick member from club
+    const kickMember = async (targetUserId) => {
+        if (!user) return;
+        if (!window.confirm("Remove this member from the club?")) return;
+        try {
+            const res = await fetch(
+                `/api/clubs/${clubId}/members/${targetUserId}?requesterEmail=${encodeURIComponent(
+                    user.email
+                )}`,
+                { method: "DELETE" }
+            );
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                alert(body.message || "Failed to remove member");
+                return;
+            }
+
+            setMembers((prev) => prev.filter((m) => m.userId !== targetUserId));
+            setOpenMember(null);
+        } catch {
+            alert("Failed to remove member");
+        }
     };
 
     if (!clubId)
@@ -226,59 +349,15 @@ export default function ClubDetail() {
             </div>
         );
 
-    // Helper to show a user label from userId
     const userLabel = (uid) => {
         const u = userMap.get(uid);
         if (!u) return `User #${uid}`;
-        return `${u.username} (${u.email})`; //shows members & Leaders username and their email.
+        return `${u.username} (${u.email})`;
     };
 
     const leaderNames = sortedMembers
-        .filter(m => m.role === "LEADER")
-        .map(m => userLabel(m.userId));
-
-    const makeLeader = async (targetUserId) => {
-        if (!user) return;
-        try {
-            const res = await fetch(
-                `/api/clubs/${clubId}/members/${targetUserId}/make-leader?requesterEmail=${encodeURIComponent(user.email)}`,
-                { method: "POST" }
-            );
-            const body = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                alert(body.message || "Failed to promote");
-                return;
-            }
-            // update local members list
-            setMembers(prev => prev.map(m =>
-                m.userId === targetUserId ? { ...m, role: "LEADER" } : m
-            ));
-        } catch {
-            alert("Failed to promote");
-        }
-    };
-
-    const makeMember = async (targetUserId) => {
-        if (!user) return;
-        try {
-            const res = await fetch(
-                `/api/clubs/${clubId}/members/${targetUserId}/make-member?requesterEmail=${encodeURIComponent(user.email)}`,
-                { method: "POST" }
-            );
-            const body = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                alert(body.message || "Failed to demote");
-                return;
-            }
-            // update local members list
-            setMembers(prev => prev.map(m =>
-                m.userId === targetUserId ? { ...m, role: "MEMBER" } : m
-            ));
-        } catch {
-            alert("Failed to demote");
-        }
-    };
-
+        .filter((m) => m.role === "LEADER")
+        .map((m) => userLabel(m.userId));
 
     return (
         <div style={s.page}>
@@ -290,45 +369,45 @@ export default function ClubDetail() {
             <div style={{ ...s.card, ...s.headerCard }}>
                 <div style={s.headerTop}>
                     <h2 style={s.title}>{club.name}</h2>
-                    <div style={{display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap"}}>
+                    <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                         <div style={s.chips}>
                             {leaderNames.length > 0 ? (
                                 leaderNames.map((ln, i) => (
                                     <span key={i} style={s.leaderChip} title="Club Leader">
-                                        ⭐ {ln}
-                                    </span>
+                    ⭐ {ln}
+                  </span>
                                 ))
                             ) : (
                                 <span style={s.leaderChipMuted}>No leader assigned</span>
                             )}
                         </div>
 
-
-                        {/* Join/Cancel/Leave button logic */}
-                        { /* change '!canManage && user' to 'user' if leaders/admins should also be able to leave */ }
-                        {(user) && (
-                            effectiveIsMember ? (
+                        {/* Join/Cancel/Leave */}
+                        {user &&
+                            (effectiveIsMember ? (
                                 isLeader ? (
-                                        <button
-                                            style={{...s.dangerBtn, opacity: 0.7, cursor: "not-allowed"}}
-                                            title="You are a leader. Transfer leadership before leaving."
-                                            disabled
-                                        >
-                                            Leader — cannot leave
-                                        </button>
-                                    ):
-                                    < button onClick = {leaveClub} style = {s.dangerBtn} > Leave < /button>
-                        ) : myStatus.hasPending ? (
-                            <button onClick={cancelJoinRequest} style={s.dangerBtn}>Cancel Request
-                    </button>
-                    ) : (
-                    <button onClick={requestJoinClub} style={s.primaryBtn}>Join</button>
-                    )
-                        )}
-
-
+                                    <button
+                                        style={{ ...s.dangerBtn, opacity: 0.7, cursor: "not-allowed" }}
+                                        title="You are a leader. Transfer leadership before leaving."
+                                        disabled
+                                    >
+                                        Leader — cannot leave
+                                    </button>
+                                ) : (
+                                    <button onClick={leaveClub} style={s.dangerBtn}>
+                                        Leave
+                                    </button>
+                                )
+                            ) : myStatus.hasPending ? (
+                                <button onClick={cancelJoinRequest} style={s.dangerBtn}>
+                                    Cancel Request
+                                </button>
+                            ) : (
+                                <button onClick={requestJoinClub} style={s.primaryBtn}>
+                                    Join
+                                </button>
+                            ))}
                     </div>
-
                 </div>
                 <p style={s.desc}>{club.description}</p>
             </div>
@@ -340,19 +419,19 @@ export default function ClubDetail() {
                         <h3 style={s.h3}>Club News</h3>
                     </div>
 
-                    {canManage && (
+                    {canPostNews && (
                         <form onSubmit={postNews} style={s.newsForm}>
                             <input
                                 placeholder="Title"
                                 value={title}
-                                onChange={e => setTitle(e.target.value)}
+                                onChange={(e) => setTitle(e.target.value)}
                                 required
                                 style={s.input}
                             />
                             <textarea
                                 placeholder="Content"
                                 value={content}
-                                onChange={e => setContent(e.target.value)}
+                                onChange={(e) => setContent(e.target.value)}
                                 required
                                 style={s.textarea}
                             />
@@ -366,20 +445,18 @@ export default function ClubDetail() {
 
                     {news.length === 0 && <div style={s.card}>No news yet.</div>}
 
-                    {news.map(n => (
+                    {news.map((n) => (
                         <div key={n.id} style={s.card}>
                             <div style={s.cardHead}>
                                 <strong style={{ fontSize: 16 }}>{n.title}</strong>
-                                {canManage && (
+                                {canPostNews && (
                                     <button onClick={() => deleteNews(n.id)} style={s.dangerBtn}>
                                         Delete
                                     </button>
                                 )}
                             </div>
                             <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{n.content}</div>
-                            <div style={s.meta}>
-                                {n.createdAt ? new Date(n.createdAt).toLocaleString() : ""}
-                            </div>
+                            <div style={s.meta}>{n.createdAt ? new Date(n.createdAt).toLocaleString() : ""}</div>
                         </div>
                     ))}
                 </div>
@@ -392,39 +469,136 @@ export default function ClubDetail() {
 
                     <div style={s.card}>
                         <ul style={s.list}>
-                            {sortedMembers.map(m => (
-                                <li key={m.id} style={s.listItem}>
-                                    <span>{userLabel(m.userId)}</span>
-                                    {m.role === "LEADER" ? (
-                                        <span style={s.badgeLeader}>LEADER</span>
-                                    ) : (
-                                        <span style={s.badge}>MEMBER</span>
-                                    )}
-                                </li>
-                            ))}
+                            {sortedMembers.map((m) => {
+                                const isThisLeader = m.role === "LEADER";
+                                const isThisCoLeader = m.role === "CO_LEADER";
+                                const isThisMember = !isThisLeader && !isThisCoLeader;
+                                const isSelf = user && m.userId === user.id;
+                                const menuOpen = openMember === m.userId;
+
+                                const badge = isThisLeader ? (
+                                    <span style={s.badgeLeader}>LEADER</span>
+                                ) : isThisCoLeader ? (
+                                    <span style={s.badgeCoLeader}>CO-LEADER</span>
+                                ) : (
+                                    <span style={s.badge}>MEMBER</span>
+                                );
+
+                                // Permissions vs this target
+                                const canKickThisUser =
+                                    isAdmin || (isLeader && !isThisLeader) || (isCoLeader && isThisMember);
+
+                                const canPromoteToCoLeader = (isLeader || isAdmin) && isThisMember;
+
+                                // Admin can demote CO_LEADER; Leader can demote CO_LEADER
+                                const canDemoteToMember =
+                                    (isLeader && isThisCoLeader) || (isAdmin && !isSelf && isThisCoLeader);
+
+
+                                return (
+                                    <li key={m.id} style={{ ...s.listItem, position: "relative" }}>
+                    <span
+                        onClick={() => setOpenMember(menuOpen ? null : m.userId)}
+                        style={{ cursor: canSeeActionMenu ? "pointer" : "default" }}
+                    >
+                      {userLabel(m.userId)}
+                    </span>
+
+                                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                            {badge}
+                                            {canSeeActionMenu && !isSelf && (
+                                                <button
+                                                    onClick={() => setOpenMember(menuOpen ? null : m.userId)}
+                                                    style={s.primaryBtnSm}
+                                                    title="Manage member"
+                                                >
+                                                    ⋮
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {canSeeActionMenu && !isSelf && menuOpen && (
+                                            <div style={s.menu}>
+                                                {/* Admin: set sole LEADER */}
+                                                {isAdmin && !isThisLeader && (
+                                                    <button
+                                                        style={s.menuItem}
+                                                        onClick={() => makeLeader(m.userId)}
+                                                    >
+                                                        Make Leader (Admin)
+                                                    </button>
+                                                )}
+                                                {isAdmin && !isThisCoLeader && !isThisMember &&(
+                                                    <button
+                                                        style={s.menuItem}
+                                                        onClick={() => makeCoLeader(m.userId)}
+                                                    >
+                                                        Demote to Co-leader
+                                                    </button>
+                                                )}
+
+                                                {/* Leader/Admin: promote MEMBER -> CO_LEADER */}
+                                                {canPromoteToCoLeader && (
+                                                    <button
+                                                        style={s.menuItem}
+                                                        onClick={() => makeCoLeader(m.userId)}
+                                                    >
+                                                        Promote to Co-leader
+                                                    </button>
+                                                )}
+
+                                                {/* Leader or Admin: CO_LEADER -> MEMBER */}
+                                                {canDemoteToMember && (
+                                                    <button
+                                                        style={s.menuItem}
+                                                        onClick={() => makeMember(m.userId)}
+                                                    >
+                                                        Demote to Member
+                                                    </button>
+                                                )}
+
+                                                {/* Kick */}
+                                                {canKickThisUser && (
+                                                    <button
+                                                        style={{ ...s.menuItem, color: "#b00020" }}
+                                                        onClick={() => kickMember(m.userId)}
+                                                    >
+                                                        Kick
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+                                    </li>
+                                );
+                            })}
                             {sortedMembers.length === 0 && <li style={s.muted}>No members yet.</li>}
                         </ul>
                     </div>
 
-                    {canManage && (
+                    {canApproveRequests && (
                         <>
                             <div style={s.sectionHeader}>
                                 <h3 style={s.h3}>Pending Requests</h3>
                             </div>
-
                             <div style={s.card}>
                                 {pending.length === 0 && <div style={s.muted}>No pending requests.</div>}
-                                {pending.map(r => (
+                                {pending.map((r) => (
                                     <div key={r.id} style={s.pendingRow}>
                                         <div>
                                             <div style={{ fontWeight: 600 }}>{userLabel(r.userId)}</div>
                                             <div style={s.meta}>Request ID: {r.id}</div>
                                         </div>
                                         <div style={s.actions}>
-                                            <button onClick={() => decide(r.id, "approve")} style={s.primaryBtnSm}>
+                                            <button
+                                                onClick={() => decide(r.id, "approve")}
+                                                style={s.primaryBtnSm}
+                                            >
                                                 Approve
                                             </button>
-                                            <button onClick={() => decide(r.id, "reject")} style={s.dangerBtnSm}>
+                                            <button
+                                                onClick={() => decide(r.id, "reject")}
+                                                style={s.dangerBtnSm}
+                                            >
                                                 Reject
                                             </button>
                                         </div>
@@ -450,7 +624,7 @@ const s = {
         background: "#f8f8f8",
         color: "#333",
         display: "inline-block",
-        marginBottom: 10
+        marginBottom: 10,
     },
 
     card: {
@@ -459,7 +633,7 @@ const s = {
         borderRadius: 12,
         padding: 16,
         boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
-        marginBottom: 12
+        marginBottom: 12,
     },
     headerCard: { paddingTop: 18, paddingBottom: 18 },
     headerTop: { display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" },
@@ -473,14 +647,14 @@ const s = {
         borderRadius: 999,
         padding: "4px 10px",
         fontSize: 12,
-        boxShadow: "0 2px 8px rgba(11,87,208,0.2)"
+        boxShadow: "0 2px 8px rgba(11,87,208,0.2)",
     },
     leaderChipMuted: {
         background: "#e9eefc",
         color: "#3b5bcc",
         borderRadius: 999,
         padding: "4px 10px",
-        fontSize: 12
+        fontSize: 12,
     },
 
     grid: { display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, alignItems: "start" },
@@ -491,7 +665,7 @@ const s = {
         ...cardLike(),
         display: "grid",
         gap: 10,
-        marginBottom: 12
+        marginBottom: 12,
     },
 
     input: {
@@ -499,7 +673,7 @@ const s = {
         padding: "10px 12px",
         borderRadius: 10,
         border: "1px solid #ddd",
-        outline: "none"
+        outline: "none",
     },
     textarea: {
         width: "90%",
@@ -508,7 +682,7 @@ const s = {
         borderRadius: 10,
         border: "1px solid #ddd",
         outline: "none",
-        resize: "vertical"
+        resize: "vertical",
     },
 
     primaryBtn: button("#0b57d0", "#fff"),
@@ -526,7 +700,7 @@ const s = {
         borderRadius: 10,
         display: "flex",
         justifyContent: "space-between",
-        alignItems: "center"
+        alignItems: "center",
     },
     muted: { color: "#777" },
 
@@ -535,7 +709,7 @@ const s = {
         color: "#374151",
         padding: "2px 8px",
         borderRadius: 999,
-        fontSize: 12
+        fontSize: 12,
     },
     badgeLeader: {
         background: "#fde68a",
@@ -543,7 +717,15 @@ const s = {
         padding: "2px 8px",
         borderRadius: 999,
         fontSize: 12,
-        fontWeight: 700
+        fontWeight: 700,
+    },
+    badgeCoLeader: {
+        background: "#dbeafe",
+        color: "#1e40af",
+        padding: "2px 8px",
+        borderRadius: 999,
+        fontSize: 12,
+        fontWeight: 600,
     },
 
     pendingRow: {
@@ -553,12 +735,37 @@ const s = {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: 8
+        marginBottom: 8,
     },
-    actions: { display: "flex", gap: 8 }
+    actions: { display: "flex", gap: 8 },
+
+    // tiny absolute dropdown menu
+    menu: {
+        position: "absolute",
+        right: 10,
+        top: "100%",
+        marginTop: 6,
+        background: "#fff",
+        border: "1px solid #ddd",
+        borderRadius: 10,
+        boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+        padding: 8,
+        display: "grid",
+        gap: 6,
+        zIndex: 5,
+        minWidth: 180,
+    },
+    menuItem: {
+        background: "transparent",
+        border: "none",
+        textAlign: "left",
+        padding: "6px 8px",
+        borderRadius: 8,
+        cursor: "pointer",
+    },
 };
 
-// little helpers for styles
+// style helpers
 function button(bg, fg, small = false) {
     return {
         background: bg,
@@ -567,7 +774,7 @@ function button(bg, fg, small = false) {
         borderRadius: 10,
         padding: small ? "6px 10px" : "8px 12px",
         cursor: "pointer",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.08)"
+        boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
     };
 }
 function cardLike() {
@@ -576,6 +783,6 @@ function cardLike() {
         border: "1px solid #e6e6e6",
         borderRadius: 12,
         padding: 12,
-        boxShadow: "0 8px 24px rgba(0,0,0,0.06)"
+        boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
     };
 }

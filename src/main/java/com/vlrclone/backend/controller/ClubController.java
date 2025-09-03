@@ -39,6 +39,9 @@ public class ClubController {
     private boolean isLeader(Long clubId, Long userId) {
         return members.existsByClubIdAndUserIdAndRole(clubId, userId, Role.LEADER);
     }
+    private boolean isCoLeader(Long clubId, Long userId) {
+        return members.existsByClubIdAndUserIdAndRole(clubId, userId, Role.CO_LEADER);
+    }
 
     /* Public */
     @GetMapping
@@ -119,7 +122,7 @@ public class ClubController {
     public ResponseEntity<?> pending(@PathVariable Long clubId, @RequestParam String requesterEmail) {
         var req = byEmail(requesterEmail).orElse(null);
         if (req == null) return ResponseEntity.status(403).body(Map.of("message", "Login required"));
-        boolean allowed = isAdmin(req) || isLeader(clubId, req.getId());
+        boolean allowed = isAdmin(req) || isLeader(clubId, req.getId()) || isCoLeader(clubId, req.getId());
         if (!allowed) return ResponseEntity.status(403).body(Map.of("message", "Forbidden"));
         return ResponseEntity.ok(requests.findByClubIdAndStatus(clubId, Status.PENDING));
     }
@@ -130,7 +133,7 @@ public class ClubController {
                                     @RequestParam String requesterEmail, @RequestParam String decision) {
         var req = byEmail(requesterEmail).orElse(null);
         if (req == null) return ResponseEntity.status(403).body(Map.of("message", "Login required"));
-        boolean allowed = isAdmin(req) || isLeader(clubId, req.getId());
+        boolean allowed = isAdmin(req) || isLeader(clubId, req.getId()) || isCoLeader(clubId, req.getId());
         if (!allowed) return ResponseEntity.status(403).body(Map.of("message", "Forbidden"));
 
         var jrOpt = requests.findById(requestId);
@@ -162,7 +165,7 @@ public class ClubController {
     public ResponseEntity<?> postNews(@PathVariable Long clubId, @RequestParam String requesterEmail, @RequestBody Map<String, String> body) {
         var req = byEmail(requesterEmail).orElse(null);
         if (req == null) return ResponseEntity.status(403).body(Map.of("message", "Login required"));
-        boolean allowed = isAdmin(req) || isLeader(clubId, req.getId());
+        boolean allowed = isAdmin(req) || isLeader(clubId, req.getId()) || isCoLeader(clubId, req.getId());
         if (!allowed) return ResponseEntity.status(403).body(Map.of("message", "Forbidden"));
 
         String title = body.getOrDefault("title", "").trim();
@@ -183,7 +186,7 @@ public class ClubController {
     public ResponseEntity<?> deleteNews(@PathVariable Long clubId, @PathVariable Long newsId, @RequestParam String requesterEmail) {
         var req = byEmail(requesterEmail).orElse(null);
         if (req == null) return ResponseEntity.status(403).body(Map.of("message", "Login required"));
-        boolean allowed = isAdmin(req) || isLeader(clubId, req.getId());
+        boolean allowed = isAdmin(req) || isLeader(clubId, req.getId()) || isCoLeader(clubId, req.getId());
         if (!allowed) return ResponseEntity.status(403).body(Map.of("message", "Forbidden"));
 
         var nOpt = news.findById(newsId);
@@ -289,6 +292,32 @@ public class ClubController {
 
         var target = targetOpt.get();
         target.setRole(ClubMember.Role.LEADER);
+        members.save(target);
+
+        return ResponseEntity.ok(Map.of("status", "promoted", "userId", targetUserId, "role", "LEADER"));
+    }
+
+    @PostMapping("/{clubId}/members/{targetUserId}/make-co_leader")
+    public ResponseEntity<?> makeCoLeader(@PathVariable Long clubId,
+                                        @PathVariable Long targetUserId,
+                                        @RequestParam String requesterEmail) {
+        var requesterOpt = users.findByEmail(requesterEmail);
+        if (requesterOpt.isEmpty()) return ResponseEntity.status(403).body(Map.of("message", "Login Required"));
+        var requester = requesterOpt.get();
+
+        boolean requesterIsAdmin = requester.getRole() == User.Role.ADMIN;
+        boolean requesterIsLeader = members.existsByClubIdAndUserId(clubId, requester.getId()) &&
+                members.findByClubIdAndUserId(clubId, requester.getId())
+                        .map(cm -> cm.getRole() == ClubMember.Role.LEADER).orElse(false);
+
+        if (!(requesterIsAdmin || requesterIsLeader)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Not allowed"));
+        }
+        var targetOpt = members.findByClubIdAndUserId(clubId, targetUserId);
+        if (targetOpt.isEmpty()) return ResponseEntity.status(404).body(Map.of("message", "User is not a member of this club"));
+
+        var target = targetOpt.get();
+        target.setRole(Role.CO_LEADER);
         members.save(target);
 
         return ResponseEntity.ok(Map.of("status", "promoted", "userId", targetUserId, "role", "LEADER"));
