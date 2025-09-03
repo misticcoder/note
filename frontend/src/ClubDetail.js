@@ -13,7 +13,6 @@ export default function ClubDetail() {
 
     const [myStatus, setMyStatus] = useState({ isMember: false, hasPending: false, requestId: null });
 
-
     const clubId = (() => {
         const m = (window.location.hash || "").match(/^#\/clubs\/(\d+)/i);
         return m ? Number(m[1]) : null;
@@ -22,6 +21,10 @@ export default function ClubDetail() {
     const isAdmin = String(user?.role || "").toUpperCase() === "ADMIN";
     const isLeader = !!user && members.some(m => m.userId === user.id && m.role === "LEADER");
     const canManage = isAdmin || isLeader;
+
+    // derive membership from both sources (status + members list)
+    const isMemberFromList = !!user && members.some(m => m.userId === user.id);
+    const effectiveIsMember = myStatus.isMember || isMemberFromList;
 
 
     const requestJoinClub = async () => {
@@ -55,6 +58,29 @@ export default function ClubDetail() {
         setPending(prev => prev.filter(p => p.id !== myStatus.requestId && p.userId !== user.id));
     };
 
+    // NEW: Leave the club if already a member
+    const leaveClub = async () => {
+        if (!user) return;
+        if (!window.confirm("Are you sure you want to leave this club?")) return;
+
+        // Prevent leaders/admins from using Leave here if you want; otherwise they can leave too.
+        // Example guard (optional):
+        // if (isLeader) { alert("Leaders cannot leave. Transfer leadership first."); return; }
+
+        const res = await fetch(
+            `/api/clubs/${clubId}/leave?requesterEmail=${encodeURIComponent(user.email)}`,
+            { method: "POST" }
+        );
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            alert(body.message || "Failed to leave club");
+            return;
+        }
+
+        // Update local state: no longer a member
+        setMyStatus({ isMember: false, hasPending: false, requestId: null });
+        setMembers(prev => prev.filter(m => m.userId !== user.id));
+    };
 
     // Build a quick lookup: userId -> {username, email, role}
     const userMap = useMemo(() => {
@@ -220,30 +246,26 @@ export default function ClubDetail() {
                             {leaderNames.length > 0 ? (
                                 leaderNames.map((ln, i) => (
                                     <span key={i} style={s.leaderChip} title="Club Leader">
-          ⭐ {ln}
-        </span>
+                                        ⭐ {ln}
+                                    </span>
                                 ))
                             ) : (
                                 <span style={s.leaderChipMuted}>No leader assigned</span>
                             )}
                         </div>
 
-                        {/* Join button logic */}
-                        {!canManage && user && (
-                            myStatus.isMember ? (
-                                <button style={{ ...s.primaryBtn, opacity: 0.6, cursor: "default" }} disabled>
-                                    Member
-                                </button>
+                        {/* Join/Cancel/Leave button logic */}
+                        { /* change '!canManage && user' to 'user' if leaders/admins should also be able to leave */ }
+                        {(!canManage && user) && (
+                            effectiveIsMember ? (
+                                <button onClick={leaveClub} style={s.dangerBtn}>Leave</button>
                             ) : myStatus.hasPending ? (
-                                <button onClick={cancelJoinRequest} style={s.dangerBtn}>
-                                    Cancel Request
-                                </button>
+                                <button onClick={cancelJoinRequest} style={s.dangerBtn}>Cancel Request</button>
                             ) : (
-                                <button onClick={requestJoinClub} style={s.primaryBtn}>
-                                    Join
-                                </button>
+                                <button onClick={requestJoinClub} style={s.primaryBtn}>Join</button>
                             )
                         )}
+
 
                     </div>
 

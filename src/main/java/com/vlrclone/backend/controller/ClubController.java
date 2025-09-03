@@ -2,7 +2,7 @@
 package com.vlrclone.backend.controller;
 
 import com.vlrclone.backend.model.*;
-import com.vlrclone.backend.model.ClubMember.ClubRole;
+import com.vlrclone.backend.model.ClubMember.Role;
 import com.vlrclone.backend.model.JoinRequest.Status;
 import com.vlrclone.backend.repository.*;
 import org.springframework.http.ResponseEntity;
@@ -25,9 +25,9 @@ public class ClubController {
 
     /* Utility */
     private Optional<User> byEmail(String email){ return users.findByEmail(email); }
-    private boolean isAdmin(User u){ return u.getRole() == Role.ADMIN; }
+    private boolean isAdmin(User u){ return u.getRole() == com.vlrclone.backend.model.Role.ADMIN; }
     private boolean isLeader(Long clubId, Long userId){
-        return members.existsByClubIdAndUserIdAndRole(clubId, userId, ClubRole.LEADER);
+        return members.existsByClubIdAndUserIdAndRole(clubId, userId, Role.LEADER);
     }
 
     /* Public */
@@ -67,7 +67,7 @@ public class ClubController {
 
         var cm = members.findByClubIdAndUserId(clubId, userId)
                 .orElseGet(()->{ var m=new ClubMember(); m.setClubId(clubId); m.setUserId(userId); return m; });
-        cm.setRole(ClubRole.LEADER);
+        cm.setRole(Role.LEADER);
         return ResponseEntity.ok(members.save(cm));
     }
 
@@ -115,7 +115,7 @@ public class ClubController {
             members.findByClubIdAndUserId(clubId, jr.getUserId())
                     .orElseGet(()->{
                         var m = new ClubMember();
-                        m.setClubId(clubId); m.setUserId(jr.getUserId()); m.setRole(ClubRole.MEMBER);
+                        m.setClubId(clubId); m.setUserId(jr.getUserId()); m.setRole(Role.MEMBER);
                         return members.save(m);
                     });
         } else if ("reject".equalsIgnoreCase(decision)) {
@@ -204,4 +204,33 @@ public class ClubController {
         requests.deleteById(requestId);
         return ResponseEntity.ok(Map.of("status","cancelled"));
     }
+
+    @PostMapping("/{clubId}/leave")
+    public ResponseEntity<?> leaveClub(@PathVariable Long clubId,
+                                       @RequestParam String requesterEmail) {
+        var u = users.findByEmail(requesterEmail).orElse(null);
+        if (u == null) return ResponseEntity.status(403).body(Map.of("message","Login required"));
+        var m = members.findByClubIdAndUserId(clubId, u.getId())
+                .orElse(null);
+        if (m == null) return ResponseEntity.status(400).body(Map.of("message","You are not a member"));
+
+        // Optional: prevent the last leader from leaving
+        if (m.getRole() == Role.LEADER) {
+            long leaderCount = members.countByClubIdAndRole(clubId, Role.LEADER);
+            if (leaderCount <= 1) {
+                return ResponseEntity.status(409).body(Map.of(
+                        "message","You are the only leader. Assign another leader before leaving."
+                ));
+            }
+        }
+
+        members.deleteById(m.getId());
+        // If a pending request exists (shouldn’t if member, but clean up anyway)
+        requests.findByClubIdAndUserId(clubId, u.getId())
+                .filter(r -> r.getStatus() == JoinRequest.Status.PENDING)
+                .ifPresent(r -> requests.deleteById(r.getId()));
+
+        return ResponseEntity.ok(Map.of("status","left"));
+    }
+
 }

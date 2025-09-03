@@ -215,13 +215,14 @@ function Dashboard() {
                     </div>
 
                     {/* Clubs */}
+
+
                     <div style={{ width: clubsWidth }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <h3 style={{ margin: 0 }}>Clubs</h3>
-                            {isAdmin && (
-                                <button style={styles.addBtn} onClick={openClubModal}>Add Club</button>
-                            )}
-                        </div>
+
+                        <h3>Clubs</h3>
+                        {isAdmin && (
+                            <button style={styles.addBtn} onClick={openClubModal}>Add Club</button>
+                        )}
 
                         {clubs.map((club) => (
                             <div
@@ -233,16 +234,6 @@ function Dashboard() {
                                 <div style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                     {club.name}
                                 </div>
-
-                                {user && (
-                                    <button
-                                        onClick={(e) => requestJoin(club.id, e)}
-                                        style={{ ...styles.smallBtn, marginLeft: 8 }}
-                                        title="Request to Join"
-                                    >
-                                        Join
-                                    </button>
-                                )}
                             </div>
                         ))}
 
