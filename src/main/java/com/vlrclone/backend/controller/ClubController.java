@@ -353,11 +353,26 @@ public class ClubController {
     }
 
     @PatchMapping("/{clubId}")
-    public ResponseEntity<?> update(@PathVariable("clubId") Long id, @RequestBody Map<String,Object> body) {
-        return clubs.findById(id).map(c -> {
-            if (body.containsKey("name")) c.setName(String.valueOf(body.get("name")));
-            if (body.containsKey("description")) c.setDescription(String.valueOf(body.get("description")));
-            return ResponseEntity.ok(clubs.save(c));
-        }).orElse(ResponseEntity.status(404).body((Club) Map.of("message","Club not found")));
+    public ResponseEntity<?> update(@PathVariable("clubId") Long clubId,
+                                    @RequestBody Map<String, Object> body) {
+        var opt = clubs.findById(clubId);
+        if (opt.isEmpty()) { return ResponseEntity.status(404).body(Map.of("message", "Club not found"));}
+        var c = opt.get();
+        if (body.containsKey("name")) { c.setName(Objects.toString(body.get("name"), c.getName())); }
+        if (body.containsKey("description")) {
+            c.setDescription(Objects.toString(body.get("description"), c.getDescription()));
+        }
+        var saved = clubs.save(c);
+        // Return the updated club (or a simple JSON map if you prefer)
+        return ResponseEntity.ok(saved);
     }
+    @DeleteMapping("/{clubId}")
+    public ResponseEntity<?> delete(@PathVariable("clubId") Long id) {
+        if (!clubs.existsById(id)) {
+            return ResponseEntity.status(404).body(Map.of("message","Club not found"));
+        }
+        clubs.deleteById(id);
+        return ResponseEntity.ok(Map.of("status","success"));
+    }
+
 }

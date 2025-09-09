@@ -98,7 +98,7 @@ export default function Clubs() {
     return (
         <div style={styles.wrap}>
             <div style={styles.headerRow}>
-                <h2 style={{ margin: 0 }}>Clubs</h2>
+                <h2>Clubs</h2>
                 <div>
                     <input
                         placeholder="Search by name/description/ID…"
@@ -187,7 +187,7 @@ export default function Clubs() {
 
 const styles = {
     wrap: { padding: 20, maxWidth: 1100, margin: "0 auto" },
-    headerRow: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+    headerRow: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 0, marginTop: 30 },
     search: { padding: "6px 8px", border: "1px solid #ccc", borderRadius: 6, marginRight: 12 },
     backLink: { textDecoration: "none", border: "1px solid #ccc", padding: "6px 10px", borderRadius: 6, background: "#f8f8f8", color: "#333" },
 
