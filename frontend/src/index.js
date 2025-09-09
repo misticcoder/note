@@ -8,6 +8,7 @@ import AdminUsers from "./AdminUsers";
 import ThreadList from "./ThreadList";
 import ThreadPage from "./ThreadPage";
 import ClubDetail from "./ClubDetail";
+import Clubs from "./Clubs";
 
 function App() {
     const [route, setRoute] = useState(window.location.hash || "#/");
@@ -23,10 +24,11 @@ function App() {
     }, []);
 
     let Page = Dashboard;
-    if (route === "#/threads") Page = ThreadList;
     if (route === "#/admin/users") Page = AdminUsers;
+    if (route === "#/threads") Page = ThreadList;
     if (route === "#/admin/threads") Page = ThreadList;
     if (route.startsWith("#/thread/")) Page = () => <ThreadPage/>
+    if (route === "#/admin/clubs") Page = Clubs;
     if (route === "#/clubs") Page = Clubs;
     if (route.startsWith("#/clubs/")) Page = () => <ClubDetail />
 

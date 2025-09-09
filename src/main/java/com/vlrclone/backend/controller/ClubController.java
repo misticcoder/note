@@ -4,6 +4,7 @@ package com.vlrclone.backend.controller;
 import com.vlrclone.backend.model.*;
 import com.vlrclone.backend.model.ClubMember.Role;
 import com.vlrclone.backend.model.JoinRequest.Status;
+import com.vlrclone.backend.model.Club;
 import com.vlrclone.backend.repository.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -349,5 +350,14 @@ public class ClubController {
         members.save(target);
 
         return ResponseEntity.ok(Map.of("status", "demoted", "userId", targetUserId, "role", "MEMBER"));
+    }
+
+    @PatchMapping("/{clubId}")
+    public ResponseEntity<?> update(@PathVariable("clubId") Long id, @RequestBody Map<String,Object> body) {
+        return clubs.findById(id).map(c -> {
+            if (body.containsKey("name")) c.setName(String.valueOf(body.get("name")));
+            if (body.containsKey("description")) c.setDescription(String.valueOf(body.get("description")));
+            return ResponseEntity.ok(clubs.save(c));
+        }).orElse(ResponseEntity.status(404).body((Club) Map.of("message","Club not found")));
     }
 }

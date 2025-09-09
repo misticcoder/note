@@ -72,7 +72,8 @@ const Header = () => {
                             Threads
                         </a>
                     )}
-                    {showClubs && <a href="#clubs" style={styles.navLink}>Clubs</a>}
+                    {showClubs && <a href={String(user?.role || '').toUpperCase() === 'ADMIN' ? "#/admin/clubs" : "#/clubs"}
+                                     style={styles.navLink}>Clubs</a>}
                     {showForms && <a href="#forms" style={styles.navLink}>Forms</a>}
                     {showTalks && <a href="#talks" style={styles.navLink}>Talks</a>}
 
