@@ -36,7 +36,6 @@ function Dashboard() {
         function handleResize() { setWindowWidth(window.innerWidth); }
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAdmin]);
 
     const hideThreads = windowWidth < 1000;
@@ -241,6 +240,8 @@ function Dashboard() {
                             <div style={{ ...styles.Clubs, justifyContent: "center" }}>No clubs yet.</div>
                         )}
                     </div>
+
+                    {/* Events */}
 
                     {!hideEvents && (
                         <div style={{ width: eventsWidth }}>
