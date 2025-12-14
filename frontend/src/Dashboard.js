@@ -12,8 +12,17 @@ function Dashboard() {
     const { user } = useContext(AuthContext);
 
     // Thread modal state
-    const [showThreadModal, setShowThreadModel] = useState(false);
+    const [showThreadModal, setShowThreadModal] = useState(false);
     const [newThread, setNewThread] = useState({ title: "", content: "" });
+
+    // News modal state
+    const [showNewsModal, setShowNewsModal] = useState(false);
+    const [newNews, setNewNews] = useState({ title: "", content: "" });
+    // #region agent log
+    useEffect(() => {
+        fetch('http://127.0.0.1:7242/ingest/eca2c071-a6e9-463e-b837-0f74ac8dbf00',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dashboard.js:20',message:'Modal state initialized',data:{showThreadModal,showNewsModal},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    }, [showThreadModal, showNewsModal]);
+    // #endregion
 
     // Club modal state
     const [showClubModal, setShowClubModal] = useState(false);
@@ -70,7 +79,7 @@ function Dashboard() {
             }
             setThreads(prev => [savedThread, ...prev]);
             setNewThread({ title: "", content: "" });
-            setShowThreadModel(false);
+            setShowThreadModal(false);
         } catch (err) {
             console.error("Failed to save thread", err);
             alert("Failed to save thread");
@@ -164,6 +173,38 @@ function Dashboard() {
         }
     };
 
+
+    // News modal handlers
+    const handleNewsChange = (e) => {
+        const { name, value } = e.target;
+        setNewNews(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleNewsSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await fetch("/api/news", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newNews),
+            });
+            const savedNews = await res.json();
+            if (!res.ok) {
+                alert(savedNews.message || "Failed to create News");
+                return;
+            }
+            setNews(prev => [savedNews, ...prev]);
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/eca2c071-a6e9-463e-b837-0f74ac8dbf00',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dashboard.js:192',message:'Resetting newNews',data:{resetValue:{title:"",content:""},expectedValue:{headline:"",body:""},newNewsBefore:newNews},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
+            setNewNews({ title: "", content: "" });
+            setShowNewsModal(false);
+        } catch (err) {
+            console.error("Failed to save news", err);
+            alert("Failed to save news");
+        }
+    };
+
     return (
         <main style={styles.Dashboard}>
             <div style={styles.container}>
@@ -172,7 +213,7 @@ function Dashboard() {
                         <div style={{ width: threadsWidth }}>
                             <h3>Threads</h3>
                             {isAdmin && (
-                                <button style={styles.addBtn} onClick={() => setShowThreadModel(true)}>Add Thread</button>
+                                <button style={styles.addBtn} onClick={() => setShowThreadModal(true)}>Add Thread</button>
                             )}
                             {threads.map((thread, idx) => (
                                 <div
@@ -185,30 +226,49 @@ function Dashboard() {
                             ))}
                         </div>
                     )}
+                    {/* News */}
 
                     <div style={{ width: newsWidth }}>
                         <h3>News</h3>
                         {isAdmin && (
-                            <button style={styles.addBtn} onClick={() => setShowThreadModel(true)}>Add News</button>
+                            <button style={styles.addBtn} onClick={() => {
+                                // #region agent log
+                                fetch('http://127.0.0.1:7242/ingest/eca2c071-a6e9-463e-b837-0f74ac8dbf00',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dashboard.js:226',message:'Add News button clicked',data:{showNewsModalBefore:showNewsModal},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                                // #endregion
+                                setShowNewsModal(true);
+                                // #region agent log
+                                setTimeout(() => fetch('http://127.0.0.1:7242/ingest/eca2c071-a6e9-463e-b837-0f74ac8dbf00',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dashboard.js:228',message:'After setShowNewsModel(true)',data:{showNewsModalAfter:showNewsModal},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{}), 10);
+                                // #endregion
+                            }}>Add News</button>
                         )}
                         {headNews && (
                             <div
                                 style={styles.HeadNews}
-                                onClick={() => alert(`Clicked head news: ${headNews.headline}`)}
+                                onClick={() => {
+                                    // #region agent log
+                                    fetch('http://127.0.0.1:7242/ingest/eca2c071-a6e9-463e-b837-0f74ac8dbf00',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dashboard.js:231',message:'Head news clicked',data:{newsId:news?.id,headNewsId:headNews?.id,newsLength:news?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                                    // #endregion
+                                    window.location.hash = `#/news/${headNews.id}`;
+                                }}
                             >
-                                {headNews.imageUrl && <img src={headNews.imageUrl} alt={headNews.headline} style={styles.HeadNewsImage} />}
+                                {headNews.imageUrl && <img src={headNews.imageUrl} alt={headNews.title} style={styles.HeadNewsImage} />}
                                 <div style={styles.HeadNewsOverlay}>
-                                    <h4 style={{ margin: 0 }}>{headNews.headline}</h4>
+                                    <h4 style={{ margin: 0 }}>{headNews.title}</h4>
                                 </div>
                             </div>
                         )}
                         {otherNews.map((item, idx) => (
                             <div
                                 key={idx}
-                                onClick={() => alert(`Clicked news: ${item.headline}`)}
+                                onClick={() => {
+                                    // #region agent log
+                                    fetch('http://127.0.0.1:7242/ingest/eca2c071-a6e9-463e-b837-0f74ac8dbf00',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dashboard.js:242',message:'Other news clicked',data:{itemId:item?.id,newsId:news?.id,newsLength:news?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                                    // #endregion
+                                    window.location.hash = `#/news/${item.id}`;
+                                }}
                                 style={styles.News}
                             >
-                                {item.headline}
+                                {item.title}
                             </div>
                         ))}
                     </div>
@@ -247,7 +307,7 @@ function Dashboard() {
                         <div style={{ width: eventsWidth }}>
                             <h3>Events</h3>
                             {isAdmin && (
-                                <button style={styles.addBtn} onClick={() => setShowThreadModel(true)}>Add Event</button>
+                                <button style={styles.addBtn} onClick={() => { window.location.hash = "#/events"; }}>Add Event</button>
                             )}
                             {events.map((event, idx) => (
                                 <div
@@ -287,7 +347,36 @@ function Dashboard() {
                                 style={styles.textarea}
                             />
                             <button type="submit" style={styles.submitBtn}>Save Thread</button>
-                            <button type="button" onClick={() => setShowThreadModel(false)} style={styles.cancelBtn}>Cancel</button>
+                            <button type="button" onClick={() => setShowThreadModal(false)} style={styles.cancelBtn}>Cancel</button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* News Modal */}
+            {showNewsModal && (
+                <div style={styles.ThreadWindow}>
+                    <div style={styles.ThreadContent}>
+                        <h3>Add New News</h3>
+                        <form onSubmit={handleNewsSubmit}>
+                            <input
+                                name="title"
+                                placeholder="News Title"
+                                value={newNews.title}
+                                onChange={handleNewsChange}
+                                required
+                                style={styles.input}
+                            />
+                            <textarea
+                                name="content"
+                                placeholder="News Content"
+                                value={newNews.content}
+                                onChange={handleNewsChange}
+                                required
+                                style={styles.textarea}
+                            />
+                            <button type="submit" style={styles.submitBtn}>Save News</button>
+                            <button type="button" onClick={() => setShowNewsModal(false)} style={styles.cancelBtn}>Cancel</button>
                         </form>
                     </div>
                 </div>
