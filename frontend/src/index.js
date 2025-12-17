@@ -11,8 +11,6 @@ import ClubDetail from "./ClubDetail";
 import Clubs from "./Clubs";
 import Events from "./Events";
 import EventPage from "./EventPage";
-import NewsPage from "./NewsPage";
-import NewsList from "./NewsList";
 
 function App() {
     const [route, setRoute] = useState(window.location.hash || "#/");
@@ -20,32 +18,32 @@ function App() {
     useEffect(() => {
         const onHashChange = () => setRoute(window.location.hash || "#/");
         window.addEventListener("hashchange", onHashChange);
+        // ensure we always have a hash
         if (!window.location.hash) {
             window.location.hash = "#/";
         }
         return () => window.removeEventListener("hashchange", onHashChange);
     }, []);
 
-    let Page = <Dashboard />;
+    let Page = Dashboard;
+    if (route === "#/admin/users") Page = AdminUsers;
+    if (route === "#/threads") Page = ThreadList;
+    if (route === "#/admin/threads") Page = ThreadList;
+    if (route.startsWith("#/thread/")) Page = () => <ThreadPage/>
+    if (route === "#/admin/clubs") Page = Clubs;
+    if (route === "#/clubs") Page = Clubs;
+    if (route.startsWith("#/clubs/")) Page = () => <ClubDetail />
 
-    if (route === "#/admin/users") Page = <AdminUsers />;
-    else if (route === "#/threads") Page = <ThreadList />;
-    else if (route === "#/admin/threads") Page = <ThreadList />;
-    else if (route.startsWith("#/thread/")) Page = <ThreadPage />;
-    else if (route === "#/admin/clubs") Page = <Clubs />;
-    else if (route === "#/clubs") Page = <Clubs />;
-    else if (route.startsWith("#/clubs/")) Page = <ClubDetail />;
-    else if (route === "#/admin/events") Page = <Events />;
-    else if (route === "#/events") Page = <Events />;
-    else if (route.startsWith("#/events/")) Page = <EventPage />;
-    else if (route.startsWith("#/news/")) Page = <NewsPage />;
-    else if (route === "#/admin/news") Page = <NewsList />;
-    else if (route === "#/news") Page = <NewsList />;
+    if (route === "#/admin/events") Page = Events;
+    if (route === "#/events") Page = Events;
+    if (route.startsWith("#/events/")) Page = () => <EventPage />
+
+
 
     return (
         <>
             <Header />
-            {Page}
+            <Page />
         </>
     );
 }

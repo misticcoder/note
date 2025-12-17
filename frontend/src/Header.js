@@ -41,7 +41,7 @@ const Header = () => {
     }, []);
 
     const showLogin = windowWidth > 800;
-    const showNews = windowWidth > 700;
+    const showTalks = windowWidth > 700;
     const showEvents = windowWidth > 600;
     const showClubs = windowWidth > 500;
     const showThreads = windowWidth > 400;
@@ -76,9 +76,8 @@ const Header = () => {
                                      style={styles.navLink}>Clubs</a>}
                     {showEvents && <a href={String(user?.role || '').toUpperCase() === 'ADMIN' ? "#/admin/events" : "#/events"}
                                      style={styles.navLink}>Events</a>}
-                    {showNews && <a href={String(user?.role || '').toUpperCase() === 'ADMIN' ? "#/admin/news" : "#/news"}
-                                    style={styles.navLink}>News</a>}
-                            
+                    {showTalks && <a href="#talks" style={styles.navLink}>Talks</a>}
+
                     {isAdmin && (
                         <a
                             href="#/admin/users"
