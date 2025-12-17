@@ -231,44 +231,15 @@ function Dashboard() {
                     <div style={{ width: newsWidth }}>
                         <h3>News</h3>
                         {isAdmin && (
-                            <button style={styles.addBtn} onClick={() => {
-                                // #region agent log
-                                fetch('http://127.0.0.1:7242/ingest/eca2c071-a6e9-463e-b837-0f74ac8dbf00',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dashboard.js:226',message:'Add News button clicked',data:{showNewsModalBefore:showNewsModal},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                                // #endregion
-                                setShowNewsModal(true);
-                                // #region agent log
-                                setTimeout(() => fetch('http://127.0.0.1:7242/ingest/eca2c071-a6e9-463e-b837-0f74ac8dbf00',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dashboard.js:228',message:'After setShowNewsModel(true)',data:{showNewsModalAfter:showNewsModal},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{}), 10);
-                                // #endregion
-                            }}>Add News</button>
+                            <button style={styles.addBtn} onClick={() => setShowNewsModal(true)}>Add News</button>
                         )}
-                        {headNews && (
+                        {news.map((news, idx) => (
                             <div
-                                style={styles.HeadNews}
-                                onClick={() => {
-                                    // #region agent log
-                                    fetch('http://127.0.0.1:7242/ingest/eca2c071-a6e9-463e-b837-0f74ac8dbf00',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dashboard.js:231',message:'Head news clicked',data:{newsId:news?.id,headNewsId:headNews?.id,newsLength:news?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-                                    // #endregion
-                                    window.location.hash = `#/news/${headNews.id}`;
-                                }}
-                            >
-                                {headNews.imageUrl && <img src={headNews.imageUrl} alt={headNews.title} style={styles.HeadNewsImage} />}
-                                <div style={styles.HeadNewsOverlay}>
-                                    <h4 style={{ margin: 0 }}>{headNews.title}</h4>
-                                </div>
-                            </div>
-                        )}
-                        {otherNews.map((item, idx) => (
-                            <div
+                                style={styles.Threads}
                                 key={idx}
-                                onClick={() => {
-                                    // #region agent log
-                                    fetch('http://127.0.0.1:7242/ingest/eca2c071-a6e9-463e-b837-0f74ac8dbf00',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dashboard.js:242',message:'Other news clicked',data:{itemId:item?.id,newsId:news?.id,newsLength:news?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-                                    // #endregion
-                                    window.location.hash = `#/news/${item.id}`;
-                                }}
-                                style={styles.News}
+                                onClick={() => { window.location.hash = `#/news/${news.id}`; }}
                             >
-                                {item.title}
+                                {news.title}
                             </div>
                         ))}
                     </div>

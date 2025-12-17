@@ -11,6 +11,8 @@ import ClubDetail from "./ClubDetail";
 import Clubs from "./Clubs";
 import Events from "./Events";
 import EventPage from "./EventPage";
+import NewsPage from "./NewsPage";
+import NewsList from "./NewsList";
 
 function App() {
     const [route, setRoute] = useState(window.location.hash || "#/");
@@ -34,10 +36,13 @@ function App() {
     if (route === "#/clubs") Page = Clubs;
     if (route.startsWith("#/clubs/")) Page = () => <ClubDetail />
 
+    if (route === "#/news") Page = NewsList;
+    if (route === "#/admin/news") Page = NewsList;
+    if (route.startsWith("#/news/")) Page = () => <NewsPage/>
+
     if (route === "#/admin/events") Page = Events;
     if (route === "#/events") Page = Events;
     if (route.startsWith("#/events/")) Page = () => <EventPage />
-
 
 
     return (
