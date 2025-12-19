@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "./AuthContext";
 
-function Dashboard() {
+function Home() {
     const [threads, setThreads] = useState([]);
     const [news, setNews] = useState([]);
     const [events, setEvents] = useState([]);
@@ -18,11 +18,7 @@ function Dashboard() {
     // News modal state
     const [showNewsModal, setShowNewsModal] = useState(false);
     const [newNews, setNewNews] = useState({ title: "", content: "" });
-    // #region agent log
-    useEffect(() => {
-        fetch('http://127.0.0.1:7242/ingest/eca2c071-a6e9-463e-b837-0f74ac8dbf00',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dashboard.js:20',message:'Modal state initialized',data:{showThreadModal,showNewsModal},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    }, [showThreadModal, showNewsModal]);
-    // #endregion
+
 
     // Club modal state
     const [showClubModal, setShowClubModal] = useState(false);
@@ -195,7 +191,7 @@ function Dashboard() {
             }
             setNews(prev => [savedNews, ...prev]);
             // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/eca2c071-a6e9-463e-b837-0f74ac8dbf00',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dashboard.js:192',message:'Resetting newNews',data:{resetValue:{title:"",content:""},expectedValue:{headline:"",body:""},newNewsBefore:newNews},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            fetch('http://127.0.0.1:7242/ingest/eca2c071-a6e9-463e-b837-0f74ac8dbf00',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Home.js:192',message:'Resetting newNews',data:{resetValue:{title:"",content:""},expectedValue:{headline:"",body:""},newNewsBefore:newNews},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
             // #endregion
             setNewNews({ title: "", content: "" });
             setShowNewsModal(false);
@@ -443,4 +439,4 @@ const styles = {
     cancelBtn: { padding: "8px 12px", backgroundColor: "#ccc", color: "#000", border: "none", borderRadius: "4px", cursor: "pointer" },
 };
 
-export default Dashboard;
+export default Home;

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
-import Dashboard from "./Dashboard";
+import Home from "./Home";
 import Header from "./Header";
 import { AuthProvider } from "./AuthContext";
 import AdminUsers from "./AdminUsers";
@@ -27,7 +27,7 @@ function App() {
         return () => window.removeEventListener("hashchange", onHashChange);
     }, []);
 
-    let Page = Dashboard;
+    let Page = Home;
     if (route === "#/admin/users") Page = AdminUsers;
     if (route === "#/threads") Page = ThreadList;
     if (route === "#/admin/threads") Page = ThreadList;

@@ -1,0 +1,96 @@
+/* Root */
+.dashboard-root {
+    display: flex;
+    min-height: 100vh;
+    background: #020617;
+    color: #e5e7eb;
+    font-family: Inter, system-ui, sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 240px;
+    background: #020617;
+    border-right: 1px solid #1e293b;
+    padding: 24px;
+}
+
+.logo {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 32px;
+}
+
+.nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nav-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.nav-item:hover,
+.nav-item.active {
+    background: #020617;
+    color: #e5e7eb;
+}
+
+/* Main */
+.dashboard-main {
+    flex: 1;
+    padding: 32px;
+}
+
+/* Section headers */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 32px 0 16px;
+}
+
+.section-header h2 {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+/* Buttons */
+.btn-primary {
+    background: #ef4444;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+/* Cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.card {
+    background: #020617;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.card-label {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.card-value {
+    font-size: 24px;
+    font-weight: 600;
+    margin-top: 4px;
+}
