@@ -1,0 +1,18 @@
+body {
+    background-color: #2f2f2f;
+    font-family: "Roboto",sans-serif;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+.title{
+    color: #FFFFE3;
+}
+.page{
+    width: 100%;
+    max-width: 1200px;
+    box-sizing: border-box;
+    background-color:#4a4a4a;
+    margin: 0 auto;
+    min-height: 100vh;
+}

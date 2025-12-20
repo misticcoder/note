@@ -25,7 +25,12 @@ function Home() {
     const [newClub, setNewClub] = useState({ name: "", description: "", leaderUserId: "" });
     const isAdmin = String(user?.role || "").toUpperCase() === "ADMIN";
 
+    // Hover state
+    const [hoveredId, setHoveredId] = useState(null);
+
+
     useEffect(() => {
+        document.title = "Home | InfCom";
         fetch("/api/threads").then(res => res.json()).then(setThreads).catch(() => setThreads([]));
         fetch("/api/news").then(res => res.json()).then(setNews).catch(() => setNews([]));
         fetch("/api/events").then(res => res.json()).then(setEvents).catch(() => setEvents([]));
@@ -190,9 +195,7 @@ function Home() {
                 return;
             }
             setNews(prev => [savedNews, ...prev]);
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/eca2c071-a6e9-463e-b837-0f74ac8dbf00',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Home.js:192',message:'Resetting newNews',data:{resetValue:{title:"",content:""},expectedValue:{headline:"",body:""},newNewsBefore:newNews},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
+
             setNewNews({ title: "", content: "" });
             setShowNewsModal(false);
         } catch (err) {
@@ -201,39 +204,140 @@ function Home() {
         }
     };
 
+    const boxHover = {
+        transform: "translateY(-2px)",
+        boxShadow: "0 6px 16px rgba(0,0,0,0.25)",
+        backgroundColor: "#cac7c7"
+    };
+
+    const now = new Date();
+
+    const classifiedEvents = events.map(ev => {
+        const start = ev.startAt ? new Date(ev.startAt) : null;
+        const end = ev.endAt ? new Date(ev.endAt) : null;
+
+        const fallbackEnd = start
+            ? new Date(start.getTime() + 2 * 60 * 60 * 1000)
+            : null;
+
+        const effectiveEnd = end || fallbackEnd;
+
+        let status = "UPCOMING";
+        if (start && now >= start && effectiveEnd && now <= effectiveEnd) {
+            status = "LIVE";
+        } else if (effectiveEnd && now > effectiveEnd) {
+            status = "ENDED";
+        }
+
+        return { ...ev, _status: status };
+    });
+
+    const ongoingEvents = classifiedEvents.filter(e => e._status === "LIVE");
+    const upcomingEvents = classifiedEvents.filter(e => e._status === "UPCOMING");
+    const completedEvents = classifiedEvents.filter(e => e._status === "ENDED");
+
+    const renderEventRow = (event) => {
+        const now = new Date();
+        let label = "";
+
+        if (event._status === "LIVE") {
+            label = "LIVE";
+        } else if (event._status === "ENDED") {
+            label = "Ended";
+        } else if (event.startAt) {
+            const diff = new Date(event.startAt) - now;
+            const mins = Math.max(0, Math.floor(diff / 60000));
+            const d = Math.floor(mins / 1440);
+            const h = Math.floor((mins % 1440) / 60);
+            const m = mins % 60;
+
+            label = d > 0 ? `${d}d ${h}h` : h > 0 ? `${h}h ${m}m` : `${m}m`;
+        }
+
+        return (
+            <div
+                key={event.id}
+                style={{
+                    ...styles.Events,
+                    ...(hoveredId === `event-${event.id}` ? boxHover : {})
+                }}
+                onMouseEnter={() => setHoveredId(`event-${event.id}`)}
+                onMouseLeave={() => setHoveredId(null)}
+                onClick={() => (window.location.hash = `#/events/${event.id}`)}
+            >
+                <div style={styles.eventTitle}>{event.title}</div>
+                <div
+                    style={{
+                        ...styles.eventTime,
+                        ...(event._status === "LIVE"
+                            ? styles.livePill
+                            : event._status === "ENDED"
+                                ? styles.endedText
+                                : {})
+                    }}
+                >
+                    {label}
+                </div>
+            </div>
+        );
+    };
+
+
+
+
     return (
         <main style={styles.Dashboard}>
             <div style={styles.container}>
                 <div style={styles.flexRow}>
+                    {/* Thread */}
                     {!hideThreads && (
-                        <div style={{ width: threadsWidth }}>
-                            <h3>Threads</h3>
+                        <div style={{width: threadsWidth, display: "flex", flexDirection: "column"}}>
+
+                            <h3 style={styles.col_title}>Threads</h3>
                             {isAdmin && (
-                                <button style={styles.addBtn} onClick={() => setShowThreadModal(true)}>Add Thread</button>
+                                <button style={styles.addBtn} onClick={() => setShowThreadModal(true)}>Add
+                                    Thread</button>
                             )}
-                            {threads.map((thread, idx) => (
-                                <div
-                                    style={styles.Threads}
-                                    key={idx}
-                                    onClick={() => { window.location.hash = `#/thread/${thread.id}`; }}
-                                >
-                                    {thread.title}
-                                </div>
-                            ))}
+                            <div >
+                                {threads.map((thread, idx) => (
+                                    <div
+                                        key={thread.id}
+                                        style={{
+                                            ...styles.Threads,
+                                            ...(hoveredId === `thread-${thread.id}` ? boxHover : {})
+                                        }}
+                                        onMouseEnter={() => setHoveredId(`thread-${thread.id}`)}
+                                        onMouseLeave={() => setHoveredId(null)}
+                                        onClick={() => {
+                                            window.location.hash = `#/thread/${thread.id}`;
+                                        }}
+                                    >
+                                        {thread.title}
+                                    </div>
+                                ))}
+                            </div>
+
                         </div>
                     )}
-                    {/* News */}
+                    {/* Daily News */}
 
-                    <div style={{ width: newsWidth }}>
-                        <h3>News</h3>
+                    <div style={{width: newsWidth, display: "flex", flexDirection: "column"}}>
+                        <h3 style={styles.col_title}>Daily News</h3>
                         {isAdmin && (
                             <button style={styles.addBtn} onClick={() => setShowNewsModal(true)}>Add News</button>
                         )}
                         {news.map((news, idx) => (
                             <div
-                                style={styles.Threads}
-                                key={idx}
-                                onClick={() => { window.location.hash = `#/news/${news.id}`; }}
+                                key={news.id}
+                                style={{
+                                    ...styles.News,
+                                    ...(hoveredId === `news-${news.id}` ? boxHover : {})
+                                }}
+                                onMouseEnter={() => setHoveredId(`news-${news.id}`)}
+                                onMouseLeave={() => setHoveredId(null)}
+                                onClick={() => {
+                                    window.location.hash = `#/news/${news.id}`;
+                                }}
                             >
                                 {news.title}
                             </div>
@@ -243,9 +347,9 @@ function Home() {
                     {/* Clubs */}
 
 
-                    <div style={{ width: clubsWidth }}>
+                    <div style={{width: clubsWidth, display: "flex", flexDirection: "column"}}>
 
-                        <h3>Clubs</h3>
+                        <h3 style={styles.col_title}>Clubs</h3>
                         {isAdmin && (
                             <button style={styles.addBtn} onClick={openClubModal}>Add Club</button>
                         )}
@@ -253,41 +357,77 @@ function Home() {
                         {clubs.map((club) => (
                             <div
                                 key={club.id}
-                                onClick={() => { window.location.hash = `#/clubs/${club.id}`; }}
-                                style={styles.Clubs}
-                                title={`Open ${club.name}`}
+                                style={{
+                                    ...styles.Clubs,
+                                    ...(hoveredId === `club-${club.id}` ? boxHover : {})
+                                }}
+                                onMouseEnter={() => setHoveredId(`club-${club.id}`)}
+                                onMouseLeave={() => setHoveredId(null)}
+                                onClick={() => {
+                                    window.location.hash = `#/clubs/${club.id}`;
+                                }}
                             >
-                                <div style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+
+                                <div style={{
+                                    flex: 1,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap"
+                                }}>
                                     {club.name}
                                 </div>
                             </div>
                         ))}
 
                         {clubs.length === 0 && (
-                            <div style={{ ...styles.Clubs, justifyContent: "center" }}>No clubs yet.</div>
+                            <div style={{...styles.Clubs, justifyContent: "center"}}>No clubs yet.</div>
                         )}
                     </div>
 
                     {/* Events */}
 
                     {!hideEvents && (
-                        <div style={{ width: eventsWidth }}>
-                            <h3>Events</h3>
+                        <div style={{ width: eventsWidth, display: "flex", flexDirection: "column" }}>
+                            <h3 style={styles.col_title}>ONGOING Events</h3>
+
                             {isAdmin && (
-                                <button style={styles.addBtn} onClick={() => { window.location.hash = "#/events"; }}>Add Event</button>
+                                <button style={styles.addBtn} onClick={() => {
+                                    window.location.hash = "#/events";
+                                }}>Add Event</button>
                             )}
-                            {events.map((event, idx) => (
-                                <div
-                                    key={idx}
-                                    onClick={() => alert(`Clicked event: ${event.name}`)}
-                                    style={styles.Events}
-                                >
-                                    {event.name} <br />
-                                    <small>{new Date(event.event_date_time).toLocaleString()}</small>
-                                </div>
-                            ))}
+
+                            <div>
+
+                                {ongoingEvents.length > 0 ? (
+                                    ongoingEvents.map(renderEventRow)
+                                ) : (
+                                    <div style={styles.emptyText}>No ongoing events</div>
+                                )}
+
+                            </div>
+
+                            <div>
+                                <h3 style={styles.col_title}>UPCOMING Events</h3>
+                                {upcomingEvents.length > 0 && (
+                                    <>
+                                        {upcomingEvents.slice(0, 5).map(renderEventRow)}
+                                    </>
+                                )}
+                            </div>
+
+                            <div>
+                                <h3 style={styles.col_title}>COMPLETED Events</h3>
+                                {completedEvents.length > 0 && (
+                                    <>
+                                        {completedEvents.slice(0, 3).map(renderEventRow)}
+                                    </>
+                                )}
+                            </div>
+
                         </div>
                     )}
+
+
                 </div>
             </div>
 
@@ -399,28 +539,47 @@ function Home() {
 }
 
 const boxBase = {
-    border: "1px solid #ccc",
-    padding: "10px",
-    marginBottom: "10px",
-    borderRadius: "4px",
+    borderTop: "1px solid #cacaca",
+    boxShadow: "0 5px 5px rgba(0,0,0,0.1)",
+    padding: "12px 12px",
     cursor: "pointer",
-    height: "40px",
+    minHeight: "37px",
     display: "flex",
     alignItems: "center",
-    backgroundColor: "#fff",
-    transition: "transform 0.3s ease, box-shadow 0.3s ease, backgroundColor 0.3s ease",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+    backgroundColor: "#605f5f",
+    transition: "transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease"
 };
 
-const styles = {
-    Dashboard: { paddingTop: "60px", height: "100vh", backgroundColor: "gray" },
-    container: { maxWidth: "1200px", margin: "0 auto", padding: "0 20px", height: "100%", backgroundColor: "#D50032" },
-    flexRow: { display: "flex", gap: "20px", height: "calc(100% - 20px)" },
 
-    Threads: { ...boxBase },
-    News: { ...boxBase, backgroundColor: "#f9f9f9" },
-    Clubs: { ...boxBase, backgroundColor: "#f9f9f9", justifyContent: "space-between" },
-    Events: { ...boxBase, backgroundColor: "#f9f9f9" },
+
+const styles = {
+    Dashboard: {
+        minHeight: "100vh",
+        backgroundColor: "#2f2f2f",
+        display: "flex",
+        justifyContent: "center"
+    },
+
+    container: {
+        width: "100%",
+        maxWidth: "1200px",
+        padding: "60px 24px 24px",
+        boxSizing: "border-box",
+        backgroundColor:"#4a4a4a"
+    },
+    flexRow: {
+        display: "flex",
+        gap: "24px",
+        alignItems: "flex-start",
+        justifyContent: "center",
+        width: "100%"
+    },
+
+
+    Threads: { ...boxBase, color:"#FFFFE3"},
+    News: { ...boxBase, color:"#FFFFE3"},
+    Clubs: { ...boxBase, color:"#FFFFE3"},
+    Events: { ...boxBase,color:"#FFFFE3"},
 
     HeadNews: { position: "relative", width: "100%", height: "150px", marginBottom: "15px", borderRadius: "6px", overflow: "hidden", boxShadow: "0 4px 10px rgba(0,0,0,0.2)", cursor: "pointer" },
     HeadNewsImage: { width: "100%", height: "100%", objectFit: "cover" },
@@ -437,6 +596,51 @@ const styles = {
 
     submitBtn: { padding: "8px 12px", backgroundColor: "#D50032", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" },
     cancelBtn: { padding: "8px 12px", backgroundColor: "#ccc", color: "#000", border: "none", borderRadius: "4px", cursor: "pointer" },
+
+    col_title:{ textTransform: "uppercase",
+        fontWeight: 700,
+        fontSize: "15px",
+        color: "#FFFFE3",
+        paddingLeft: "10px",
+        paddingRight: "15px",
+        display: "inline-block"},
+
+    eventRow: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "0 10px",
+        minHeight: 40,
+        borderTop: "1px solid #555",
+        cursor: "pointer"
+    },
+    eventTitle: {
+        flex: 1,
+        minWidth: 0,
+        overflow: "hidden",
+        whiteSpace: "nowrap",
+        textOverflow: "ellipsis",
+        color: "#FFFFE3"
+    },
+    eventTime: {
+        flexShrink: 0,
+        fontWeight: 600
+    },
+    livePill: {
+        background: "#d50032",
+        color: "#fff",
+        padding: "2px 8px",
+        borderRadius: 999
+    },
+    endedText: {
+        color: "#9aa0a6"
+    },
+    emptyText: {
+        ...boxBase,
+        padding: "8px 12px",
+        color: "#9aa0a6",
+        fontSize: "13px",
+        fontStyle: "italic"}
 };
 
 export default Home;

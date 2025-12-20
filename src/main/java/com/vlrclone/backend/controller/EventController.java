@@ -14,6 +14,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/events")
 public class EventController {
+
     private final EventRepository events;
     private final UserRepository users;
 
@@ -39,58 +40,105 @@ public class EventController {
     public ResponseEntity<?> get(@PathVariable Long id) {
         return events.findById(id)
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(404).body(Map.of("message","Event not found")));
+                .orElse(ResponseEntity.status(404)
+                        .body(Map.of("message", "Event not found")));
     }
 
-    // Admin: create
+    // ---------------- CREATE ----------------
     @PostMapping
-    public ResponseEntity<?> create(@RequestParam String requesterEmail,
-                                    @RequestBody Map<String, String> body) {
+    public ResponseEntity<?> create(
+            @RequestParam String requesterEmail,
+            @RequestBody Map<String, String> body
+    ) {
         var me = byEmail(requesterEmail);
-        if (!isAdmin(me)) return ResponseEntity.status(403).body(Map.of("message","Admin only"));
+        if (!isAdmin(me)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "Admin only"));
+        }
 
-        var name = (body.getOrDefault("name","")+"").trim();
-        var description = body.getOrDefault("description","");
-        var location = body.getOrDefault("location","");
-        var startStr = body.getOrDefault("startAt","");
-        var endStr = body.getOrDefault("endAt","");
+        var name = body.getOrDefault("name", "").trim();
+        var description = body.getOrDefault("description", "").trim();
+        var location = body.getOrDefault("location", "").trim();
+        var startStr = body.get("startAt");
+        var endStr = body.get("endAt");
 
-        if (name.isBlank())
-            return ResponseEntity.badRequest().body(Map.of("message","name and startAt are required"));
+        if (name.isBlank() || startStr == null || startStr.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "name and startAt are required"));
+        }
+
+        LocalDateTime startAt;
+        LocalDateTime endAt = null;
+
+        try {
+            startAt = LocalDateTime.parse(startStr);
+            if (endStr != null && !endStr.isBlank()) {
+                endAt = LocalDateTime.parse(endStr);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Invalid date format. Use ISO-8601."));
+        }
 
         var ev = new Event();
         ev.setTitle(name);
         ev.setContent(description);
-        ev.setLocation(location);
-        ev.setStartAt(LocalDateTime.parse(startStr)); // expects ISO-8601 (e.g., 2025-09-01T18:00:00)
-        if (!endStr.isBlank()) ev.setEndAt(LocalDateTime.parse(endStr));
+        ev.setLocation(location.isBlank() ? null : location);
+        ev.setStartAt(startAt);
+        ev.setEndAt(endAt);
 
         return ResponseEntity.ok(events.save(ev));
     }
 
+    // ---------------- UPDATE ----------------
     @PatchMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable("id") Long clubId,
-                                    @RequestBody Map<String, Object> body) {
-        var opt = events.findById(clubId);
-        if (opt.isEmpty()) { return ResponseEntity.status(404).body(Map.of("message", "Event not found"));}
-        var c = opt.get();
-        if (body.containsKey("title")) { c.setTitle(String.valueOf(body.get("name"))); }
-        if (body.containsKey("content")) { c.setContent(String.valueOf(body.get("content")));}
-        if (body.containsKey("location")) { c.setLocation(String.valueOf(body.get("location")));}
-        if (body.containsKey("startAt")) {c.setStartAt(LocalDateTime.parse(String.valueOf(body.get("startAt"))));}
-        if (body.containsKey("endAt")) {c.setEndAt(LocalDateTime.parse(String.valueOf(body.get("endAt"))));}
-        var saved = events.save(c);
-        // Return the updated club (or a simple JSON map if you prefer)
-        return ResponseEntity.ok(saved);
+    public ResponseEntity<?> update(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body
+    ) {
+        var opt = events.findById(id);
+        if (opt.isEmpty()) {
+            return ResponseEntity.status(404)
+                    .body(Map.of("message", "Event not found"));
+        }
+
+        var ev = opt.get();
+
+        if (body.containsKey("name")) {
+            ev.setTitle(String.valueOf(body.get("name")));
+        }
+        if (body.containsKey("description")) {
+            ev.setContent(String.valueOf(body.get("description")));
+        }
+        if (body.containsKey("location")) {
+            ev.setLocation(String.valueOf(body.get("location")));
+        }
+        if (body.containsKey("startAt")) {
+            ev.setStartAt(LocalDateTime.parse(String.valueOf(body.get("startAt"))));
+        }
+        if (body.containsKey("endAt")) {
+            ev.setEndAt(LocalDateTime.parse(String.valueOf(body.get("endAt"))));
+        }
+
+        return ResponseEntity.ok(events.save(ev));
     }
 
-    // Admin: delete
+    // ---------------- DELETE ----------------
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id, @RequestParam String requesterEmail) {
+    public ResponseEntity<?> delete(
+            @PathVariable Long id,
+            @RequestParam String requesterEmail
+    ) {
         var me = byEmail(requesterEmail);
-        if (!isAdmin(me)) return ResponseEntity.status(403).body(Map.of("message","Admin only"));
-        if (!events.existsById(id)) return ResponseEntity.status(404).body(Map.of("message","Event not found"));
+        if (!isAdmin(me)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "Admin only"));
+        }
+        if (!events.existsById(id)) {
+            return ResponseEntity.status(404)
+                    .body(Map.of("message", "Event not found"));
+        }
         events.deleteById(id);
-        return ResponseEntity.ok(Map.of("status","deleted","id", id));
+        return ResponseEntity.ok(Map.of("status", "deleted", "id", id));
     }
 }

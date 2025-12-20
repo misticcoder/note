@@ -1,5 +1,8 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "./AuthContext";
+import "./styles/club_header.css";
+import ClubHeader from "./ClubHeader";
+
 
 export default function ClubDetail() {
     const { user } = useContext(AuthContext);
@@ -360,57 +363,34 @@ export default function ClubDetail() {
         .map((m) => userLabel(m.userId));
 
     return (
-        <div style={s.page}>
-            <a href="#/clubs" style={s.backLink}>
-                ← Back
-            </a>
+
+
+        <div className="page">
+            <ClubHeader
+                club={{
+                    id: club.id,
+                    name: club.name,
+                    shortName: club.tag,
+                    website: club.website,
+                    twitter: club.twitter,
+                    country: club.country,
+                    logoUrl: club.logoUrl,
+                    description: club.description
+                }}
+                leaders={leaderNames}
+                membership={{
+                    isMember: effectiveIsMember,
+                    hasPending: myStatus.hasPending,
+                    isLeader
+                }}
+                activeTab="overview"
+                onJoin={requestJoinClub}
+                onLeave={leaveClub}
+                onCancelRequest={cancelJoinRequest}
+            />
+
 
             {/* Club header */}
-            <div style={{ ...s.card, ...s.headerCard }}>
-                <div style={s.headerTop}>
-                    <h2 style={s.title}>{club.name}</h2>
-                    <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                        <div style={s.chips}>
-                            {leaderNames.length > 0 ? (
-                                leaderNames.map((ln, i) => (
-                                    <span key={i} style={s.leaderChip} title="Club Leader">
-                    ⭐ {ln}
-                  </span>
-                                ))
-                            ) : (
-                                <span style={s.leaderChipMuted}>No leader assigned</span>
-                            )}
-                        </div>
-
-                        {/* Join/Cancel/Leave */}
-                        {user &&
-                            (effectiveIsMember ? (
-                                isLeader ? (
-                                    <button
-                                        style={{ ...s.dangerBtn, opacity: 0.7, cursor: "not-allowed" }}
-                                        title="You are a leader. Transfer leadership before leaving."
-                                        disabled
-                                    >
-                                        Leader — cannot leave
-                                    </button>
-                                ) : (
-                                    <button onClick={leaveClub} style={s.dangerBtn}>
-                                        Leave
-                                    </button>
-                                )
-                            ) : myStatus.hasPending ? (
-                                <button onClick={cancelJoinRequest} style={s.dangerBtn}>
-                                    Cancel Request
-                                </button>
-                            ) : (
-                                <button onClick={requestJoinClub} style={s.primaryBtn}>
-                                    Join
-                                </button>
-                            ))}
-                    </div>
-                </div>
-                <p style={s.desc}>{club.description}</p>
-            </div>
 
             <div style={s.grid}>
                 {/* News */}
@@ -435,7 +415,7 @@ export default function ClubDetail() {
                                 required
                                 style={s.textarea}
                             />
-                            <div style={{ textAlign: "right" }}>
+                            <div style={{textAlign: "right"}}>
                                 <button type="submit" style={s.primaryBtn}>
                                     Post
                                 </button>
@@ -448,14 +428,14 @@ export default function ClubDetail() {
                     {news.map((n) => (
                         <div key={n.id} style={s.card}>
                             <div style={s.cardHead}>
-                                <strong style={{ fontSize: 16 }}>{n.title}</strong>
+                                <strong style={{fontSize: 16}}>{n.title}</strong>
                                 {canPostNews && (
                                     <button onClick={() => deleteNews(n.id)} style={s.dangerBtn}>
                                         Delete
                                     </button>
                                 )}
                             </div>
-                            <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{n.content}</div>
+                            <div style={{whiteSpace: "pre-wrap", lineHeight: 1.5}}>{n.content}</div>
                             <div style={s.meta}>{n.createdAt ? new Date(n.createdAt).toLocaleString() : ""}</div>
                         </div>
                     ))}
@@ -496,15 +476,15 @@ export default function ClubDetail() {
 
 
                                 return (
-                                    <li key={m.id} style={{ ...s.listItem, position: "relative" }}>
+                                    <li key={m.id} style={{...s.listItem, position: "relative"}}>
                     <span
                         onClick={() => setOpenMember(menuOpen ? null : m.userId)}
-                        style={{ cursor: canSeeActionMenu ? "pointer" : "default" }}
+                        style={{cursor: canSeeActionMenu ? "pointer" : "default"}}
                     >
                       {userLabel(m.userId)}
                     </span>
 
-                                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                        <div style={{display: "flex", alignItems: "center", gap: 8}}>
                                             {badge}
                                             {canSeeActionMenu && !isSelf && (
                                                 <button
@@ -528,7 +508,7 @@ export default function ClubDetail() {
                                                         Make Leader (Admin)
                                                     </button>
                                                 )}
-                                                {isAdmin && !isThisCoLeader && !isThisMember &&(
+                                                {isAdmin && !isThisCoLeader && !isThisMember && (
                                                     <button
                                                         style={s.menuItem}
                                                         onClick={() => makeCoLeader(m.userId)}
@@ -560,7 +540,7 @@ export default function ClubDetail() {
                                                 {/* Kick */}
                                                 {canKickThisUser && (
                                                     <button
-                                                        style={{ ...s.menuItem, color: "#b00020" }}
+                                                        style={{...s.menuItem, color: "#b00020"}}
                                                         onClick={() => kickMember(m.userId)}
                                                     >
                                                         Kick
@@ -585,7 +565,7 @@ export default function ClubDetail() {
                                 {pending.map((r) => (
                                     <div key={r.id} style={s.pendingRow}>
                                         <div>
-                                            <div style={{ fontWeight: 600 }}>{userLabel(r.userId)}</div>
+                                            <div style={{fontWeight: 600}}>{userLabel(r.userId)}</div>
                                             <div style={s.meta}>Request ID: {r.id}</div>
                                         </div>
                                         <div style={s.actions}>
@@ -615,8 +595,9 @@ export default function ClubDetail() {
 
 /* ---- styles ---- */
 const s = {
-    page: { maxWidth: 1100, margin: "0 auto", padding: 20 },
+
     backLink: {
+        margin: "10px 20px",
         textDecoration: "none",
         border: "1px solid #ddd",
         padding: "6px 10px",
@@ -635,27 +616,10 @@ const s = {
         boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
         marginBottom: 12,
     },
-    headerCard: { paddingTop: 18, paddingBottom: 18 },
-    headerTop: { display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" },
-    title: { margin: 0, fontSize: 24, lineHeight: 1.25 },
+    headerCard: { width:"100%", backgroundColor: "#605f5f", marginTop:50},
+    headerTop: { display: "flex", padding:"20", justifyContent: "space-between",  },
+    title: { margin: 0, fontSize: "24px", lineHeight: 1.2,color: "#FFFFE4", fontWeight:"700" },
     desc: { marginTop: 8, color: "#444", lineHeight: 1.6 },
-
-    chips: { display: "flex", gap: 8, flexWrap: "wrap" },
-    leaderChip: {
-        background: "#0b57d0",
-        color: "#fff",
-        borderRadius: 999,
-        padding: "4px 10px",
-        fontSize: 12,
-        boxShadow: "0 2px 8px rgba(11,87,208,0.2)",
-    },
-    leaderChipMuted: {
-        background: "#e9eefc",
-        color: "#3b5bcc",
-        borderRadius: 999,
-        padding: "4px 10px",
-        fontSize: 12,
-    },
 
     grid: { display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, alignItems: "start" },
     sectionHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", margin: "8px 0" },

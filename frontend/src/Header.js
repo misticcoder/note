@@ -57,7 +57,7 @@ const Header = () => {
         <header style={styles.header}>
             <div style={styles.container}>
                 {/* Logo */}
-                <a href="#/" style={styles.logo} >MyLogo</a>
+                <a href="#/" style={styles.logo} >InfCom</a>
 
                 {/* Search Bar */}
                 <input type="text" placeholder="Search..." style={styles.search} />
@@ -176,11 +176,11 @@ const styles = {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "10px 20px",
+        padding: "10px 30px",
     },
     logo: { fontWeight: "bold",
         fontSize: "20px",
-        color: "#D50032",
+        color: "#FFFFE3",
         textDecoration: "none",
         cursor: "pointer", },
     search: {

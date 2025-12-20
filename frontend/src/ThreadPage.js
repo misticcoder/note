@@ -8,14 +8,32 @@ export default function ThreadPage() {
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState("");
     const [newComment, setNewComment] = useState("");
+    const [threads, setThreads] = useState([]);
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+    const hideThreads = windowWidth < 1000;
+    const threadsWidth = "20%";
+    const [hoveredId, setHoveredId] = useState(null);
 
     // extract id from hash: #/thread/123
     const threadId = (() => {
         const m = (window.location.hash || "").match(/^#\/thread\/(\d+)/i);
         return m ? Number(m[1]) : null;
     })();
+    const isAdmin = String(user?.role || "").toUpperCase() === "ADMIN";
 
     useEffect(() => {
+        const onResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener("resize", onResize);
+        return () => window.removeEventListener("resize", onResize);
+    }, []);
+
+
+    useEffect(() => {
+        fetch("/api/threads")
+            .then(r => r.json())
+            .then(setThreads)
+            .catch(() => setThreads([]));
+
         if (!threadId) return;
         (async () => {
             try {
@@ -105,81 +123,128 @@ export default function ThreadPage() {
             </div>
         );
     }
+    const boxHover = {
+        transform: "translateY(-2px)",
+        boxShadow: "0 6px 16px rgba(0,0,0,0.25)",
+        backgroundColor: "#f3f4f6"
+    };
 
     return (
-        <div style={styles.wrap}>
-            <div style={styles.headerRow}>
-                <a href="#/threads" style={styles.backLink}>← Back to Threads</a>
-            </div>
+        <div style={styles.pageRow}>
+            {!hideThreads && (
+                <div style={{width: threadsWidth, display: "flex", flexDirection: "column"}}>
 
-            {loading && <p>Loading…</p>}
-            {err && <p style={{ color: "red" }}>{err}</p>}
-
-            {thread && (
-                <div style={styles.threadCard}>
-                    <h2 style={{ marginTop: 0 }}>{thread.title}</h2>
-                    <div style={styles.threadContent}>
-                        {thread.content}
-                    </div>
+                    <h3 style={styles.col_title}>Threads</h3>
+                    {isAdmin && (
+                        <button style={styles.addBtn} onClick={() => setShowThreadModal(true)}>Add
+                            Thread</button>
+                    )}
+                    {threads.map((thread, idx) => (
+                        <div
+                            key={thread.id}
+                            style={{
+                                ...styles.Threads,
+                                ...(hoveredId === `thread-${thread.id}` ? boxHover : {})
+                            }}
+                            onMouseEnter={() => setHoveredId(`thread-${thread.id}`)}
+                            onMouseLeave={() => setHoveredId(null)}
+                            onClick={() => {
+                                window.location.hash = `#/thread/${thread.id}`;
+                            }}
+                        >
+                            {thread.title}
+                        </div>
+                    ))}
                 </div>
             )}
 
-            {/* Comments */}
-            <div style={styles.commentsCard}>
-                <h3 style={{ marginTop: 0 }}>Comments</h3>
-                {comments.length === 0 && <p>No comments yet.</p>}
-                <ul style={styles.commentList}>
-                    {comments.map(c => {
-                        const canDelete =
-                            user &&
-                            (String(user.role || "").toUpperCase() === "ADMIN" ||
-                                user.username === c.username);
+            <main style={styles.contentCol}>
+                <div style={styles.headerRow}>
+                    <a href="#/threads" style={styles.backLink}>← Back to Threads</a>
+                </div>
 
-                        return (
-                            <li key={c.id} style={styles.commentItem}>
-                                <div style={styles.commentHeader}>
-                                    <strong>{c.username}</strong>
-                                    <span style={styles.commentTime}>
-                    {c.createdAt ? new Date(c.createdAt).toLocaleString() : ""}
-                  </span>
-                                </div>
-                                <div>{c.comment}</div>
+                {loading && <p>Loading…</p>}
+                {err && <p style={{ color: "red" }}>{err}</p>}
 
-                                {canDelete && (
-                                    <div style={{ textAlign: "right", marginTop: 6 }}>
-                                        <button
-                                            onClick={() => handleDeleteComment(c.id)}
-                                            style={styles.deleteBtn}
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
-                                )}
-                            </li>
-                        );
-                    })}
-                </ul>
-
-                {/* Add comment (logged-in users) */}
-                <form onSubmit={postComment} style={styles.commentForm}>
-          <textarea
-              placeholder={user ? "Write a comment…" : "Log in to comment"}
-              value={newComment}
-              onChange={e => setNewComment(e.target.value)}
-              rows={3}
-              disabled={!user}
-              style={styles.textarea}
-          />
-                    <div style={{ textAlign: "right" }}>
-                        <button type="submit" disabled={!user || !newComment.trim()} style={styles.postBtn}>
-                            Post Comment
-                        </button>
+                {thread && (
+                    <div style={styles.threadCard}>
+                        <h2 style={{ marginTop: 0 }}>{thread.title}</h2>
+                        <div style={styles.threadContent}>
+                            {thread.content}
+                        </div>
                     </div>
-                </form>
-            </div>
+                )}
+
+                {/* Comments */}
+                <div style={styles.commentsCard}>
+                    <h3 style={{ marginTop: 0 }}>Comments</h3>
+                    {comments.length === 0 && <p>No comments yet.</p>}
+                    <ul style={styles.commentList}>
+                        {comments.map(c => {
+                            const canDelete =
+                                user &&
+                                (String(user.role || "").toUpperCase() === "ADMIN" ||
+                                    user.username === c.username);
+
+                            return (
+                                <li key={c.id} style={styles.commentItem}>
+                                    <div style={styles.commentHeader}>
+                                        <strong>{c.username}</strong>
+                                        <span style={styles.commentTime}>
+                        {c.createdAt ? new Date(c.createdAt).toLocaleString() : ""}
+                      </span>
+                                    </div>
+                                    <div>{c.comment}</div>
+
+                                    {canDelete && (
+                                        <div style={{ textAlign: "right", marginTop: 6 }}>
+                                            <button
+                                                onClick={() => handleDeleteComment(c.id)}
+                                                style={styles.deleteBtn}
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    )}
+                                </li>
+                            );
+                        })}
+                    </ul>
+
+                    {/* Add comment (logged-in users) */}
+                    <form onSubmit={postComment} style={styles.commentForm}>
+              <textarea
+                  placeholder={user ? "Write a comment…" : "Log in to comment"}
+                  value={newComment}
+                  onChange={e => setNewComment(e.target.value)}
+                  rows={3}
+                  disabled={!user}
+                  style={styles.textarea}
+              />
+                        <div style={{ textAlign: "right" }}>
+                            <button type="submit" disabled={!user || !newComment.trim()} style={styles.postBtn}>
+                                Post Comment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </main>
         </div>
     );
 }
+
+const boxBase = {
+    border: "1px solid #ccc",
+    padding: "10px 12px",
+    marginBottom: "10px",
+    borderRadius: "2px",
+    cursor: "pointer",
+    minHeight: "44px",
+    display: "flex",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    transition: "transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease"
+};
 
 const styles = {
     wrap: { padding: 20, maxWidth: 900, margin: "0 auto" },
@@ -198,5 +263,39 @@ const styles = {
     commentForm: { marginTop: 8 },
     textarea: { width: "100%", border: "1px solid #ccc", borderRadius: 6, padding: 8, resize: "vertical" },
     postBtn: { padding: "6px 12px", background: "#0b57d0", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" },
-    deleteBtn: { padding: "4px 8px", background: "#b00020", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" }
+    deleteBtn: { padding: "4px 8px", background: "#b00020", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" },
+    // NEW
+    pageRow: {
+        display: "flex",
+        gap: 24,
+        maxWidth: 1200,
+        margin: "0 auto",          // 🔑 THIS centers the layout
+        padding: "60px 24px 24px",
+        alignItems: "flex-start",
+        boxSizing: "border-box"
+    },
+
+    // LEFT column
+    threadListCol: {
+        width: 260,
+        flexShrink: 0,
+        display: "flex",
+        flexDirection: "column"
+    },
+
+    // RIGHT column
+    contentCol: {
+        flex: 1,
+        maxWidth: 900
+    },
+    col_title:{ textTransform: "uppercase",
+        fontWeight: 700,
+        fontSize: "15px",
+        color: "#FFFFE3",
+        paddingBottom: "5px",
+        paddingLeft: "5px",
+        paddingRight: "15px",
+        display: "inline-block"},
+    addBtn: { margin: "10px 0px", padding: "5px 8px", fontSize: "0.8rem", borderRadius: "4px", backgroundColor: "#041E42", color: "#D50032", border: "1px solid #D50032", cursor: "pointer", fontWeight: "Bold", textDecoration: "none", display: "inline-block" },
+    Threads: { ...boxBase },
 };

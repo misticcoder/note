@@ -16,6 +16,7 @@ export default function ThreadList() {
     const [editThread, setEditThread] = useState(null); // {id, title, content}
 
     useEffect(() => {
+        document.title = "Threads Directory | InfCom";
         (async () => {
             try {
                 setLoading(true);

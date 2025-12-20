@@ -15,6 +15,14 @@ public class Event {
     @Column private LocalDateTime startAt;
     @Column private LocalDateTime endAt;
 
+    public enum EventStatus {
+        UPCOMING,
+        LIVE,
+        ENDED
+    }
+
+
+
     // Getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -32,4 +40,26 @@ public class Event {
     public void setStartAt(LocalDateTime startAt) { this.startAt = startAt; }
     public LocalDateTime getEndAt() { return endAt; }
     public void setEndAt(LocalDateTime endAt) { this.endAt = endAt; }
+
+    @Transient
+    public EventStatus getStatus() {
+        if (startAt == null) return EventStatus.UPCOMING;
+
+        LocalDateTime now = LocalDateTime.now();
+
+        LocalDateTime effectiveEnd = endAt != null
+                ? endAt
+                : startAt.plusHours(2); // fallback duration
+
+        if (!now.isBefore(startAt) && now.isBefore(effectiveEnd)) {
+            return EventStatus.LIVE;
+        }
+
+        if (now.isAfter(effectiveEnd)) {
+            return EventStatus.ENDED;
+        }
+
+        return EventStatus.UPCOMING;
+    }
+
 }

@@ -16,6 +16,7 @@ export default function Clubs() {
     const [editClub, setEditClub] = useState(null); // {id, name, description}
 
     useEffect(() => {
+        document.title = "Clubs Directory | InfCom";
         (async () => {
             try {
                 setLoading(true);

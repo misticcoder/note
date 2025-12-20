@@ -16,6 +16,7 @@ export default function NewsList() {
     const [editNews, setEditNews] = useState(null); // {id, title, content}
 
     useEffect(() => {
+        document.title = "News Directory | InfCom";
         (async () => {
             try {
                 setLoading(true);
