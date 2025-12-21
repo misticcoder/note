@@ -126,7 +126,7 @@ public class ClubController {
             return ResponseEntity.status(404).body(Map.of("message", "Club not found"));
         }
 
-        // 🔹 Ensure membership exists
+        // 🔹d Ensure membership exists
         ClubMember member = members.findByClubIdAndUserId(clubId, userId)
                 .orElseGet(() -> {
                     ClubMember m = new ClubMember();

@@ -11,6 +11,7 @@ export default function ClubHeader({
                                        onCancelRequest
                                    }) {
     const { user } = useContext(AuthContext);
+    const TABS = ["overview", "stats", "matches", "news", "members"];
 
     return (
         <div className="club-header">
@@ -107,17 +108,18 @@ export default function ClubHeader({
             </div>
 
             {/* TABS */}
-            <div className="club-tabs">
-                {["overview", "stats", "matches", "news", "members"].map(tab => (
+            <nav className="club-tabs">
+                {TABS.map(tab => (
                     <a
                         key={tab}
                         href={`#/clubs/${club.id}/${tab}`}
                         className={activeTab === tab ? "active" : ""}
+                        aria-current={activeTab === tab ? "page" : undefined}
                     >
                         {tab.toUpperCase()}
                     </a>
                 ))}
-            </div>
+            </nav>
         </div>
     );
 }

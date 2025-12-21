@@ -610,6 +610,7 @@ const s = {
 
     card: {
         background: "#fff",
+
         border: "1px solid #e6e6e6",
         borderRadius: 12,
         padding: 16,
@@ -621,9 +622,9 @@ const s = {
     title: { margin: 0, fontSize: "24px", lineHeight: 1.2,color: "#FFFFE4", fontWeight:"700" },
     desc: { marginTop: 8, color: "#444", lineHeight: 1.6 },
 
-    grid: { display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, alignItems: "start" },
+    grid: { display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, alignItems: "start", margin:"15px" },
     sectionHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", margin: "8px 0" },
-    h3: { margin: 0 },
+    h3: { margin: "10px", color:"#FFFFE3"},
 
     newsForm: {
         ...cardLike(),
@@ -659,7 +660,7 @@ const s = {
 
     list: { listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 },
     listItem: {
-        padding: "8px 10px",
+        padding: "5px 10px",
         border: "1px solid #eee",
         borderRadius: 10,
         display: "flex",

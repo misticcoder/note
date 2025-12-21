@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "./AuthContext";
+import SideNav from "./components/SideNav";
 
 const Header = () => {
+    const [navOpen, setNavOpen] = useState(false);
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
     const { user, login, logout, signup } = useContext(AuthContext);
     const [showModal, setShowModal] = useState(false);
@@ -56,11 +58,30 @@ const Header = () => {
     return (
         <header style={styles.header}>
             <div style={styles.container}>
+
+                <button
+                    onClick={() => setNavOpen(true)}
+                    title={"Quick Access Bar"}
+                    style={{
+                        marginRight:"5px",
+                        background: "none",
+                        border: "none",
+                        color: "#fff",
+                        fontSize: 20,
+                        cursor: "pointer"
+                    }}
+                >
+                    ☰
+                </button>
+
+                <SideNav open={navOpen} onClose={() => setNavOpen(false)}/>
+
                 {/* Logo */}
-                <a href="#/" style={styles.logo} >InfCom</a>
+                <a href="#/" style={styles.logo}
+                title={"Home"}>InfCom</a>
 
                 {/* Search Bar */}
-                <input type="text" placeholder="Search..." style={styles.search} />
+                <input type="text" placeholder="Search..." style={styles.search}/>
 
                 {/* Navigation */}
                 <nav style={styles.nav}>
@@ -72,12 +93,15 @@ const Header = () => {
                             Threads
                         </a>
                     )}
-                    {showClubs && <a href={String(user?.role || '').toUpperCase() === 'ADMIN' ? "#/admin/clubs" : "#/clubs"}
-                                     style={styles.navLink}>Clubs</a>}
-                    {showEvents && <a href={String(user?.role || '').toUpperCase() === 'ADMIN' ? "#/admin/events" : "#/events"}
-                                     style={styles.navLink}>Events</a>}
-                    {showNews && <a href={String(user?.role || '').toUpperCase() === 'ADMIN' ? "#/admin/news" : "#/news"}
-                                    style={styles.navLink}>News</a>}
+                    {showClubs &&
+                        <a href={String(user?.role || '').toUpperCase() === 'ADMIN' ? "#/admin/clubs" : "#/clubs"}
+                           style={styles.navLink}>Clubs</a>}
+                    {showEvents &&
+                        <a href={String(user?.role || '').toUpperCase() === 'ADMIN' ? "#/admin/events" : "#/events"}
+                           style={styles.navLink}>Events</a>}
+                    {showNews &&
+                        <a href={String(user?.role || '').toUpperCase() === 'ADMIN' ? "#/admin/news" : "#/news"}
+                           style={styles.navLink}>News</a>}
 
                     {isAdmin && (
                         <a
@@ -109,7 +133,7 @@ const Header = () => {
                     <div style={styles.modalOverlay}>
                         <div style={styles.modalContent}>
                             <h3>{isSignup ? "Sign Up" : "Login"}</h3>
-                            {error && <p style={{ color: "red" }}>{error}</p>}
+                            {error && <p style={{color: "red"}}>{error}</p>}
                             <form onSubmit={handleSubmit}>
                                 {isSignup && (
                                     <input
@@ -139,7 +163,7 @@ const Header = () => {
                                     required
                                     style={styles.input}
                                 />
-                                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                                <div style={{display: "flex", justifyContent: "flex-end"}}>
                                     <button type="submit" style={styles.submitBtn}>
                                         {isSignup ? "Sign Up" : "Login"}
                                     </button>
@@ -178,11 +202,13 @@ const styles = {
         justifyContent: "space-between",
         padding: "10px 30px",
     },
-    logo: { fontWeight: "bold",
+    logo: {
+        fontWeight: "bold",
         fontSize: "20px",
         color: "#FFFFE3",
         textDecoration: "none",
-        cursor: "pointer", },
+        cursor: "pointer",
+    },
     search: {
         backgroundColor: "#6f7680",
         flexGrow: 1,
