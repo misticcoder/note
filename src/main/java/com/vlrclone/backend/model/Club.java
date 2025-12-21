@@ -9,10 +9,15 @@ public class Club {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    @Column(length = 50)
     private String name;
+    @Column
     private String description;
+    @Column
     private LocalDateTime createdAt;
+
+    @Column
+    private String logoUrl;
 
     // Getters and setters
     public Long getId() { return id; }
@@ -27,6 +32,7 @@ public class Club {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-
+    public String getLogoUrl() { return logoUrl; }
+    public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
 
 }

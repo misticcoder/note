@@ -22,7 +22,7 @@ function Home() {
 
     // Club modal state
     const [showClubModal, setShowClubModal] = useState(false);
-    const [newClub, setNewClub] = useState({ name: "", description: "", leaderUserId: "" });
+    const [newClub, setNewClub] = useState({logo: null, name: "", description: "", leaderUserId: "" });
     const isAdmin = String(user?.role || "").toUpperCase() === "ADMIN";
 
     // Hover state
@@ -111,7 +111,7 @@ function Home() {
 
     // Club modal handlers
     const openClubModal = () => {
-        setNewClub({ name: "", description: "", leaderUserId: "" });
+        setNewClub({logo:null, name: "", description: "", leaderUserId: "" });
         setShowClubModal(true);
         // Ensure users list is fresh (in case admin opened later)
         if (isAdmin && users.length === 0) {
@@ -134,15 +134,25 @@ function Home() {
         if (!newClub.leaderUserId) {
             if (!window.confirm("No leader selected. Create club without a leader?")) return;
         }
+        const form = new FormData();
+        form.append("name", newClub.name);
+        form.append("description", newClub.description);
+
+        if (newClub.logo) {
+            form.append("logo", newClub.logo);
+        }
+
         try {
             // 1) Create club
-            const createRes = await fetch(`/api/clubs?requesterEmail=${encodeURIComponent(user.email)}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: newClub.name.trim(), description: newClub.description.trim() })
-            });
-            const created = await createRes.json().catch(() => ({}));
-            if (!createRes.ok) {
+            const res = await fetch(
+                `/api/clubs?requesterEmail=${encodeURIComponent(user.email)}`,
+                {
+                    method: "POST",
+                    body: form
+                }
+            );
+            const created = await res.json().catch(() => ({}));
+            if (!res.ok) {
                 alert(created.message || "Failed to create club");
                 return;
             }
@@ -164,7 +174,7 @@ function Home() {
             // 3) Update UI and close
             setClubs(prev => [...prev, created]);
             setShowClubModal(false);
-            setNewClub({ name: "", description: "", leaderUserId: "" });
+            setNewClub({ logo: null, name: "", description: "", leaderUserId: "" });
 
             // 4) (Optional) Navigate to club page
             // window.location.hash = `#/clubs/${created.id}`;
@@ -496,6 +506,15 @@ function Home() {
                         <h3>Create Club</h3>
                         <form onSubmit={handleClubSubmit}>
                             <input
+                                type="file"
+                                accept="image/*"
+                                onChange={e => setNewClub(prev => ({
+                                    ...prev,
+                                    logo: e.target.files[0]
+                                }))}
+                            />
+
+                            <input
                                 name="name"
                                 placeholder="Club Name"
                                 value={newClub.name}
@@ -525,8 +544,10 @@ function Home() {
                                 ))}
                             </select>
 
-                            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                                <button type="button" onClick={() => setShowClubModal(false)} style={styles.cancelBtn}>Cancel</button>
+                            <div style={{display: "flex", gap: 10, justifyContent: "flex-end"}}>
+                                <button type="button" onClick={() => setShowClubModal(false)}
+                                        style={styles.cancelBtn}>Cancel
+                                </button>
                                 <button type="submit" style={styles.submitBtn}>Create</button>
                             </div>
                         </form>

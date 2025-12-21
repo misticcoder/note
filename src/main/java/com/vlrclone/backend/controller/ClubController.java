@@ -6,9 +6,15 @@ import com.vlrclone.backend.model.ClubMember.Role;
 import com.vlrclone.backend.model.JoinRequest.Status;
 import com.vlrclone.backend.model.Club;
 import com.vlrclone.backend.repository.*;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 @RestController
@@ -34,7 +40,7 @@ public class ClubController {
     }
 
     private boolean isAdmin(User u) {
-        return u.getRole() == com.vlrclone.backend.model.User.Role.ADMIN;
+        return u != null && u.getRole() == User.Role.ADMIN;
     }
 
     private boolean isLeader(Long clubId, Long userId) {
@@ -66,41 +72,79 @@ public class ClubController {
         return members.findByClubId(clubId);
     }
 
-    /* Admin: create club */
-    @PostMapping
-    public ResponseEntity<?> createClub(@RequestParam String requesterEmail, @RequestBody Map<String, String> body) {
-        var req = byEmail(requesterEmail).orElse(null);
-        if (req == null || !isAdmin(req)) return ResponseEntity.status(403).body(Map.of("message", "Admin only"));
-        String name = body.getOrDefault("name", "").trim();
-        String description = body.getOrDefault("description", "").trim();
-        if (name.isBlank() || description.isBlank())
-            return ResponseEntity.badRequest().body(Map.of("message", "name and description required"));
-        if (clubs.existsByName(name)) return ResponseEntity.status(409).body(Map.of("message", "name already exists"));
-        var c = new Club();
-        c.setName(name);
-        c.setDescription(description);
-        return ResponseEntity.ok(clubs.save(c));
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createClub(
+            @RequestParam String requesterEmail,
+            @RequestParam String name,
+            @RequestParam String description,
+            @RequestParam(required = false) MultipartFile logo
+    ) throws IOException {
+
+        var me = byEmail(requesterEmail).orElse(null);
+        if (!isAdmin(me)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Admin only"));
+        }
+
+        Club club = new Club();
+        club.setName(name);
+        club.setDescription(description);
+
+        if (logo != null && !logo.isEmpty()) {
+            String ext = Objects.requireNonNull(logo.getOriginalFilename())
+                    .substring(logo.getOriginalFilename().lastIndexOf("."));
+
+            String filename = "clubs/club-" + System.currentTimeMillis() + ext;
+            Path path = Paths.get("uploads").resolve(filename);
+
+            Files.createDirectories(path.getParent());
+            Files.write(path, logo.getBytes());
+
+            club.setLogoUrl("/uploads/" + filename);
+        }
+
+        return ResponseEntity.ok(clubs.save(club));
     }
 
-    /* Admin: assign leader */
     @PostMapping("/{clubId}/leader")
-    public ResponseEntity<?> assignLeader(@PathVariable Long clubId, @RequestParam String requesterEmail, @RequestBody Map<String, Long> body) {
-        var req = byEmail(requesterEmail).orElse(null);
-        if (req == null || !isAdmin(req)) return ResponseEntity.status(403).body(Map.of("message", "Admin only"));
-        Long userId = body.get("userId");
-        if (userId == null) return ResponseEntity.badRequest().body(Map.of("message", "userId required"));
-        if (!clubs.existsById(clubId)) return ResponseEntity.status(404).body(Map.of("message", "Club not found"));
+    public ResponseEntity<?> assignLeader(
+            @PathVariable Long clubId,
+            @RequestParam String requesterEmail,
+            @RequestBody Map<String, Long> body
+    ) {
+        User requester = users.findByEmail(requesterEmail).orElse(null);
+        if (requester == null || requester.getRole() != User.Role.ADMIN) {
+            return ResponseEntity.status(403).body(Map.of("message", "Admin only"));
+        }
 
-        var cm = members.findByClubIdAndUserId(clubId, userId)
+        Long userId = body.get("userId");
+        if (userId == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "userId required"));
+        }
+
+        Club club = clubs.findById(clubId).orElse(null);
+        if (club == null) {
+            return ResponseEntity.status(404).body(Map.of("message", "Club not found"));
+        }
+
+        // 🔹 Ensure membership exists
+        ClubMember member = members.findByClubIdAndUserId(clubId, userId)
                 .orElseGet(() -> {
-                    var m = new ClubMember();
+                    ClubMember m = new ClubMember();
                     m.setClubId(clubId);
                     m.setUserId(userId);
                     return m;
                 });
-        cm.setRole(Role.LEADER);
-        return ResponseEntity.ok(members.save(cm));
+
+        member.setRole(ClubMember.Role.LEADER);
+        members.save(member);
+
+        return ResponseEntity.ok(Map.of(
+                "status", "leader_assigned",
+                "clubId", clubId,
+                "userId", userId
+        ));
     }
+
 
     /* User: request to join */
     @PostMapping("/{clubId}/join")
