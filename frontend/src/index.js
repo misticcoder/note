@@ -13,9 +13,11 @@ import Events from "./Events";
 import EventPage from "./EventPage";
 import NewsPage from "./NewsPage";
 import NewsList from "./NewsList";
+import ClubMembers from "./Clubs/ClubMembers";
 
 function App() {
     const [route, setRoute] = useState(window.location.hash || "#/");
+    const clubId = Clubs.id;
 
     useEffect(() => {
         const onHashChange = () => setRoute(window.location.hash || "#/");
@@ -35,6 +37,7 @@ function App() {
     if (route === "#/admin/clubs") Page = Clubs;
     if (route === "#/clubs") Page = Clubs;
     if (route.startsWith("#/clubs/")) Page = () => <ClubDetail />
+
 
     if (route === "#/news") Page = NewsList;
     if (route === "#/admin/news") Page = NewsList;
