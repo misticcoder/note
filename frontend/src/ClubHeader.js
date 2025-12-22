@@ -11,7 +11,7 @@ export default function ClubHeader({
                                        onCancelRequest
                                    }) {
     const { user } = useContext(AuthContext);
-    const TABS = ["overview", "Events", "news", "members"];
+    const TABS = ["overview", "events", "news", "members"];
 
     return (
         <div className="club-header">

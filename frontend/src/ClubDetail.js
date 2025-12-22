@@ -570,7 +570,7 @@ export default function ClubDetail() {
                                         <div key={r.id} style={s.pendingRow}>
                                             <div>
                                                 <div style={{fontWeight: 600}}>{userLabel(r.userId)}</div>
-                                                <div style={s.meta}>Request ID: {r.id}</div>
+                             a                   <div style={s.meta}>Request ID: {r.id}</div>
                                             </div>
                                             <div style={s.actions}>
                                                 <button
@@ -596,6 +596,55 @@ export default function ClubDetail() {
             )}
 
             {activeTab === "news" && (
+                <div>
+                    <div style={s.sectionHeader}>
+                        <h3 style={s.h3}>Club News</h3>
+                    </div>
+
+                    {canPostNews && (
+                        <form onSubmit={postNews} style={s.newsForm}>
+                            <input
+                                placeholder="Title"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                required
+                                style={s.input}
+                            />
+                            <textarea
+                                placeholder="Content"
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
+                                required
+                                style={s.textarea}
+                            />
+                            <div style={{textAlign: "right"}}>
+                                <button type="submit" style={s.primaryBtn}>
+                                    Post
+                                </button>
+                            </div>
+                        </form>
+                    )}
+
+                    {news.length === 0 && <div style={s.card}>No news yet.</div>}
+
+                    {news.map((n) => (
+                        <div key={n.id} style={s.card}>
+                            <div style={s.cardHead}>
+                                <strong style={{fontSize: 16}}>{n.title}</strong>
+                                {canPostNews && (
+                                    <button onClick={() => deleteNews(n.id)} style={s.dangerBtn}>
+                                        Delete
+                                    </button>
+                                )}
+                            </div>
+                            <div style={{whiteSpace: "pre-wrap", lineHeight: 1.5}}>{n.content}</div>
+                            <div style={s.meta}>{n.createdAt ? new Date(n.createdAt).toLocaleString() : ""}</div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {activeTab === "events" && (
                 <div>
                     <div style={s.sectionHeader}>
                         <h3 style={s.h3}>Club News</h3>

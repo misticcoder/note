@@ -194,18 +194,18 @@ function Home() {
     const handleNewsSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch("/api/news", {
+            const res = await fetch(`/api/news?requesterEmail=${encodeURIComponent(user.email)}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(newNews),
             });
+
             const savedNews = await res.json();
             if (!res.ok) {
                 alert(savedNews.message || "Failed to create News");
                 return;
             }
             setNews(prev => [savedNews, ...prev]);
-
             setNewNews({ title: "", content: "" });
             setShowNewsModal(false);
         } catch (err) {
@@ -241,6 +241,32 @@ function Home() {
 
         return { ...ev, _status: status };
     });
+
+    const togglePin = async (newsId, pinned) => {
+        try {
+            const res = await fetch(
+                `/api/news/${newsId}/pin?pinned=${pinned}`,
+                { method: "PATCH" }
+            );
+
+            if (!res.ok) {
+                alert("Failed to update pin");
+                return;
+            }
+
+            const updated = await res.json();
+
+            // Update local state
+            setNews(prev =>
+                prev.map(n =>
+                    n.id === updated.id ? updated : { ...n, pinned: false }
+                )
+            );
+        } catch {
+            alert("Failed to update pin");
+        }
+    };
+
 
     const ongoingEvents = classifiedEvents.filter(e => e._status === "LIVE");
     const upcomingEvents = classifiedEvents.filter(e => e._status === "UPCOMING");
@@ -336,22 +362,95 @@ function Home() {
                         {isAdmin && (
                             <button style={styles.addBtn} onClick={() => setShowNewsModal(true)}>Add News</button>
                         )}
-                        {news.map((news, idx) => (
+                        {/* Featured / Headline News */}
+                        {headNews && (
+
+                            <div
+                                style={{
+                                    ...styles.HeadNews,
+                                    ...(hoveredId === `news-head-${headNews.id}` ? boxHover : {})
+                                }}
+                                onMouseEnter={() => setHoveredId(`news-head-${headNews.id}`)}
+                                onMouseLeave={() => setHoveredId(null)}
+                                onClick={() => {
+                                    window.location.hash = `#/news/${headNews.id}`;
+                                }}
+                            >
+                                <div style={styles.HeadNewsOverlay}>
+                                    {headNews.pinned && (
+                                        <span
+                                            style={{
+                                                background: "#d50032",
+                                                color: "#fff",
+                                                fontSize: "0.7rem",
+                                                padding: "2px 6px",
+                                                borderRadius: "4px",
+                                                marginRight: "6px"
+                                            }}
+                                        >
+    PINNED
+  </span>
+                                    )}
+
+                                    <div style={{ fontWeight: 700 }}>
+                                        {headNews.title}
+                                    </div>
+                                    <div style={{fontSize: "0.8rem", opacity: 0.85}}>
+                                        {headNews.published &&
+                                            new Date(headNews.published).toLocaleDateString()}
+                                        {headNews.author && ` · ${headNews.author}`}
+                                    </div>
+
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Rest of News */}
+                        {otherNews.map(news => (
                             <div
                                 key={news.id}
                                 style={{
                                     ...styles.News,
-                                    ...(hoveredId === `news-${news.id}` ? boxHover : {})
+                                    justifyContent: "space-between"
                                 }}
-                                onMouseEnter={() => setHoveredId(`news-${news.id}`)}
-                                onMouseLeave={() => setHoveredId(null)}
-                                onClick={() => {
-                                    window.location.hash = `#/news/${news.id}`;
-                                }}
+                                onClick={() => window.location.hash = `#/news/${news.id}`}
                             >
-                                {news.title}
+                                {/* Left: title + meta */}
+                                <div style={{ display: "flex", flexDirection: "column" }}>
+      <span style={{ fontWeight: 600 }}>
+        {news.title}
+      </span>
+                                    <span style={{ fontSize: "0.75rem", opacity: 0.7 }}>
+        {news.published &&
+            new Date(news.published).toLocaleDateString()}
+                                        {news.author && ` · ${news.author}`}
+      </span>
+                                </div>
+
+                                {/* Right: pin button (ADMIN ONLY) */}
+                                {isAdmin && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation(); // ⬅ prevents navigation
+                                            togglePin(news.id, !news.pinned);
+                                        }}
+                                        style={{
+                                            fontSize: "0.7rem",
+                                            padding: "4px 6px",
+                                            borderRadius: "4px",
+                                            border: "none",
+                                            background: news.pinned ? "#d50032" : "#555",
+                                            color: "#fff",
+                                            cursor: "pointer"
+                                        }}
+                                    >
+                                        {news.pinned ? "Unpin" : "Pin"}
+                                    </button>
+                                )}
                             </div>
                         ))}
+
+
                     </div>
 
                     {/* Clubs */}
