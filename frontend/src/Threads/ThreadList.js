@@ -1,6 +1,8 @@
 // frontend/src/AdminThreads.jsx
 import { useContext, useEffect, useMemo, useState } from "react";
-import { AuthContext } from "./AuthContext";
+import { AuthContext } from "../AuthContext";
+
+import "../styles/Threads.css";
 
 export default function ThreadList() {
     const { user } = useContext(AuthContext);
@@ -97,17 +99,17 @@ export default function ThreadList() {
     };
 
     return (
-        <div style={styles.wrap}>
-            <div style={styles.headerRow}>
+        <div className={"wrap"}>
+            <div className={"header-row"}>
                 <h2 >Threads</h2>
                 <div>
                     <input
                         placeholder="Search by title/content/ID…"
                         value={q}
                         onChange={(e) => setQ(e.target.value)}
-                        style={styles.search}
+                        className={"search"}
                     />
-                    <a href="#/" style={styles.backLink}>← Back</a>
+                    <a href="#/" className={"back-link"}>← Back</a>
                 </div>
             </div>
 
@@ -150,7 +152,7 @@ export default function ThreadList() {
 
             {/* EDIT MODAL (admins only) */}
             {isAdmin && showEdit && editThread && (
-                <div style={styles.backdrop}>
+                <div className={styles.backdrop}>
                     <div style={styles.modal}>
                         <h3 style={{ marginTop: 0 }}>Edit Thread</h3>
                         <form onSubmit={saveEdit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -187,10 +189,6 @@ export default function ThreadList() {
 }
 
 const styles = {
-    wrap: { padding: 20, maxWidth: 1100, margin: "0 auto" },
-    headerRow: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 0, marginTop: 30},
-    search: { padding: "6px 8px", border: "1px solid #ccc", borderRadius: 6, marginRight: 12 },
-    backLink: { textDecoration: "none", border: "1px solid #ccc", padding: "6px 10px", borderRadius: 6, background: "#f8f8f8", color: "#333" },
 
     tableWrap: { background: "#fff", border: "1px solid #ddd", borderRadius: 8, overflow: "hidden" },
     row: { display: "flex", gap: 8, padding: "10px 8px", borderBottom: "1px solid #eee", alignItems: "center" },

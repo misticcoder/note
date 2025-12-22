@@ -1,5 +1,8 @@
 import { useContext, useEffect, useState } from "react";
-import { AuthContext } from "./AuthContext";
+import { AuthContext } from "../AuthContext";
+import ThreadSection from "./ThreadSection";
+import "../styles/Threads.css";
+
 
 export default function ThreadPage() {
     const { user } = useContext(AuthContext);
@@ -12,7 +15,6 @@ export default function ThreadPage() {
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
     const hideThreads = windowWidth < 1000;
     const threadsWidth = "20%";
-    const [hoveredId, setHoveredId] = useState(null);
 
     // extract id from hash: #/thread/123
     const threadId = (() => {
@@ -117,9 +119,9 @@ export default function ThreadPage() {
 
     if (!threadId) {
         return (
-            <div style={styles.wrap}>
+            <div className="wrap">
                 <p>Invalid thread link.</p>
-                <a href="#/threads" style={styles.backLink}>← Back to Threads</a>
+                <a href="#/threads" className="back-link">← Back to Threads</a>
             </div>
         );
     }
@@ -130,56 +132,37 @@ export default function ThreadPage() {
     };
 
     return (
-        <div style={styles.pageRow}>
+        <div className={"page-row"}>
             {!hideThreads && (
-                <div style={{width: threadsWidth, display: "flex", flexDirection: "column"}}>
-
-                    <h3 style={styles.col_title}>Threads</h3>
-                    {isAdmin && (
-                        <button style={styles.addBtn} onClick={() => setShowThreadModal(true)}>Add
-                            Thread</button>
-                    )}
-                    {threads.map((thread, idx) => (
-                        <div
-                            key={thread.id}
-                            style={{
-                                ...styles.Threads,
-                                ...(hoveredId === `thread-${thread.id}` ? boxHover : {})
-                            }}
-                            onMouseEnter={() => setHoveredId(`thread-${thread.id}`)}
-                            onMouseLeave={() => setHoveredId(null)}
-                            onClick={() => {
-                                window.location.hash = `#/thread/${thread.id}`;
-                            }}
-                        >
-                            {thread.title}
-                        </div>
-                    ))}
-                </div>
+                <ThreadSection
+                    title="Threads"
+                    width={threadsWidth}
+                    showAddButton={isAdmin}
+                />
             )}
 
-            <main style={styles.contentCol}>
-                <div style={styles.headerRow}>
-                    <a href="#/threads" style={styles.backLink}>← Back to Threads</a>
+            <main className={"content-col"}>
+                <div className={"header-row"}>
+                    <a href="#/threads" className={"back-link"}>← Back to Threads</a>
                 </div>
 
                 {loading && <p>Loading…</p>}
                 {err && <p style={{ color: "red" }}>{err}</p>}
 
                 {thread && (
-                    <div style={styles.threadCard}>
+                    <div className={"thread-card"}>
                         <h2 style={{ marginTop: 0 }}>{thread.title}</h2>
-                        <div style={styles.threadContent}>
+                        <div className={"thread-content"}>
                             {thread.content}
                         </div>
                     </div>
                 )}
 
                 {/* Comments */}
-                <div style={styles.commentsCard}>
+                <div className={"comments-card"}>
                     <h3 style={{ marginTop: 0 }}>Comments</h3>
                     {comments.length === 0 && <p>No comments yet.</p>}
-                    <ul style={styles.commentList}>
+                    <ul className={"comment-list"}>
                         {comments.map(c => {
                             const canDelete =
                                 user &&
@@ -187,10 +170,10 @@ export default function ThreadPage() {
                                     user.username === c.username);
 
                             return (
-                                <li key={c.id} style={styles.commentItem}>
-                                    <div style={styles.commentHeader}>
+                                <li key={c.id} className={"comment-item"}>
+                                    <div className={"comment-header"}>
                                         <strong>{c.username}</strong>
-                                        <span style={styles.commentTime}>
+                                        <span className={"comment-time"}>
                         {c.createdAt ? new Date(c.createdAt).toLocaleString() : ""}
                       </span>
                                     </div>
@@ -200,7 +183,7 @@ export default function ThreadPage() {
                                         <div style={{ textAlign: "right", marginTop: 6 }}>
                                             <button
                                                 onClick={() => handleDeleteComment(c.id)}
-                                                style={styles.deleteBtn}
+                                                className={"delete-btn"}
                                             >
                                                 Delete
                                             </button>
@@ -212,17 +195,17 @@ export default function ThreadPage() {
                     </ul>
 
                     {/* Add comment (logged-in users) */}
-                    <form onSubmit={postComment} style={styles.commentForm}>
+                    <form onSubmit={postComment} className={"comment-form"}>
               <textarea
                   placeholder={user ? "Write a comment…" : "Log in to comment"}
                   value={newComment}
                   onChange={e => setNewComment(e.target.value)}
                   rows={3}
                   disabled={!user}
-                  style={styles.textarea}
+                  className={"textarea"}
               />
                         <div style={{ textAlign: "right" }}>
-                            <button type="submit" disabled={!user || !newComment.trim()} style={styles.postBtn}>
+                            <button type="submit" disabled={!user || !newComment.trim()} className={"post-btn"}>
                                 Post Comment
                             </button>
                         </div>
@@ -233,69 +216,4 @@ export default function ThreadPage() {
     );
 }
 
-const boxBase = {
-    border: "1px solid #ccc",
-    padding: "10px 12px",
-    marginBottom: "10px",
-    borderRadius: "2px",
-    cursor: "pointer",
-    minHeight: "44px",
-    display: "flex",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    transition: "transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease"
-};
 
-const styles = {
-    wrap: { padding: 20, maxWidth: 900, margin: "0 auto" },
-    headerRow: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-    backLink: { textDecoration: "none", border: "1px solid #ccc", padding: "6px 10px", borderRadius: 6, background: "#f8f8f8", color: "#333" },
-
-    threadCard: { background: "#fff", border: "1px solid #ddd", borderRadius: 8, padding: 16, marginBottom: 16 },
-    threadContent: { whiteSpace: "pre-wrap", lineHeight: 1.5 },
-
-    commentsCard: { background: "#fff", border: "1px solid #ddd", borderRadius: 8, padding: 16 },
-    commentList: { listStyle: "none", padding: 0, margin: "0 0 12px 0" },
-    commentItem: { padding: "8px 0", borderBottom: "1px solid #eee" },
-    commentHeader: { display: "flex", justifyContent: "space-between", marginBottom: 4, fontSize: 13, color: "#555" },
-    commentTime: { opacity: 0.8 },
-
-    commentForm: { marginTop: 8 },
-    textarea: { width: "100%", border: "1px solid #ccc", borderRadius: 6, padding: 8, resize: "vertical" },
-    postBtn: { padding: "6px 12px", background: "#0b57d0", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" },
-    deleteBtn: { padding: "4px 8px", background: "#b00020", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" },
-    // NEW
-    pageRow: {
-        display: "flex",
-        gap: 24,
-        maxWidth: 1200,
-        margin: "0 auto",          // 🔑 THIS centers the layout
-        padding: "60px 24px 24px",
-        alignItems: "flex-start",
-        boxSizing: "border-box"
-    },
-
-    // LEFT column
-    threadListCol: {
-        width: 260,
-        flexShrink: 0,
-        display: "flex",
-        flexDirection: "column"
-    },
-
-    // RIGHT column
-    contentCol: {
-        flex: 1,
-        maxWidth: 900
-    },
-    col_title:{ textTransform: "uppercase",
-        fontWeight: 700,
-        fontSize: "15px",
-        color: "#FFFFE3",
-        paddingBottom: "5px",
-        paddingLeft: "5px",
-        paddingRight: "15px",
-        display: "inline-block"},
-    addBtn: { margin: "10px 0px", padding: "5px 8px", fontSize: "0.8rem", borderRadius: "4px", backgroundColor: "#041E42", color: "#D50032", border: "1px solid #D50032", cursor: "pointer", fontWeight: "Bold", textDecoration: "none", display: "inline-block" },
-    Threads: { ...boxBase },
-};

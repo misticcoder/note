@@ -1,5 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "./AuthContext";
+import ThreadSection from "./Threads/ThreadSection";
+
 
 function Home() {
     const [threads, setThreads] = useState([]);
@@ -68,7 +70,7 @@ function Home() {
     const handleThreadSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch("/api/threads", {
+            const res = await fetch(`/api/threads?requesterEmail=${encodeURIComponent(user.email)}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(newThread),
@@ -327,41 +329,23 @@ function Home() {
                 <div style={styles.flexRow}>
                     {/* Thread */}
                     {!hideThreads && (
-                        <div style={{width: threadsWidth, display: "flex", flexDirection: "column"}}>
-
-                            <h3 style={styles.col_title}>Threads</h3>
-                            {isAdmin && (
-                                <button style={styles.addBtn} onClick={() => setShowThreadModal(true)}>Add
-                                    Thread</button>
-                            )}
-                            <div >
-                                {threads.map((thread, idx) => (
-                                    <div
-                                        key={thread.id}
-                                        style={{
-                                            ...styles.Threads,
-                                            ...(hoveredId === `thread-${thread.id}` ? boxHover : {})
-                                        }}
-                                        onMouseEnter={() => setHoveredId(`thread-${thread.id}`)}
-                                        onMouseLeave={() => setHoveredId(null)}
-                                        onClick={() => {
-                                            window.location.hash = `#/thread/${thread.id}`;
-                                        }}
-                                    >
-                                        {thread.title}
-                                    </div>
-                                ))}
-                            </div>
-
-                        </div>
+                        <ThreadSection
+                            title="Threads"
+                            width={threadsWidth}
+                            showAddButton={isAdmin}
+                            onAddThread={() => setShowThreadModal(true)}
+                        />
                     )}
                     {/* Daily News */}
 
                     <div style={{width: newsWidth, display: "flex", flexDirection: "column"}}>
-                        <h3 style={styles.col_title}>Daily News</h3>
+
                         {isAdmin && (
                             <button style={styles.addBtn} onClick={() => setShowNewsModal(true)}>Add News</button>
                         )}
+
+                        <h3 style={styles.col_title}>Daily News</h3>
+
                         {/* Featured / Headline News */}
                         {headNews && (
 
@@ -458,10 +442,12 @@ function Home() {
 
                     <div style={{width: clubsWidth, display: "flex", flexDirection: "column"}}>
 
-                        <h3 style={styles.col_title}>Clubs</h3>
                         {isAdmin && (
                             <button style={styles.addBtn} onClick={openClubModal}>Add Club</button>
                         )}
+
+                        <h3 style={styles.col_title}>Clubs</h3>
+
 
                         {clubs.map((club) => (
                             <div
@@ -497,13 +483,14 @@ function Home() {
 
                     {!hideEvents && (
                         <div style={{ width: eventsWidth, display: "flex", flexDirection: "column" }}>
-                            <h3 style={styles.col_title}>ONGOING Events</h3>
 
                             {isAdmin && (
                                 <button style={styles.addBtn} onClick={() => {
                                     window.location.hash = "#/events";
                                 }}>Add Event</button>
                             )}
+
+                            <h3 style={styles.col_title}>ONGOING Events</h3>
 
                             <div>
 
@@ -539,35 +526,6 @@ function Home() {
 
                 </div>
             </div>
-
-            {/* Thread Modal */}
-            {showThreadModal && (
-                <div style={styles.ThreadWindow}>
-                    <div style={styles.ThreadContent}>
-                        <h3>Add New Thread</h3>
-                        <form onSubmit={handleThreadSubmit}>
-                            <input
-                                name="title"
-                                placeholder="Thread Title"
-                                value={newThread.title}
-                                onChange={handleThreadChange}
-                                required
-                                style={styles.input}
-                            />
-                            <textarea
-                                name="content"
-                                placeholder="Thread Content"
-                                value={newThread.content}
-                                onChange={handleThreadChange}
-                                required
-                                style={styles.textarea}
-                            />
-                            <button type="submit" style={styles.submitBtn}>Save Thread</button>
-                            <button type="button" onClick={() => setShowThreadModal(false)} style={styles.cancelBtn}>Cancel</button>
-                        </form>
-                    </div>
-                </div>
-            )}
 
             {/* News Modal */}
             {showNewsModal && (
@@ -669,8 +627,6 @@ const boxBase = {
     backgroundColor: "#605f5f",
     transition: "transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease"
 };
-
-
 
 const styles = {
     Dashboard: {
