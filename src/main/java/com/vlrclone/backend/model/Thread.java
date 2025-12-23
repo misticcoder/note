@@ -27,8 +27,6 @@ public class Thread {
     @Column(nullable = false)
     private String author;
 
-
-
     public Thread() {}
 
     public Thread(String title, String content) {

@@ -51,11 +51,6 @@
     margin-bottom: 16px;
 }
 
-.thread-content {
-    white-space: pre-wrap;
-    line-height: 1.5;
-}
-
 /* Comments */
 .comments-card {
     background: #fff;
@@ -76,11 +71,28 @@
 }
 
 .comment-header {
+    align-items: center;
+    flex-wrap: wrap;
+    height: 30px;
+    padding: 0 20px;
     display: flex;
     justify-content: space-between;
     margin-bottom: 4px;
-    font-size: 13px;
+    font-size: 11px;
+    position: relative;
+    overflow: hidden;
     color: #555;
+}
+
+.comment-body{
+    font-size: 13px;
+    display: flex;
+    padding: 0 25px;
+    padding-top: 4px;
+    min-height: 35px;
+    word-wrap: break-word;
+    justify-content: space-between;
+    overflow: hidden;
 }
 
 .comment-time {
@@ -111,6 +123,7 @@
 }
 
 .delete-btn {
+    display: inline-block;
     padding: 4px 8px;
     background: #b00020;
     color: #fff;
@@ -119,9 +132,6 @@
     cursor: pointer;
 }
 
-/* ========================= */
-/* NEW LAYOUT STRUCTURE      */
-/* ========================= */
 
 .page-row {
     display: flex;
@@ -213,6 +223,8 @@
     max-width: 90%;
 }
 
+/* Thread Modal TODO: */
+
 .input {
     width: 100%;
     padding: 8px;
@@ -241,3 +253,45 @@
     border: none;
     border-radius: 4px;
     cursor: pointer }
+
+/* Thread Page ToDo: */
+
+.thread-layout {
+    display: flex;
+    gap: 20px;
+    max-width: 1100px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.thread-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+}
+
+.thread-main {
+    flex: 1;
+}
+
+@media (max-width: 1000px) {
+    .thread-sidebar {
+        display: none;
+    }
+}
+.thread-title {
+    margin: 0 0 6px 0;
+}
+
+.thread-meta {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.thread-meta-sep {
+    opacity: 0.6;
+}
+
