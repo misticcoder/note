@@ -23,9 +23,16 @@ export default function ThreadPage() {
     const role = String(user?.role || "").toUpperCase();
     const isAdmin = role === "ADMIN";
 
-    /* ------------------------------
-       Fetch sidebar thread list
-    ------------------------------ */
+    useEffect(() => {
+        if (thread?.title) {
+            document.title = `${thread.title} | InfCom`;
+        } else {
+            document.title = "InfCom";
+        }
+    }, [thread]);
+
+    /* SideBar Thread List */
+
     useEffect(() => {
         const controller = new AbortController();
 
@@ -37,9 +44,8 @@ export default function ThreadPage() {
         return () => controller.abort();
     }, []);
 
-    /* ------------------------------
-       Fetch comments (with reactions)
-    ------------------------------ */
+    /* Fetch Comments */
+
     const fetchComments = useCallback(
         async (signal) => {
             if (!threadId) return;
@@ -63,9 +69,8 @@ export default function ThreadPage() {
         [threadId, user?.username]
     );
 
-    /* ------------------------------
-       Fetch thread + comments
-    ------------------------------ */
+    /* Fetch thread + comments */
+
     useEffect(() => {
         if (!threadId) return;
 
@@ -102,9 +107,8 @@ export default function ThreadPage() {
         return () => controller.abort();
     }, [threadId, fetchComments]);
 
-    /* ------------------------------
-       Post comment
-    ------------------------------ */
+    /* Post Comments */
+
     const postComment = async (e) => {
         e.preventDefault();
         if (!user) {
@@ -139,9 +143,8 @@ export default function ThreadPage() {
         }
     };
 
-    /* ------------------------------
-       Delete comment
-    ------------------------------ */
+    /* Delete Comments */
+
     const handleDeleteComment = async (commentId) => {
         if (!user) {
             alert("You must be logged in.");
@@ -175,9 +178,8 @@ export default function ThreadPage() {
         }
     };
 
-    /* ------------------------------
-       Invalid thread guard
-    ------------------------------ */
+    /* Thread Guard */
+
     if (!threadId) {
         return (
             <div className="wrap">
@@ -189,9 +191,6 @@ export default function ThreadPage() {
         );
     }
 
-    /* ------------------------------
-       Render
-    ------------------------------ */
     return (
         <div className="page-row">
             <aside className="thread-sidebar">
