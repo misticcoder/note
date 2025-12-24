@@ -13,20 +13,20 @@ export default function CommentSection({
     const isAdmin = role === "ADMIN";
     const list = Array.isArray(comments) ? comments : [];
 
-    async function toggleLike(comment) {
+    async function toggleReaction(comment, type) {
         if (!user) return;
 
-        const hasLiked = comment.reactions?.myReaction === "LIKE";
+        const hasReacted = comment.reactions?.myReaction === type;
         const url = `http://localhost:8080/api/comments/${comment.id}/reactions?username=${user.username}`;
 
         try {
-            if (hasLiked) {
+            if (hasReacted) {
                 await fetch(url, { method: "DELETE" });
             } else {
                 await fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ reactionType: "LIKE" })
+                    body: JSON.stringify({ reactionType: type })
                 });
             }
 
@@ -37,6 +37,7 @@ export default function CommentSection({
             console.error("Failed to toggle reaction", err);
         }
     }
+
 
     return (
         <div className="comments-card">
@@ -73,15 +74,24 @@ export default function CommentSection({
                                                 ? "reaction-btn active"
                                                 : "reaction-btn"
                                         }
-                                        onClick={() => toggleLike(c)}
+                                        onClick={() => toggleReaction(c, "LIKE")}
                                         disabled={!user}
-                                        title={
-                                            user
-                                                ? "Like comment"
-                                                : "Log in to react"
-                                        }
+                                        title="Like"
                                     >
                                         👍 {c.reactions?.counts?.LIKE || 0}
+                                    </button>
+
+                                    <button
+                                        className={
+                                            c.reactions?.myReaction === "DISLIKE"
+                                                ? "reaction-btn active dislike"
+                                                : "reaction-btn dislike"
+                                        }
+                                        onClick={() => toggleReaction(c, "DISLIKE")}
+                                        disabled={!user}
+                                        title="Dislike"
+                                    >
+                                        👎 {c.reactions?.counts?.DISLIKE || 0}
                                     </button>
 
                                     {canDelete && (
@@ -93,6 +103,8 @@ export default function CommentSection({
                                         </button>
                                     )}
                                 </div>
+
+
                             </div>
                         </li>
                     );

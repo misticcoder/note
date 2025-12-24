@@ -301,9 +301,14 @@
     background: transparent;
     cursor: pointer;
     margin-right: 8px;
+    font-size: 14px;
 }
 
 .reaction-btn.active {
-    color: #d32f2f;
     font-weight: bold;
 }
+
+.reaction-btn.dislike.active {
+    color: #555;
+}
+
