@@ -1,0 +1,231 @@
+.post-feed {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+
+.post-card {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    border-bottom: 1px solid #2c2c2c;
+}
+
+.post-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #444;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.post-body {
+    flex: 1;
+}
+
+.post-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+    color: #aaa;
+}
+
+.post-text {
+    margin: 6px 0;
+    font-size: 15px;
+    white-space: pre-wrap;
+}
+
+.post-image {
+    margin-top: 8px;
+    max-width: 100%;
+    border-radius: 12px;
+}
+
+.post-action {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.15s ease;
+}
+
+.post-action:hover {
+    color: #1d9bf0;
+}
+
+.post-action.liked {
+    color: #e0245e;
+}
+
+
+/* Create Post */
+.post-composer {
+    align-items: flex-start;
+}
+
+.composer-body textarea {
+    padding-top: 6px;
+    line-height: 1.4;
+}
+
+.composer-body textarea::placeholder {
+    color: #9aa0a6;
+}
+
+
+.composer-body textarea {
+    width: 100%;
+    min-height: 60px;
+    resize: vertical;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-size: 15px;
+}
+
+.composer-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 6px;
+}
+
+.composer-actions button {
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    background: #1d9bf0;
+    color: #fff;
+}
+
+.composer-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.post-meta {
+    font-size: 13px;
+    color: #9aa0a6;
+}
+
+.post-meta strong {
+    color: #fff;
+}
+
+.post-time {
+    font-size: 12px;
+    color: #9aa0a6;
+}
+
+/* X-style post */
+
+.x-post {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    border-bottom: 1px solid #2c2c2c;
+}
+
+.x-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.x-body {
+    flex: 1;
+}
+
+/* Header */
+.x-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.x-user {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 14px;
+}
+
+.x-name {
+    font-weight: 700;
+    color: #fff;
+}
+
+.x-handle,
+.x-time {
+    color: #9aa0a6;
+    font-size: 13px;
+}
+
+.x-more {
+    background: none;
+    border: none;
+    color: #9aa0a6;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.x-more:hover {
+    color: #fff;
+}
+
+/* Content */
+.x-content {
+    margin-top: 6px;
+    font-size: 15px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+/* Image */
+.x-image {
+    margin-top: 10px;
+    border-radius: 14px;
+    max-width: 100%;
+}
+
+/* Actions */
+.x-actions {
+    display: flex;
+    justify-content: space-between;
+    max-width: 300px;
+    margin-top: 10px;
+}
+
+.x-action {
+    background: none;
+    border: none;
+    color: #9aa0a6;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+}
+
+.x-action:hover {
+    color: #1d9bf0;
+}
+
+.x-action.liked {
+    color: #e0245e;
+}
+

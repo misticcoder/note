@@ -2,6 +2,8 @@ import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "./AuthContext";
 import ThreadSection from "./Threads/ThreadSection";
 
+import PostFeed from "./components/PostFeed";
+
 
 function Home() {
     const [threads, setThreads] = useState([]);
@@ -338,108 +340,20 @@ function Home() {
                     )}
                     {/* Daily News */}
 
-                    <div style={{width: newsWidth, display: "flex", flexDirection: "column"}}>
+                    <div
+                        style={{
+                            width: newsWidth,
+                            display: "flex",
+                            flexDirection: "column"
+                        }}
+                    >
+                        <h3 style={styles.col_title}>Feed</h3>
 
-                        {isAdmin && (
-                            <button style={styles.addBtn} onClick={() => setShowNewsModal(true)}>Add News</button>
-                        )}
-
-                        <h3 style={styles.col_title}>Daily News</h3>
-
-                        {/* Featured / Headline News */}
-                        {headNews && (
-
-                            <div
-                                style={{
-                                    ...styles.HeadNews,
-                                    ...(hoveredId === `news-head-${headNews.id}` ? boxHover : {})
-                                }}
-                                onMouseEnter={() => setHoveredId(`news-head-${headNews.id}`)}
-                                onMouseLeave={() => setHoveredId(null)}
-                                onClick={() => {
-                                    window.location.hash = `#/news/${headNews.id}`;
-                                }}
-                            >
-                                <div style={styles.HeadNewsOverlay}>
-                                    {headNews.pinned && (
-                                        <span
-                                            style={{
-                                                background: "#d50032",
-                                                color: "#fff",
-                                                fontSize: "0.7rem",
-                                                padding: "2px 6px",
-                                                borderRadius: "4px",
-                                                marginRight: "6px"
-                                            }}
-                                        >
-    PINNED
-  </span>
-                                    )}
-
-                                    <div style={{ fontWeight: 700 }}>
-                                        {headNews.title}
-                                    </div>
-                                    <div style={{fontSize: "0.8rem", opacity: 0.85}}>
-                                        {headNews.published &&
-                                            new Date(headNews.published).toLocaleDateString()}
-                                        {headNews.author && ` · ${headNews.author}`}
-                                    </div>
-
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Rest of News */}
-                        {otherNews.map(news => (
-                            <div
-                                key={news.id}
-                                style={{
-                                    ...styles.News,
-                                    justifyContent: "space-between"
-                                }}
-                                onClick={() => window.location.hash = `#/news/${news.id}`}
-                            >
-                                {/* Left: title + meta */}
-                                <div style={{ display: "flex", flexDirection: "column" }}>
-      <span style={{ fontWeight: 600 }}>
-        {news.title}
-      </span>
-                                    <span style={{ fontSize: "0.75rem", opacity: 0.7 }}>
-        {news.published &&
-            new Date(news.published).toLocaleDateString()}
-                                        {news.author && ` · ${news.author}`}
-      </span>
-                                </div>
-
-                                {/* Right: pin button (ADMIN ONLY) */}
-                                {isAdmin && (
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation(); // ⬅ prevents navigation
-                                            togglePin(news.id, !news.pinned);
-                                        }}
-                                        style={{
-                                            fontSize: "0.7rem",
-                                            padding: "4px 6px",
-                                            borderRadius: "4px",
-                                            border: "none",
-                                            background: news.pinned ? "#d50032" : "#555",
-                                            color: "#fff",
-                                            cursor: "pointer"
-                                        }}
-                                    >
-                                        {news.pinned ? "Unpin" : "Pin"}
-                                    </button>
-                                )}
-                            </div>
-                        ))}
-
-
+                        <PostFeed/>
                     </div>
 
+
                     {/* Clubs */}
-
-
                     <div style={{width: clubsWidth, display: "flex", flexDirection: "column"}}>
 
                         {isAdmin && (
@@ -482,7 +396,7 @@ function Home() {
                     {/* Events */}
 
                     {!hideEvents && (
-                        <div style={{ width: eventsWidth, display: "flex", flexDirection: "column" }}>
+                        <div style={{width: eventsWidth, display: "flex", flexDirection: "column"}}>
 
                             {isAdmin && (
                                 <button style={styles.addBtn} onClick={() => {

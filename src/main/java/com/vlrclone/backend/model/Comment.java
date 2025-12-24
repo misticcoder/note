@@ -20,6 +20,8 @@ public class Comment {
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    private Long postId; // nullable
+
     @OneToMany(
             mappedBy = "comment",
             cascade = CascadeType.ALL,
