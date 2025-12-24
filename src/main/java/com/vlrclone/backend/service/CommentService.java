@@ -34,7 +34,8 @@ public class CommentService {
                         c.getUsername(),
                         c.getComment(),
                         c.getCreatedAt(),
-                        reactionService.getReactionSummary(c.getId(), username)
+                        reactionService.getReactionSummary(c.getId(), username),
+                        c.getParentId()
                 ))
                 .toList();
     }

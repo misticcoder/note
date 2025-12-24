@@ -12,19 +12,22 @@ public class CommentResponseDto {
     private String comment;
     private LocalDateTime createdAt;
     private ReactionSummaryDto reactions;
+    private Long parentId;
 
     public CommentResponseDto(
             Long id,
             String username,
             String comment,
             LocalDateTime createdAt,
-            ReactionSummaryDto reactions
+            ReactionSummaryDto reactions,
+            Long parentId
     ) {
         this.id = id;
         this.username = username;
         this.comment = comment;
         this.createdAt = createdAt;
         this.reactions = reactions;
+        this.parentId = parentId;
     }
 
     public Long getId() {
@@ -45,5 +48,8 @@ public class CommentResponseDto {
 
     public ReactionSummaryDto getReactions() {
         return reactions;
+    }
+    public Long getParentId() {
+        return parentId;
     }
 }

@@ -295,20 +295,100 @@
     opacity: 0.6;
 }
 
-/* REACTION */
-.reaction-btn {
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    margin-right: 8px;
+
+
+.comment-item {
+    list-style: none;
+    margin-bottom: 16px;
+}
+
+.comment-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+/* Avatar */
+.comment-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #444;
+    color: #fff;
+    font-weight: bold;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Content */
+.comment-content {
+    flex: 1;
+}
+
+.comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.comment-username {
+    font-weight: 600;
+}
+
+.comment-time {
+    color: #888;
+    font-size: 12px;
+}
+
+/* Text */
+.comment-text {
+    margin: 4px 0 6px;
     font-size: 14px;
 }
 
+/* Actions */
+.comment-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+}
+
+.reaction-btn,
+.reply-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #aaa;
+    padding: 0;
+}
+
 .reaction-btn.active {
-    font-weight: bold;
+    color: #f1c40f;
 }
 
-.reaction-btn.dislike.active {
-    color: #555;
+.reply-btn {
+    font-weight: 500;
 }
 
+/* Replies */
+.reply-list {
+    margin-left: 48px;
+    margin-top: 8px;
+    padding-left: 12px;
+    border-left: 2px solid #2c2c2c;
+}
+
+/* Toggle */
+.toggle-replies-btn {
+    margin-top: 6px;
+    background: none;
+    border: none;
+    color: #3ea6ff;
+    cursor: pointer;
+    font-size: 13px;
+}

@@ -56,21 +56,47 @@ public class CommentController {
 
 
     @PostMapping
-    public ResponseEntity<?> create(@PathVariable Long threadId, @RequestBody Map<String, String> body) {
-        if (!threads.existsById(threadId)) return ResponseEntity.status(404).body(Map.of("message","Thread not found"));
+    public ResponseEntity<?> create(
+            @PathVariable Long threadId,
+            @RequestBody Map<String, String> body
+    ) {
+        if (!threads.existsById(threadId)) {
+            return ResponseEntity.status(404)
+                    .body(Map.of("message", "Thread not found"));
+        }
 
         String username = body.get("username");
-        String text = body.getOrDefault("comment", "").trim(); // your field name is "comment"
+        String text = body.getOrDefault("comment", "").trim();
+
         if (username == null || username.isBlank() || text.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("message","username and comment are required"));
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "username and comment are required"));
+        }
+
+        Long parentId = null;
+        if (body.containsKey("parentId") && body.get("parentId") != null) {
+            try {
+                parentId = Long.valueOf(body.get("parentId"));
+
+                if (!comments.existsById(parentId)) {
+                    return ResponseEntity.badRequest()
+                            .body(Map.of("message", "Parent comment not found"));
+                }
+            } catch (NumberFormatException e) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "Invalid parentId"));
+            }
         }
 
         Comment c = new Comment();
         c.setThreadId(threadId);
         c.setUsername(username);
-        c.setComment(text); // ensure Comment has getComment/setComment
+        c.setComment(text);
+        c.setParentId(parentId); // ← this is the key line
+
         return ResponseEntity.ok(comments.save(c));
     }
+
 
     @DeleteMapping("/{commentId}")
     public ResponseEntity<?> delete(

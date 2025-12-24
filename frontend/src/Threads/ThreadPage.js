@@ -109,7 +109,7 @@ export default function ThreadPage() {
 
     /* Post Comments */
 
-    const postComment = async (e) => {
+    const postComment = async (e, parentId = null) => {
         e.preventDefault();
         if (!user) {
             alert("You must be logged in to comment.");
@@ -125,7 +125,8 @@ export default function ThreadPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     username: user.username,
-                    comment: text
+                    comment: text,
+                    parentId
                 })
             });
 
@@ -142,6 +143,7 @@ export default function ThreadPage() {
             alert(e.message || "Failed to post comment");
         }
     };
+
 
     /* Delete Comments */
 
