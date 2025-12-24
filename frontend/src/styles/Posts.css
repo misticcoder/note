@@ -219,6 +219,7 @@
     align-items: center;
     gap: 6px;
     font-size: 14px;
+    opacity: 0.85;
 }
 
 .x-action:hover {
@@ -228,4 +229,108 @@
 .x-action.liked {
     color: #e0245e;
 }
+
+.post-detail{
+    margin-top: 50px;
+}
+
+/* Root list */
+.comment-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Comment row */
+.yt-comment {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+}
+
+/* Avatar */
+.yt-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #444;
+    color: #fff;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Main content */
+.yt-main {
+    flex: 1;
+}
+
+/* Header */
+.yt-header {
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+    align-items: center;
+}
+
+.yt-username {
+    font-weight: 600;
+}
+
+.yt-time {
+    color: #aaa;
+    font-size: 12px;
+}
+
+/* Text */
+.yt-text {
+    margin: 4px 0 6px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Actions */
+.yt-actions {
+    display: flex;
+    gap: 12px;
+    font-size: 13px;
+}
+
+.yt-actions button {
+    background: none;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    padding: 0;
+}
+
+.yt-actions button:hover {
+    color: #fff;
+}
+
+.yt-delete {
+    color: #ff4d4d;
+}
+
+/* Reply toggle */
+.yt-toggle {
+    margin-top: 6px;
+    background: none;
+    border: none;
+    color: #3ea6ff;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 0;
+}
+
+/* Replies */
+.yt-replies {
+    margin-top: 8px;
+    padding-left: 48px;
+    list-style: none;
+}
+
+
 

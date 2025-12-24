@@ -1,3 +1,4 @@
+// src/Comments/CommentItem.js
 import { useState } from "react";
 
 export default function CommentItem({
@@ -8,96 +9,87 @@ export default function CommentItem({
                                         toggleReaction,
                                         onReply
                                     }) {
+    const [showReplies, setShowReplies] = useState(false);
+
     const canDelete =
         user && (isAdmin || user.username === comment.username);
 
-    const [collapsed, setCollapsed] = useState(true);
-    const hasReplies = comment.replies.length > 0;
+    const replies = comment.replies || [];
+    const replyCount = replies.length;
 
     return (
-        <li className="comment-item">
-            <div className="comment-row">
-                {/* Avatar */}
-                <div className="comment-avatar">
-                    {comment.username[0].toUpperCase()}
+        <li className="yt-comment">
+            {/* Avatar */}
+            <div className="yt-avatar">
+                {comment.username[0].toUpperCase()}
+            </div>
+
+            {/* Main */}
+            <div className="yt-main">
+                {/* Header */}
+                <div className="yt-header">
+                    <span className="yt-username">@{comment.username}</span>
+                    <span className="yt-time">
+                        {new Date(comment.createdAt).toLocaleString()}
+                    </span>
                 </div>
 
-                {/* Main content */}
-                <div className="comment-content">
-                    <div className="comment-meta">
-                <span className="comment-username">
-                    @{comment.username}
-                </span>
-                        <span className="comment-time">
-                    {new Date(comment.createdAt).toLocaleString()}
-                </span>
-                    </div>
+                {/* Body */}
+                <div className="yt-text">
+                    {comment.comment}
+                </div>
 
-                    <div className="comment-text">
-                        {comment.comment}
-                    </div>
+                {/* Actions */}
+                <div className="yt-actions">
+                    <button onClick={() => toggleReaction(comment, "LIKE")}>
+                        👍 {comment.reactions?.counts?.LIKE || 0}
+                    </button>
+                    <button onClick={() => toggleReaction(comment, "DISLIKE")}>
+                        👎
+                    </button>
+                    <button onClick={() => onReply(comment.id)}>
+                        Reply
+                    </button>
 
-                    <div className="comment-actions">
+                    {canDelete && (
                         <button
-                            className={
-                                comment.reactions?.myReaction === "LIKE"
-                                    ? "reaction-btn active"
-                                    : "reaction-btn"
-                            }
-                            onClick={() => toggleReaction(comment, "LIKE")}
+                            className="yt-delete"
+                            onClick={() => onDelete(comment.id)}
                         >
-                            👍 {comment.reactions?.counts?.LIKE || 0}
-                        </button>
-
-                        <button
-                            className={
-                                comment.reactions?.myReaction === "DISLIKE"
-                                    ? "reaction-btn active"
-                                    : "reaction-btn"
-                            }
-                            onClick={() => toggleReaction(comment, "DISLIKE")}
-                        >
-                            👎
-                        </button>
-
-                        <button
-                            className="reply-btn"
-                            onClick={() => onReply(comment.id)}
-                        >
-                            Reply
-                        </button>
-                    </div>
-
-                    {/* Replies toggle */}
-                    {comment.replies.length > 0 && (
-                        <button
-                            className="toggle-replies-btn"
-                            onClick={() => setCollapsed(v => !v)}
-                        >
-                            {collapsed
-                                ? `${comment.replies.length} replies`
-                                : "Hide replies"}
+                            Delete
                         </button>
                     )}
                 </div>
-            </div>
 
-            {/* Replies */}
-            {!collapsed && comment.replies.length > 0 && (
-                <ul className="reply-list">
-                    {comment.replies.map(r => (
-                        <CommentItem
-                            key={r.id}
-                            comment={r}
-                            user={user}
-                            isAdmin={isAdmin}
-                            onDelete={onDelete}
-                            toggleReaction={toggleReaction}
-                            onReply={onReply}
-                        />
-                    ))}
-                </ul>
-            )}
+                {/* Replies toggle */}
+                {replyCount > 0 && (
+                    <button
+                        className="yt-toggle"
+                        onClick={() => setShowReplies(!showReplies)}
+                    >
+                        {showReplies
+                            ? "Hide replies"
+                            : `View ${replyCount} repl${replyCount > 1 ? "ies" : "y"}`}
+                    </button>
+                )}
+
+                {/* Replies */}
+                {showReplies && (
+                    <ul className="yt-replies">
+                        {replies.map(r => (
+                            <CommentItem
+                                key={r.id}
+                                comment={r}
+                                user={user}
+                                isAdmin={isAdmin}
+                                onDelete={onDelete}
+                                toggleReaction={toggleReaction}
+                                onReply={onReply}
+                            />
+                        ))}
+                    </ul>
+                )}
+            </div>
         </li>
     );
 }

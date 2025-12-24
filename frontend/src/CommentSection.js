@@ -1,10 +1,11 @@
+// src/CommentSection.js
 import { useState } from "react";
 import CommentItem from "./Comments/CommentItem";
 import "./styles/Threads.css";
 
-/* ------------------------------
-   Build comment tree (flat → nested)
------------------------------- */
+/* ===============================
+   Build tree from flat list
+================================ */
 function buildCommentTree(comments) {
     const map = new Map();
     const roots = [];
@@ -16,9 +17,7 @@ function buildCommentTree(comments) {
     map.forEach(c => {
         if (c.parentId) {
             const parent = map.get(c.parentId);
-            if (parent) {
-                parent.replies.push(c);
-            }
+            if (parent) parent.replies.push(c);
         } else {
             roots.push(c);
         }
@@ -27,9 +26,9 @@ function buildCommentTree(comments) {
     return roots;
 }
 
-/* ------------------------------
+/* ===============================
    Comment Section
------------------------------- */
+================================ */
 export default function CommentSection({
                                            comments,
                                            user,
@@ -44,17 +43,14 @@ export default function CommentSection({
 
     const [replyTo, setReplyTo] = useState(null);
 
-    const list = Array.isArray(comments) ? comments : [];
-    const tree = buildCommentTree(list);
+    const tree = buildCommentTree(Array.isArray(comments) ? comments : []);
 
-    /* ------------------------------
-       Toggle reactions (LIKE / DISLIKE)
-    ------------------------------ */
+    /* -------- Reaction toggle -------- */
     async function toggleReaction(comment, type) {
         if (!user) return;
 
         const hasReacted = comment.reactions?.myReaction === type;
-        const url = `http://localhost:8080/api/comments/${comment.id}/reactions?username=${encodeURIComponent(
+        const url = `/api/comments/${comment.id}/reactions?username=${encodeURIComponent(
             user.username
         )}`;
 
@@ -68,16 +64,13 @@ export default function CommentSection({
                     body: JSON.stringify({ reactionType: type })
                 });
             }
-
             refreshComments?.();
-        } catch (err) {
-            console.error("Failed to toggle reaction", err);
+        } catch (e) {
+            console.error("Reaction failed", e);
         }
     }
 
-    /* ------------------------------
-       Submit comment / reply
-    ------------------------------ */
+    /* -------- Submit handler -------- */
     const handleSubmit = (e) => {
         e.preventDefault();
         onSubmit(e, replyTo);
@@ -104,23 +97,15 @@ export default function CommentSection({
                 ))}
             </ul>
 
-            {/* Reply indicator */}
             {user && replyTo && (
                 <div className="replying-indicator">
                     Replying to comment #{replyTo}
-                    <button
-                        className="cancel-reply-btn"
-                        onClick={() => setReplyTo(null)}
-                    >
-                        Cancel
-                    </button>
+                    <button onClick={() => setReplyTo(null)}>Cancel</button>
                 </div>
             )}
 
-            {/* Comment / Reply form */}
             <form onSubmit={handleSubmit} className="comment-form">
                 <textarea
-                    className="textarea"
                     value={newComment}
                     onChange={e => setNewComment(e.target.value)}
                     disabled={!user}
@@ -132,12 +117,7 @@ export default function CommentSection({
                             : "Log in to comment"
                     }
                 />
-
-                <button
-                    className="submit-btn"
-                    type="submit"
-                    disabled={!user || !newComment.trim()}
-                >
+                <button disabled={!user || !newComment.trim()}>
                     {replyTo ? "Post Reply" : "Post Comment"}
                 </button>
             </form>

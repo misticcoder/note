@@ -39,4 +39,25 @@ public class CommentService {
                 ))
                 .toList();
     }
+
+    @Transactional(readOnly = true)
+    public List<CommentResponseDto> getPostCommentsWithReactions(
+            Long postId,
+            String username
+    ) {
+        return commentRepository.findByPostIdOrderByCreatedAtAsc(postId)
+                .stream()
+                .map(c -> new CommentResponseDto(
+                        c.getId(),
+                        c.getUsername(),
+                        c.getComment(),
+                        c.getCreatedAt(),
+                        reactionService.getReactionSummary(c.getId(), username),
+                        c.getParentId()
+                ))
+                .toList();
+    }
+
+
+
 }

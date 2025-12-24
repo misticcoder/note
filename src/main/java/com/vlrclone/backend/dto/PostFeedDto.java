@@ -9,6 +9,7 @@ public class PostFeedDto {
     public String content;
     public String imageUrl;
     public LocalDateTime createdAt;
+    public long replyCount;
 
     public long likes;
     public boolean myLike;
@@ -20,7 +21,8 @@ public class PostFeedDto {
             String imageUrl,
             LocalDateTime createdAt,
             long likes,
-            boolean myLike
+            boolean myLike,
+            long replyCount
     ) {
         this.id = id;
         this.author = author;
@@ -29,5 +31,6 @@ public class PostFeedDto {
         this.createdAt = createdAt;
         this.likes = likes;
         this.myLike = myLike;
+        this.replyCount = replyCount;
     }
 }

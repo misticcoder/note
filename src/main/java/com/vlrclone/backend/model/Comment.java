@@ -9,18 +9,29 @@ import java.util.List;
 @Entity
 @Table(name = "comments")
 public class Comment {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(nullable = false)
+
+    @Column(nullable = true)
     private Long threadId;
+
+    @Column(nullable = true)
+    private Long postId;
+
+    /* Core fields */
+
     @Column(nullable = false)
     private String username;
+
     @Column(nullable = false, length = 400)
     private String comment;
+
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    private Long postId; // nullable
+    /* Reactions */
 
     @OneToMany(
             mappedBy = "comment",
@@ -29,23 +40,34 @@ public class Comment {
     )
     private List<CommentReaction> reactions = new ArrayList<>();
 
+    /* Replies */
+
     @Column(nullable = true)
     private Long parentId;
 
+    /* Getters / setters */
 
-    public Long getId() {return id;}
-    public void setId(Long id) {this.id = id;}
-    public Long getThreadId() {return threadId;}
-    public void setThreadId(Long threadId) {this.threadId = threadId;}
-    public String getUsername() {return username;}
-    public void setUsername(String username) {this.username = username;}
-    public String getComment() {return comment;}
-    public void setComment(String comment) {this.comment = comment;}
-    public LocalDateTime getCreatedAt() {return createdAt;}
-    public void setCreatedAt(LocalDateTime createdAt) {this.createdAt = createdAt;}
-    public List<CommentReaction> getReactions() {return reactions;}
-    public void setReactions(List<CommentReaction> reactions) {this.reactions = reactions;}
-    public Long getParentId() {return parentId;}
-    public void setParentId(Long parentId) {this.parentId = parentId;}
+    public Long getId() { return id; }
 
+    public Long getThreadId() { return threadId; }
+    public void setThreadId(Long threadId) { this.threadId = threadId; }
+
+    public Long getPostId() { return postId; }
+    public void setPostId(Long postId) { this.postId = postId; }
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
+    public String getComment() { return comment; }
+    public void setComment(String comment) { this.comment = comment; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+
+    public List<CommentReaction> getReactions() { return reactions; }
+    public void setReactions(List<CommentReaction> reactions) {
+        this.reactions = reactions;
+    }
+
+    public Long getParentId() { return parentId; }
+    public void setParentId(Long parentId) { this.parentId = parentId; }
 }

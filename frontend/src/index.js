@@ -14,6 +14,7 @@ import EventPage from "./EventPage";
 import NewsPage from "./NewsPage";
 import NewsList from "./NewsList";
 import ClubMembers from "./Clubs/ClubMembers";
+import PostDetailPage from "./Post/PostDetail";
 
 function App() {
     const [route, setRoute] = useState(window.location.hash || "#/");
@@ -30,6 +31,9 @@ function App() {
     }, []);
 
     let Page = Home;
+
+    if (route.startsWith("#/post/")) Page = () => <PostDetailPage />;
+
     if (route === "#/admin/users") Page = AdminUsers;
     if (route === "#/threads") Page = ThreadList;
     if (route === "#/admin/threads") Page = ThreadList;

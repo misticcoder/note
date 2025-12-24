@@ -2,7 +2,12 @@ import { timeAgo } from "./timeAgo";
 
 export default function PostCard({ post, user, onLike }) {
     return (
-        <div className="x-post">
+        <div
+            className="x-post"
+            onClick={() => {
+                window.location.hash = `#/post/${post.id}`;
+            }}
+        >
             {/* Avatar */}
             <div className="x-avatar">
                 {post.author[0].toUpperCase()}
@@ -15,10 +20,17 @@ export default function PostCard({ post, user, onLike }) {
                     <div className="x-user">
                         <span className="x-name">{post.author}</span>
                         <span className="x-handle">@{post.author}</span>
-                        <span className="x-time">· {timeAgo(post.createdAt)}</span>
+                        <span className="x-time">
+                            · {timeAgo(post.createdAt)}
+                        </span>
                     </div>
 
-                    <button className="x-more">⋯</button>
+                    <button
+                        className="x-more"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        ⋯
+                    </button>
                 </div>
 
                 {/* Text */}
@@ -37,19 +49,31 @@ export default function PostCard({ post, user, onLike }) {
 
                 {/* Actions */}
                 <div className="x-actions">
-                    <button className="x-action">
-                        💬
+                    <button
+                        className="x-action"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            window.location.hash = `#/post/${post.id}`;
+                        }}
+                    >
+                        💬 {post.replyCount || ""}
                     </button>
 
                     <button
                         className={`x-action ${post.myLike ? "liked" : ""}`}
-                        onClick={onLike}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onLike();
+                        }}
                         disabled={!user}
                     >
                         ❤️ {post.likes}
                     </button>
 
-                    <button className="x-action">
+                    <button
+                        className="x-action"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         ↗
                     </button>
                 </div>
