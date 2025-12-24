@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useCallback } from "react";
 import { AuthContext } from "../AuthContext";
 import ThreadSection from "./ThreadSection";
 import CommentSection from "../CommentSection";
@@ -23,6 +23,9 @@ export default function ThreadPage() {
     const role = String(user?.role || "").toUpperCase();
     const isAdmin = role === "ADMIN";
 
+    /* ------------------------------
+       Fetch sidebar thread list
+    ------------------------------ */
     useEffect(() => {
         const controller = new AbortController();
 
@@ -34,8 +37,35 @@ export default function ThreadPage() {
         return () => controller.abort();
     }, []);
 
-    /* Fetch thread and comments */
-    /* Fetch thread and comments */
+    /* ------------------------------
+       Fetch comments (with reactions)
+    ------------------------------ */
+    const fetchComments = useCallback(
+        async (signal) => {
+            if (!threadId) return;
+
+            const usernameParam = user?.username
+                ? `?username=${encodeURIComponent(user.username)}`
+                : "";
+
+            const res = await fetch(
+                `/api/threads/${threadId}/comments${usernameParam}`,
+                { signal }
+            );
+
+            if (!res.ok) {
+                throw new Error(`Failed to load comments (${res.status})`);
+            }
+
+            const data = await res.json();
+            setComments(Array.isArray(data) ? data : []);
+        },
+        [threadId, user?.username]
+    );
+
+    /* ------------------------------
+       Fetch thread + comments
+    ------------------------------ */
     useEffect(() => {
         if (!threadId) return;
 
@@ -45,20 +75,19 @@ export default function ThreadPage() {
             try {
                 setLoading(true);
 
-                const [tRes, cRes] = await Promise.all([
-                    fetch(`/api/threads/${threadId}`, { signal: controller.signal }),
-                    fetch(`/api/threads/${threadId}/comments`, { signal: controller.signal })
-                ]);
+                const tRes = await fetch(
+                    `/api/threads/${threadId}`,
+                    { signal: controller.signal }
+                );
 
                 if (!tRes.ok) {
                     throw new Error(`Thread not found (${tRes.status})`);
                 }
 
                 const t = await tRes.json();
-                const c = cRes.ok ? await cRes.json() : [];
-
                 setThread(t);
-                setComments(Array.isArray(c) ? c : []);
+
+                await fetchComments(controller.signal);
                 setErr("");
             } catch (e) {
                 if (e.name !== "AbortError") {
@@ -71,9 +100,11 @@ export default function ThreadPage() {
         })();
 
         return () => controller.abort();
-    }, [threadId]);
+    }, [threadId, fetchComments]);
 
-    /* Post comment */
+    /* ------------------------------
+       Post comment
+    ------------------------------ */
     const postComment = async (e) => {
         e.preventDefault();
         if (!user) {
@@ -96,19 +127,21 @@ export default function ThreadPage() {
 
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}));
-                throw new Error(body.message || `Failed to post comment (${res.status})`);
+                throw new Error(
+                    body.message || `Failed to post comment (${res.status})`
+                );
             }
 
-            const saved = await res.json();
-            setComments(prev => [...prev, saved]);
             setNewComment("");
+            await fetchComments();
         } catch (e) {
             alert(e.message || "Failed to post comment");
         }
     };
 
-    /*Delete Comment*/
-
+    /* ------------------------------
+       Delete comment
+    ------------------------------ */
     const handleDeleteComment = async (commentId) => {
         if (!user) {
             alert("You must be logged in.");
@@ -118,7 +151,9 @@ export default function ThreadPage() {
 
         try {
             const res = await fetch(
-                `/api/threads/${threadId}/comments/${commentId}?requesterEmail=${encodeURIComponent(user.email)}`,
+                `/api/threads/${threadId}/comments/${commentId}?requesterEmail=${encodeURIComponent(
+                    user.email
+                )}`,
                 { method: "DELETE" }
             );
 
@@ -134,21 +169,29 @@ export default function ThreadPage() {
                 return;
             }
 
-            setComments(prev => prev.filter(c => c.id !== commentId));
+            await fetchComments();
         } catch (e) {
             alert(e.message || "Delete failed");
         }
     };
 
+    /* ------------------------------
+       Invalid thread guard
+    ------------------------------ */
     if (!threadId) {
         return (
             <div className="wrap">
                 <p>Invalid thread link.</p>
-                <a href="#/threads" className="back-link">← Back to Threads</a>
+                <a href="#/threads" className="back-link">
+                    ← Back to Threads
+                </a>
             </div>
         );
     }
 
+    /* ------------------------------
+       Render
+    ------------------------------ */
     return (
         <div className="page-row">
             <aside className="thread-sidebar">
@@ -161,7 +204,9 @@ export default function ThreadPage() {
 
             <main className="content-col">
                 <div className="header-row">
-                    <a href="#/threads" className="back-link">← Back to Threads</a>
+                    <a href="#/threads" className="back-link">
+                        ← Back to Threads
+                    </a>
                 </div>
 
                 {loading && <p>Loading…</p>}
@@ -178,7 +223,9 @@ export default function ThreadPage() {
                             <span className="thread-meta-sep">•</span>
                             <span>
                                 {thread.published &&
-                                    new Date(thread.published).toLocaleString()}
+                                    new Date(
+                                        thread.published
+                                    ).toLocaleString()}
                             </span>
                         </div>
 
@@ -188,7 +235,6 @@ export default function ThreadPage() {
                     </div>
                 )}
 
-
                 <CommentSection
                     comments={comments}
                     user={user}
@@ -196,6 +242,7 @@ export default function ThreadPage() {
                     setNewComment={setNewComment}
                     onSubmit={postComment}
                     onDelete={handleDeleteComment}
+                    refreshComments={fetchComments}
                 />
             </main>
         </div>
