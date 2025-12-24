@@ -1,5 +1,6 @@
 // src/Comments/CommentItem.js
 import { useState } from "react";
+import {timeAgo} from "../components/timeAgo";
 
 export default function CommentItem({
                                         comment,
@@ -30,8 +31,9 @@ export default function CommentItem({
                 <div className="yt-header">
                     <span className="yt-username">@{comment.username}</span>
                     <span className="yt-time">
-                        {new Date(comment.createdAt).toLocaleString()}
+                        · {timeAgo(comment.createdAt)}
                     </span>
+
                 </div>
 
                 {/* Body */}
