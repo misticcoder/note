@@ -191,59 +191,72 @@ export default function PostFeed() {
                         maxLength={500}
                     />
 
-                    <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        disabled={!user || posting}
-                        onChange={e => {
-                            const files = Array.from(e.target.files || []);
-                            if (!files.length) return;
+                    <div className={"composer-footer"}>
+                        {/* Hidden file input */}
+                        <input
+                            id="post-image-input"
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            disabled={!user || posting}
+                            style={{ display: "none" }}
+                            onChange={e => {
+                                const files = Array.from(e.target.files || []);
+                                if (!files.length) return;
 
-                            setImages(prev => [...prev, ...files]);
-                            setImagePreviews(prev =>
-                                prev.concat(
-                                    files.map(f => URL.createObjectURL(f))
-                                )
-                            );
-                        }}
-                    />
+                                setImages(prev => [...prev, ...files]);
+                                setImagePreviews(prev => [
+                                    ...prev,
+                                    ...files.map(f => URL.createObjectURL(f)),
+                                ]);
+                            }}
+                        />
 
-                    {imagePreviews.length > 0 && (
-                        <div className={`image-grid grid-${imagePreviews.length}`}>
-                            {imagePreviews.map((src, i) => (
-                                <div key={i} className="image-item">
-                                    <img src={src} alt={`preview-${i}`} />
-                                    <button
-                                        className="remove-image"
-                                        onClick={() => {
-                                            setImages(prev =>
-                                                prev.filter((_, idx) => idx !== i)
-                                            );
-                                            setImagePreviews(prev =>
-                                                prev.filter((_, idx) => idx !== i)
-                                            );
-                                        }}
-                                    >
-                                        ✕
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    <div className="composer-actions">
-
-                        <button
-                            onClick={createPost}
-                            disabled={
-                                !user ||
-                                posting ||
-                                (!newPost.trim() && images.length === 0)
-                            }
+                        {/* Custom file button */}
+                        <label
+                            htmlFor="post-image-input"
+                            className={`file-btn ${(!user || posting) ? "disabled" : ""}`}
                         >
-                            Post
-                        </button>
+                            📷 Add images
+                        </label>
+
+
+                        {imagePreviews.length > 0 && (
+                            <div className={`image-grid grid-${imagePreviews.length}`}>
+                                {imagePreviews.map((src, i) => (
+                                    <div key={i} className="image-item">
+                                        <img src={src} alt={`preview-${i}`} />
+                                        <button
+                                            className="remove-image"
+                                            onClick={() => {
+                                                setImages(prev =>
+                                                    prev.filter((_, idx) => idx !== i)
+                                                );
+                                                setImagePreviews(prev =>
+                                                    prev.filter((_, idx) => idx !== i)
+                                                );
+                                            }}
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        <div className="composer-actions">
+
+                            <button
+                                onClick={createPost}
+                                disabled={
+                                    !user ||
+                                    posting ||
+                                    (!newPost.trim() && images.length === 0)
+                                }
+                            >
+                                Post
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

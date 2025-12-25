@@ -131,6 +131,13 @@
     cursor: not-allowed;
 }
 
+.composer-footer{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+}
+
 .post-meta {
     font-size: 13px;
     color: #9aa0a6;
@@ -171,6 +178,7 @@
 
 .x-body {
     flex: 1;
+    cursor: pointer;
 }
 
 /* Header */
@@ -636,11 +644,44 @@
 }
 
 .modal {
-    background: #111;
+    background: #ffffff;
+    color: #000000;
     padding: 20px;
     border-radius: 6px;
     width: 360px;
 
     position: relative;
     z-index: 10000; /* 🔥 REQUIRED */
+}
+
+.file-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    padding: 6px 12px;
+    font-size: 14px;
+    font-weight: 500;
+
+    background-color: #1f2937; /* dark gray */
+    color: #e5e7eb;
+
+    border: 1px solid #374151;
+    border-radius: 6px;
+    cursor: pointer;
+
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.file-btn:hover {
+    background-color: #374151;
+}
+
+.file-btn:active {
+    background-color: #111827;
+}
+
+.file-btn.disabled {
+    opacity: 0.5;
+    pointer-events: none;
 }
