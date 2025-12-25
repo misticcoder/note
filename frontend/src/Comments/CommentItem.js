@@ -31,7 +31,7 @@ export default function CommentItem({
                 <div className="yt-header">
                     <span className="yt-username">@{comment.username}</span>
                     <span className="yt-time">
-                        · {timeAgo(comment.published)}
+                        · {timeAgo(comment.createdAt)}
                     </span>
 
                 </div>

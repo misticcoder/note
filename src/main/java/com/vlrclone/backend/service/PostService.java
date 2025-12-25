@@ -2,6 +2,7 @@ package com.vlrclone.backend.service;
 
 import com.vlrclone.backend.dto.PostFeedDto;
 import com.vlrclone.backend.model.Post;
+import com.vlrclone.backend.model.PostImage;
 import com.vlrclone.backend.model.PostLike;
 import com.vlrclone.backend.repository.CommentRepository;
 import com.vlrclone.backend.repository.PostLikeRepository;
@@ -35,13 +36,16 @@ public class PostService {
                         p.getId(),
                         p.getAuthor(),
                         p.getContent(),
-                        p.getImageUrl(),
+                        p.getImages()
+                                .stream()
+                                .map(PostImage::getUrl)
+                                .toList(),
                         p.getCreatedAt(),
                         likes.countByPostId(p.getId()),
-                        username != null &&
-                                likes.existsByPostIdAndUsername(p.getId(), username),
+                        username != null && likes.existsByPostIdAndUsername(p.getId(), username),
                         comments.countByPostIdAndParentIdIsNull(p.getId())
                 ))
+
                 .toList();
     }
 

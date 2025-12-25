@@ -2,7 +2,7 @@
 
 import { useContext, useEffect, useState, useCallback } from "react";
 import { AuthContext } from "../AuthContext";
-import PostCard from "../components/PostCard";
+import PostCard from "./PostCard";
 import CommentSection from "../CommentSection";
 import "../styles/Posts.css"
 
@@ -14,11 +14,21 @@ export default function PostDetailPage() {
     const [newComment, setNewComment] = useState("");
     const [loading, setLoading] = useState(true);
 
-    /* Extract postId from hash: #/post/123 */
-    const postId = (() => {
-        const m = (window.location.hash || "").match(/^#\/post\/(\d+)/i);
-        return m ? Number(m[1]) : null;
-    })();
+    const [postId, setPostId] = useState(null);
+
+    useEffect(() => {
+        const extractId = () => {
+            const m = (window.location.hash || "").match(/^#\/post\/(\d+)/i);
+            setPostId(m ? Number(m[1]) : null);
+        };
+
+        extractId(); // initial
+        window.addEventListener("hashchange", extractId);
+
+        return () => window.removeEventListener("hashchange", extractId);
+    }, []);
+
+
 
     /* ===================== FETCH POST ===================== */
 
@@ -64,17 +74,13 @@ export default function PostDetailPage() {
         if (!postId) return;
 
         (async () => {
-            try {
-                setLoading(true);
-                await fetchPost();
-                await fetchComments();
-            } catch (e) {
-                console.error("Failed to load post detail", e);
-            } finally {
-                setLoading(false);
-            }
+            setLoading(true);
+            await fetchPost();
+            await fetchComments();
+            setLoading(false);
         })();
-    }, [postId, fetchPost, fetchComments]);
+    }, [postId, user]);
+
 
     /* ===================== POST COMMENT / REPLY ===================== */
 

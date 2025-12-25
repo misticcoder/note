@@ -2,7 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "./AuthContext";
 import ThreadSection from "./Threads/ThreadSection";
 
-import PostFeed from "./components/PostFeed";
+import PostFeed from "./Post/PostFeed";
 
 
 function Home() {
@@ -138,13 +138,24 @@ function Home() {
         if (!newClub.leaderUserId) {
             if (!window.confirm("No leader selected. Create club without a leader?")) return;
         }
-        const form = new FormData();
-        form.append("name", newClub.name);
-        form.append("description", newClub.description);
+        const ClubForm = new FormData();
+        ClubForm.append("name", newClub.name);
+        ClubForm.append("description", newClub.description);
 
         if (newClub.logo) {
-            form.append("logo", newClub.logo);
+            ClubForm.append("logo", newClub.logo);
         }
+
+        const form = new FormData();
+        form.append("author", user.username);
+        form.append("content", newPost);
+        if (media) form.append("image", media);
+
+        fetch("/api/posts", {
+            method: "POST",
+            body: form
+        });
+
 
         try {
             // 1) Create club
@@ -152,7 +163,7 @@ function Home() {
                 `/api/clubs?requesterEmail=${encodeURIComponent(user.email)}`,
                 {
                     method: "POST",
-                    body: form
+                    body: ClubForm
                 }
             );
             const created = await res.json().catch(() => ({}));
@@ -344,11 +355,14 @@ function Home() {
                         style={{
                             width: newsWidth,
                             display: "flex",
-                            flexDirection: "column"
+                            flexDirection: "column",
+                            border: "1px solid #ffffe3",
+                            minHeight: "100vh"
                         }}
                     >
-                        <h3 style={styles.col_title}>Feed</h3>
 
+
+                        <h3 style={styles.col_title}>Feed</h3>
                         <PostFeed/>
                     </div>
 
@@ -356,7 +370,7 @@ function Home() {
                     {/* Clubs */}
                     <div style={{width: clubsWidth, display: "flex", flexDirection: "column"}}>
 
-                        {isAdmin && (
+                    {isAdmin && (
                             <button style={styles.addBtn} onClick={openClubModal}>Add Club</button>
                         )}
 
@@ -561,7 +575,6 @@ const styles = {
         display: "flex",
         gap: "24px",
         alignItems: "flex-start",
-        justifyContent: "center",
         width: "100%"
     },
 

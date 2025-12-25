@@ -1,5 +1,6 @@
-import { timeAgo } from "./timeAgo";
-import "../styles/Posts.css"
+import { timeAgo } from "../components/timeAgo";
+import "../styles/Posts.css";
+import ImageCarousel from "./ImageCarousal";
 
 export default function PostCard({ post, user, onLike }) {
     return (
@@ -11,10 +12,10 @@ export default function PostCard({ post, user, onLike }) {
         >
             {/* Avatar */}
             <div className="x-avatar">
-                {post.author[0].toUpperCase()}
+                {post.author?.[0]?.toUpperCase() || "?"}
             </div>
 
-            {/* Main content */}
+            {/* Body */}
             <div className="x-body">
                 {/* Header */}
                 <div className="x-header">
@@ -28,32 +29,26 @@ export default function PostCard({ post, user, onLike }) {
 
                     <button
                         className="x-more"
-                        data-tooltip={"more"}
+                        data-tooltip="more"
                         onClick={(e) => e.stopPropagation()}
                     >
                         ⋯
                     </button>
                 </div>
 
-                {/* Text */}
-                <div className="x-content">
-                    {post.content}
-                </div>
+                {/* Content */}
+                <div className="x-content">{post.content}</div>
 
-                {/* Image (future-proof) */}
-                {post.imageUrl && (
-                    <img
-                        src={post.imageUrl}
-                        alt=""
-                        className="x-image"
-                    />
+                {post.images?.length > 0 && (
+                    <ImageCarousel images={post.images} />
                 )}
+
 
                 {/* Actions */}
                 <div className="x-actions">
                     <button
-                        className={`x-action ${post.myLike ? "reply" : ""}`}
-                        data-tooltip={"reply"}
+                        className="x-action reply"
+                        data-tooltip="reply"
                         onClick={(e) => {
                             e.stopPropagation();
                             window.location.hash = `#/post/${post.id}`;
@@ -63,8 +58,8 @@ export default function PostCard({ post, user, onLike }) {
                     </button>
 
                     <button
-                        className={`x-action ${post.myLike ? "like" : ""}`}
-                        data-tooltip={"Like"}
+                        className={`x-action like ${post.myLike ? "active" : ""}`}
+                        data-tooltip="like"
                         onClick={(e) => {
                             e.stopPropagation();
                             onLike();
@@ -75,8 +70,8 @@ export default function PostCard({ post, user, onLike }) {
                     </button>
 
                     <button
-                        className={`x-action ${post.myLike ? "share" : ""}`}
-                        data-tooltip={"share"}
+                        className="x-action share"
+                        data-tooltip="share"
                         onClick={(e) => e.stopPropagation()}
                     >
                         ↗
