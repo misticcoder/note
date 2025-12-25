@@ -133,4 +133,20 @@ public class PostController {
             throw new RuntimeException("Failed to save image", e);
         }
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(
+            @PathVariable Long id,
+            @RequestParam String username,
+            @RequestParam(required = false, defaultValue = "false") boolean admin
+    ) {
+        try {
+            service.deletePost(id, username, admin);
+            return ResponseEntity.ok(Map.of("status", "deleted"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
+
 }

@@ -4,7 +4,9 @@ import { useContext, useEffect, useState, useCallback } from "react";
 import { AuthContext } from "../AuthContext";
 import PostCard from "./PostCard";
 import CommentSection from "../CommentSection";
-import "../styles/Posts.css"
+import ConfirmDialog from "../hooks/ConfirmDialog";
+import { useConfirm } from "../hooks/useConfirm";
+import "../styles/Posts.css";
 
 export default function PostDetailPage() {
     const { user } = useContext(AuthContext);
@@ -13,8 +15,18 @@ export default function PostDetailPage() {
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState("");
     const [loading, setLoading] = useState(true);
-
     const [postId, setPostId] = useState(null);
+
+    /* ===================== CONFIRM HOOK ===================== */
+
+    const {
+        confirmState,
+        confirm,
+        handleConfirm,
+        handleCancel,
+    } = useConfirm();
+
+    /* ===================== EXTRACT POST ID ===================== */
 
     useEffect(() => {
         const extractId = () => {
@@ -22,13 +34,10 @@ export default function PostDetailPage() {
             setPostId(m ? Number(m[1]) : null);
         };
 
-        extractId(); // initial
+        extractId();
         window.addEventListener("hashchange", extractId);
-
         return () => window.removeEventListener("hashchange", extractId);
     }, []);
-
-
 
     /* ===================== FETCH POST ===================== */
 
@@ -59,7 +68,6 @@ export default function PostDetailPage() {
         );
 
         if (!res.ok) {
-            console.error("Failed to load comments");
             setComments([]);
             return;
         }
@@ -79,14 +87,12 @@ export default function PostDetailPage() {
             await fetchComments();
             setLoading(false);
         })();
-    }, [postId, user]);
+    }, [postId, fetchPost, fetchComments]);
 
-
-    /* ===================== POST COMMENT / REPLY ===================== */
+    /* ===================== POST COMMENT ===================== */
 
     const postComment = async (e, parentId = null) => {
         e.preventDefault();
-
         if (!user) return;
 
         const text = newComment.trim();
@@ -99,59 +105,61 @@ export default function PostDetailPage() {
                 body: JSON.stringify({
                     username: user.username,
                     comment: text,
-                    parentId
-                })
+                    parentId,
+                }),
             });
 
             if (!res.ok) throw new Error();
 
             setNewComment("");
-            await fetchComments();
+            fetchComments();
         } catch {
             alert("Failed to post comment");
         }
     };
 
+    /* ===================== DELETE POST ===================== */
 
+    const requestDeletePost = (post) => {
+        confirm(post, async (p) => {
+            await fetch(
+                `/api/posts/${p.id}?username=${encodeURIComponent(
+                    user.username
+                )}&admin=${user.role === "ADMIN"}`,
+                { method: "DELETE" }
+            );
+
+            window.history.back();
+        });
+    };
 
     /* ===================== DELETE COMMENT ===================== */
 
-    const deleteComment = async (commentId) => {
-        if (!user) return;
-
-        if (!window.confirm("Delete this comment?")) return;
-
-        try {
-            const res = await fetch(
-                `/api/posts/${postId}/comments/${commentId}?requesterEmail=${encodeURIComponent(
+    const requestDeleteComment = (commentId) => {
+        confirm(commentId, async (id) => {
+            await fetch(
+                `/api/posts/${postId}/comments/${id}?requesterEmail=${encodeURIComponent(
                     user.email
                 )}`,
                 { method: "DELETE" }
             );
 
-            if (!res.ok) {
-                throw new Error("Delete failed");
-            }
-
-            await fetchComments();
-        } catch {
-            alert("Failed to delete comment");
-        }
+            fetchComments();
+        });
     };
 
-    /* ===================== LIKE HANDLER ===================== */
+    /* ===================== LIKE ===================== */
 
     const toggleLike = async () => {
         if (!user || !post) return;
 
-        const url = `/api/posts/${post.id}/like?username=${encodeURIComponent(
-            user.username
-        )}`;
-
         try {
-            await fetch(url, {
-                method: post.myLike ? "DELETE" : "POST"
-            });
+            await fetch(
+                `/api/posts/${post.id}/like?username=${encodeURIComponent(
+                    user.username
+                )}`,
+                { method: post.myLike ? "DELETE" : "POST" }
+            );
 
             fetchPost();
         } catch (e) {
@@ -179,27 +187,37 @@ export default function PostDetailPage() {
                     </button>
                 </div>
 
-                <div className={"post-card-wrapper"}>
+                <div className="post-card-wrapper">
                     <PostCard
                         post={post}
                         user={user}
                         onLike={toggleLike}
+                        onDelete={requestDeletePost}
                     />
                 </div>
 
-                <div className={"comments-card-wrapper"}>
+                <div className="comments-card-wrapper">
                     <CommentSection
                         comments={comments}
                         user={user}
                         newComment={newComment}
                         setNewComment={setNewComment}
-                        onSubmit={postComment}          // ← pass the function reference
-                        onDelete={deleteComment}
+                        onSubmit={postComment}
+                        onDelete={requestDeleteComment}
                         refreshComments={fetchComments}
                     />
                 </div>
             </div>
+
+            {/* ===================== CONFIRM DIALOG ===================== */}
+
+            <ConfirmDialog
+                open={confirmState.open}
+                title="Confirm Deletion"
+                message="Are you sure you want to delete this? This action cannot be undone."
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+            />
         </div>
     );
-
 }

@@ -60,4 +60,20 @@ public class PostService {
     public void unlike(Long postId, String username) {
         likes.deleteByPostIdAndUsername(postId, username);
     }
+
+    // src/main/java/com/vlrclone/backend/service/PostService.java
+
+    public void deletePost(Long postId, String requesterUsername, boolean isAdmin) {
+        Post post = posts.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        if (!isAdmin && !post.getAuthor().equals(requesterUsername)) {
+            throw new RuntimeException("Not allowed");
+        }
+
+        likes.deleteAllByPostId(postId);
+        comments.deleteAllByPostId(postId);
+        posts.delete(post);
+    }
+
 }

@@ -2,7 +2,36 @@ import { timeAgo } from "../components/timeAgo";
 import "../styles/Posts.css";
 import ImageCarousel from "./ImageCarousal";
 
-export default function PostCard({ post, user, onLike }) {
+export default function PostCard({ post, user, onLike, onDelete }) {
+
+
+    const requestDeletePost = (post) => {
+        if (!user) return;
+        setConfirmDelete({ open: true, post });
+    };
+
+    const confirmDeletePost = async () => {
+        const post = confirmDelete.post;
+        if (!post) return;
+
+        // Optimistic removal
+        setPosts(prev => prev.filter(p => p.id !== post.id));
+
+        try {
+            await fetch(
+                `/api/posts/${post.id}?username=${encodeURIComponent(
+                    user.username
+                )}&admin=${user.role === "ADMIN"}`,
+                { method: "DELETE" }
+            );
+        } catch (e) {
+            alert("Failed to delete post");
+            fetchPosts(); // rollback
+        } finally {
+            setConfirmDelete({ open: false, post: null });
+        }
+    };
+
     return (
         <div
             className="x-post"
@@ -43,7 +72,6 @@ export default function PostCard({ post, user, onLike }) {
                     <ImageCarousel images={post.images} />
                 )}
 
-
                 {/* Actions */}
                 <div className="x-actions">
                     <button
@@ -76,6 +104,21 @@ export default function PostCard({ post, user, onLike }) {
                     >
                         ↗
                     </button>
+
+                    {(user &&
+                        (user.username === post.author ||
+                            user.role === "ADMIN")) && (
+                        <button
+                            className="x-action danger"
+                            data-tooltip="Delete"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(post);
+                            }}
+                        >
+                            🗑
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

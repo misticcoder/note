@@ -2,8 +2,10 @@ import { useContext, useEffect, useState, useCallback } from "react";
 import { AuthContext } from "../AuthContext";
 import ThreadSection from "./ThreadSection";
 import CommentSection from "../CommentSection";
+import ConfirmDialog from "../hooks/ConfirmDialog";
+import { useConfirm } from "../hooks/useConfirm";
 import "../styles/Threads.css";
-import "../styles/buttons.css"
+import "../styles/buttons.css";
 
 export default function ThreadPage() {
     const { user } = useContext(AuthContext);
@@ -15,7 +17,17 @@ export default function ThreadPage() {
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState("");
 
-    // extract id from hash: #/thread/123
+    /* ===================== CONFIRM HOOK ===================== */
+
+    const {
+        confirmState,
+        confirm,
+        handleConfirm,
+        handleCancel,
+    } = useConfirm();
+
+    /* ===================== THREAD ID ===================== */
+
     const threadId = (() => {
         const m = (window.location.hash || "").match(/^#\/thread\/(\d+)/i);
         return m ? Number(m[1]) : null;
@@ -25,14 +37,12 @@ export default function ThreadPage() {
     const isAdmin = role === "ADMIN";
 
     useEffect(() => {
-        if (thread?.title) {
-            document.title = `${thread.title} | InfCom`;
-        } else {
-            document.title = "InfCom";
-        }
+        document.title = thread?.title
+            ? `${thread.title} | InfCom`
+            : "InfCom";
     }, [thread]);
 
-    /* SideBar Thread List */
+    /* ===================== SIDEBAR THREAD LIST ===================== */
 
     useEffect(() => {
         const controller = new AbortController();
@@ -45,7 +55,7 @@ export default function ThreadPage() {
         return () => controller.abort();
     }, []);
 
-    /* Fetch Comments */
+    /* ===================== FETCH COMMENTS ===================== */
 
     const fetchComments = useCallback(
         async (signal) => {
@@ -70,7 +80,7 @@ export default function ThreadPage() {
         [threadId, user?.username]
     );
 
-    /* Fetch thread + comments */
+    /* ===================== FETCH THREAD + COMMENTS ===================== */
 
     useEffect(() => {
         if (!threadId) return;
@@ -108,7 +118,7 @@ export default function ThreadPage() {
         return () => controller.abort();
     }, [threadId, fetchComments]);
 
-    /* Post Comments */
+    /* ===================== POST COMMENT ===================== */
 
     const postComment = async (e, parentId = null) => {
         e.preventDefault();
@@ -127,8 +137,8 @@ export default function ThreadPage() {
                 body: JSON.stringify({
                     username: user.username,
                     comment: text,
-                    parentId
-                })
+                    parentId,
+                }),
             });
 
             if (!res.ok) {
@@ -139,49 +149,38 @@ export default function ThreadPage() {
             }
 
             setNewComment("");
-            await fetchComments();
+            fetchComments();
         } catch (e) {
             alert(e.message || "Failed to post comment");
         }
     };
 
+    /* ===================== DELETE COMMENT (CONFIRMED) ===================== */
 
-    /* Delete Comments */
-
-    const handleDeleteComment = async (commentId) => {
+    const requestDeleteComment = (commentId) => {
         if (!user) {
             alert("You must be logged in.");
             return;
         }
-        if (!window.confirm("Delete this comment?")) return;
 
-        try {
+        confirm(commentId, async (id) => {
             const res = await fetch(
-                `/api/threads/${threadId}/comments/${commentId}?requesterEmail=${encodeURIComponent(
+                `/api/threads/${threadId}/comments/${id}?requesterEmail=${encodeURIComponent(
                     user.email
                 )}`,
                 { method: "DELETE" }
             );
 
-            const bodyText = await res.text();
-
             if (!res.ok) {
-                let msg = bodyText;
-                try {
-                    const json = JSON.parse(bodyText || "{}");
-                    msg = json.message || bodyText || `HTTP ${res.status}`;
-                } catch {}
-                alert(`Delete failed (${res.status}): ${msg}`);
-                return;
+                const msg = await res.text();
+                throw new Error(msg || "Delete failed");
             }
 
-            await fetchComments();
-        } catch (e) {
-            alert(e.message || "Delete failed");
-        }
+            fetchComments();
+        });
     };
 
-    /* Thread Guard */
+    /* ===================== GUARD ===================== */
 
     if (!threadId) {
         return (
@@ -193,6 +192,8 @@ export default function ThreadPage() {
             </div>
         );
     }
+
+    /* ===================== RENDER ===================== */
 
     return (
         <div className="page-row">
@@ -215,7 +216,7 @@ export default function ThreadPage() {
                 </div>
 
                 {loading && <p>Loading…</p>}
-                {err && <p style={{color: "red"}}>{err}</p>}
+                {err && <p style={{ color: "red" }}>{err}</p>}
 
                 {thread && (
                     <div className="thread-card">
@@ -246,10 +247,20 @@ export default function ThreadPage() {
                     newComment={newComment}
                     setNewComment={setNewComment}
                     onSubmit={postComment}
-                    onDelete={handleDeleteComment}
+                    onDelete={requestDeleteComment}
                     refreshComments={fetchComments}
                 />
             </main>
+
+            {/* ===================== CONFIRM DIALOG ===================== */}
+
+            <ConfirmDialog
+                open={confirmState.open}
+                title="Delete Comment"
+                message="Are you sure you want to delete this comment? This action cannot be undone."
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+            />
         </div>
     );
 }

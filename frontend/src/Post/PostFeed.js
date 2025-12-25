@@ -1,6 +1,10 @@
+// src/Posts/PostFeed.jsx
+
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../AuthContext";
 import PostCard from "./PostCard";
+import ConfirmDialog from "../hooks/ConfirmDialog";
+import { useConfirm } from "../hooks/useConfirm";
 import "../styles/Posts.css";
 
 export default function PostFeed() {
@@ -14,6 +18,15 @@ export default function PostFeed() {
 
     const [images, setImages] = useState([]);
     const [imagePreviews, setImagePreviews] = useState([]);
+
+    /* ===================== CONFIRM HOOK ===================== */
+
+    const {
+        confirmState,
+        confirm,
+        handleConfirm,
+        handleCancel,
+    } = useConfirm();
 
     /* ===================== FETCH POSTS ===================== */
 
@@ -65,17 +78,14 @@ export default function PostFeed() {
         const form = new FormData();
         form.append("author", user.username);
         form.append("content", text);
-
-        images.forEach(file => {
-            form.append("images", file);
-        });
+        images.forEach(file => form.append("images", file));
 
         try {
             setPosting(true);
 
             const res = await fetch("/api/posts", {
                 method: "POST",
-                body: form
+                body: form,
             });
 
             if (!res.ok) {
@@ -84,11 +94,14 @@ export default function PostFeed() {
                 return;
             }
 
+            const savedPost = await res.json();
+
+            // Optimistic insert
+            setPosts(prev => [savedPost, ...prev]);
+
             setNewPost("");
             setImages([]);
             setImagePreviews([]);
-
-            await fetchPosts();
         } catch (e) {
             console.error("Create post failed", e);
         } finally {
@@ -96,21 +109,20 @@ export default function PostFeed() {
         }
     };
 
-    /* ===================== LIKE HANDLER ===================== */
+    /* ===================== LIKE ===================== */
 
     const toggleLike = async (post) => {
         if (!user) return;
 
         const liked = post.myLike;
 
-        // Optimistic update
         setPosts(prev =>
             prev.map(p =>
                 p.id === post.id
                     ? {
                         ...p,
                         myLike: !liked,
-                        likes: liked ? p.likes - 1 : p.likes + 1
+                        likes: liked ? p.likes - 1 : p.likes + 1,
                     }
                     : p
             )
@@ -124,14 +136,14 @@ export default function PostFeed() {
                 { method: liked ? "DELETE" : "POST" }
             );
         } catch {
-            // Rollback on failure
+            // rollback
             setPosts(prev =>
                 prev.map(p =>
                     p.id === post.id
                         ? {
                             ...p,
                             myLike: liked,
-                            likes: liked ? p.likes + 1 : p.likes - 1
+                            likes: liked ? p.likes + 1 : p.likes - 1,
                         }
                         : p
                 )
@@ -139,11 +151,28 @@ export default function PostFeed() {
         }
     };
 
+    /* ===================== DELETE POST ===================== */
+
+    const requestDeletePost = (post) => {
+        confirm(post, async (p) => {
+            // Optimistic removal
+            setPosts(prev => prev.filter(x => x.id !== p.id));
+
+            await fetch(
+                `/api/posts/${p.id}?username=${encodeURIComponent(
+                    user.username
+                )}&admin=${user.role === "ADMIN"}`,
+                { method: "DELETE" }
+            );
+        });
+    };
+
     /* ===================== RENDER ===================== */
 
     return (
         <div className="post-feed">
-            {/* Create Post */}
+            {/* ===================== CREATE POST ===================== */}
+
             <div className="post-composer">
                 <div className="post-avatar">
                     {user ? user.username[0].toUpperCase() : "?"}
@@ -172,10 +201,11 @@ export default function PostFeed() {
                             if (!files.length) return;
 
                             setImages(prev => [...prev, ...files]);
-                            setImagePreviews(prev => [
-                                ...prev,
-                                ...files.map(f => URL.createObjectURL(f))
-                            ]);
+                            setImagePreviews(prev =>
+                                prev.concat(
+                                    files.map(f => URL.createObjectURL(f))
+                                )
+                            );
                         }}
                     />
 
@@ -203,6 +233,7 @@ export default function PostFeed() {
                     )}
 
                     <div className="composer-actions">
+
                         <button
                             onClick={createPost}
                             disabled={
@@ -217,16 +248,29 @@ export default function PostFeed() {
                 </div>
             </div>
 
+            {/* ===================== POSTS ===================== */}
+
             {loading && <p>Loading posts…</p>}
 
-            {posts.map(post => (
+            {posts.map(p => (
                 <PostCard
-                    key={post.id}
-                    post={post}
+                    key={p.id}
+                    post={p}
                     user={user}
-                    onLike={() => toggleLike(post)}
+                    onLike={() => toggleLike(p)}
+                    onDelete={requestDeletePost}
                 />
             ))}
+
+            {/* ===================== CONFIRM DIALOG ===================== */}
+
+            <ConfirmDialog
+                open={confirmState.open}
+                title="Delete Post"
+                message="Are you sure you want to delete this post? This action cannot be undone."
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+            />
         </div>
     );
 }
