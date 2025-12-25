@@ -107,6 +107,7 @@ export default function CommentSection({
             <form onSubmit={handleSubmit} className="comment-form">
                 <textarea
                     value={newComment}
+                    className={"textarea"}
                     onChange={e => setNewComment(e.target.value)}
                     disabled={!user}
                     placeholder={
@@ -117,7 +118,7 @@ export default function CommentSection({
                             : "Log in to comment"
                     }
                 />
-                <button disabled={!user || !newComment.trim()}>
+                <button className={"post-btn"} disabled={!user || !newComment.trim()}>
                     {replyTo ? "Post Reply" : "Post Comment"}
                 </button>
             </form>

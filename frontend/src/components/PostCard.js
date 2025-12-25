@@ -1,4 +1,5 @@
 import { timeAgo } from "./timeAgo";
+import "../styles/Posts.css"
 
 export default function PostCard({ post, user, onLike }) {
     return (
@@ -27,6 +28,7 @@ export default function PostCard({ post, user, onLike }) {
 
                     <button
                         className="x-more"
+                        data-tooltip={"more"}
                         onClick={(e) => e.stopPropagation()}
                     >
                         ⋯
@@ -50,7 +52,8 @@ export default function PostCard({ post, user, onLike }) {
                 {/* Actions */}
                 <div className="x-actions">
                     <button
-                        className="x-action"
+                        className={`x-action ${post.myLike ? "reply" : ""}`}
+                        data-tooltip={"reply"}
                         onClick={(e) => {
                             e.stopPropagation();
                             window.location.hash = `#/post/${post.id}`;
@@ -60,7 +63,8 @@ export default function PostCard({ post, user, onLike }) {
                     </button>
 
                     <button
-                        className={`x-action ${post.myLike ? "liked" : ""}`}
+                        className={`x-action ${post.myLike ? "like" : ""}`}
+                        data-tooltip={"Like"}
                         onClick={(e) => {
                             e.stopPropagation();
                             onLike();
@@ -71,7 +75,8 @@ export default function PostCard({ post, user, onLike }) {
                     </button>
 
                     <button
-                        className="x-action"
+                        className={`x-action ${post.myLike ? "share" : ""}`}
+                        data-tooltip={"share"}
                         onClick={(e) => e.stopPropagation()}
                     >
                         ↗

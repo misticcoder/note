@@ -1,14 +1,29 @@
+/* Layout wrapper */
+.page-row {
+    display: flex;
+    gap: 24px;
+    max-width: 1200px;
+    margin: 0 auto;                 /* centers layout */
+    padding: 60px 24px 24px;
+    align-items: flex-start;
+    box-sizing: border-box;
+}
+
 .post-feed {
-    max-width: 600px;
+    width: 100%;
+    box-sizing: border-box;
+    max-width: 680px;
     margin: 0 auto;
+
 }
 
 
 .post-card {
     display: flex;
     gap: 12px;
+    justify-content: center;
     padding: 14px;
-    border-bottom: 1px solid #2c2c2c;
+    border: 1px solid #2c2c2c;
 }
 
 .post-avatar {
@@ -66,6 +81,8 @@
 /* Create Post */
 .post-composer {
     align-items: flex-start;
+    padding: 20px;
+    border: 1px solid #ffffe3;
 }
 
 .composer-body textarea {
@@ -130,7 +147,7 @@
     display: flex;
     gap: 12px;
     padding: 14px;
-    border-bottom: 1px solid #2c2c2c;
+    border: 1px solid #ffffe3;
 }
 
 .x-avatar {
@@ -181,56 +198,117 @@
     color: #9aa0a6;
     cursor: pointer;
     font-size: 18px;
+    position: relative;
 }
 
-.x-more:hover {
+.x-more::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: -28px;
+    right: 0;
+    background: #111;
     color: #fff;
+    font-size: 11px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(4px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
-/* Content */
-.x-content {
-    margin-top: 6px;
-    font-size: 15px;
-    line-height: 1.5;
-    white-space: pre-wrap;
+.x-more:hover::after {
+    opacity: 1;
+    transform: translateY(0);
 }
 
-/* Image */
-.x-image {
-    margin-top: 10px;
-    border-radius: 14px;
-    max-width: 100%;
-}
-
-/* Actions */
 .x-actions {
     display: flex;
-    justify-content: space-between;
-    max-width: 300px;
-    margin-top: 10px;
+    gap: 16px;
+    margin-top: 6px;
 }
 
 .x-action {
-    background: none;
-    border: none;
-    color: #9aa0a6;
-    cursor: pointer;
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
+
+    background: transparent;
+    border: none;
+
+    color: #aaa;
     font-size: 14px;
-    opacity: 0.85;
+
+    padding: 4px 6px;
+    border-radius: 999px;
+
+    cursor: pointer;
+    line-height: 1;
+}
+
+.x-action:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 .x-action:hover {
-    color: #1d9bf0;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
 }
 
-.x-action.liked {
-    color: #e0245e;
+.x-action.active {
+    color: #ff4d6d; /* like / heart color */
 }
+
+.x-action::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: -28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+
+    background: #111;
+    color: #fff;
+    font-size: 11px;
+
+    padding: 4px 6px;
+    border-radius: 4px;
+
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.x-action:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+
+.x-action.like:hover {
+    color: #ff4d6d;
+}
+
+.x-action.reply:hover {
+    color: #3ea6ff;
+}
+
+.x-action.share:hover {
+    color: #4caf50;
+}
+
+.x-content{
+    color: #ffffff;
+    cursor: pointer;
+}
+
 
 .post-detail{
+    margin: 0 auto;
     margin-top: 50px;
 }
 
@@ -332,5 +410,59 @@
     list-style: none;
 }
 
+/* Page background */
+.post-page {
+    min-height: 100vh;
+    background: #2f2f2f;
+    display: flex;
+    justify-content: center;
+    padding: 24px 16px;
+}
 
+/* Centered column */
+.post-page-inner {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Back button */
+.post-nav {
+    display: flex;
+    justify-content: flex-start;
+    height: 3em;
+    background-color: #1f1f1f;
+    opacity: 80%;
+}
+
+.back-btn {
+    background: transparent;
+    border: none;
+    color: #aaa;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.back-btn:hover {
+    color: #fff;
+}
+
+/* Post card spacing */
+.post-card-wrapper {
+    margin-top: 30px;
+    width: 100%;
+}
+
+/* Comments card spacing */
+.comments-wrapper {
+    width: 100%;
+}
+
+.post-nav {
+    position: sticky;
+    top: 60px;
+    z-index: 10;
+}
 

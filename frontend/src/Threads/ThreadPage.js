@@ -3,6 +3,7 @@ import { AuthContext } from "../AuthContext";
 import ThreadSection from "./ThreadSection";
 import CommentSection from "../CommentSection";
 import "../styles/Threads.css";
+import "../styles/buttons.css"
 
 export default function ThreadPage() {
     const { user } = useContext(AuthContext);
@@ -204,14 +205,17 @@ export default function ThreadPage() {
             </aside>
 
             <main className="content-col">
-                <div className="header-row">
-                    <a href="#/threads" className="back-link">
-                        ← Back to Threads
-                    </a>
+                <div className="post-nav">
+                    <button
+                        className="back-btn"
+                        onClick={() => window.history.back()}
+                    >
+                        ← Back
+                    </button>
                 </div>
 
                 {loading && <p>Loading…</p>}
-                {err && <p style={{ color: "red" }}>{err}</p>}
+                {err && <p style={{color: "red"}}>{err}</p>}
 
                 {thread && (
                     <div className="thread-card">

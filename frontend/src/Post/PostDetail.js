@@ -4,7 +4,7 @@ import { useContext, useEffect, useState, useCallback } from "react";
 import { AuthContext } from "../AuthContext";
 import PostCard from "../components/PostCard";
 import CommentSection from "../CommentSection";
-import "../styles/Threads.css"; // IMPORTANT: reuse thread styles
+import "../styles/Posts.css"
 
 export default function PostDetailPage() {
     const { user } = useContext(AuthContext);
@@ -162,23 +162,38 @@ export default function PostDetailPage() {
     /* ===================== RENDER ===================== */
 
     return (
-        <div className="post-detail">
-            <PostCard
-                post={post}
-                user={user}
-                onLike={toggleLike}
-            />
+        <div className="post-page">
+            <div className="post-page-inner">
+                <div className="post-nav">
+                    <button
+                        className="back-btn"
+                        onClick={() => window.history.back()}
+                    >
+                        ← Back
+                    </button>
+                </div>
 
-            <CommentSection
-                comments={comments}
-                user={user}
-                newComment={newComment}
-                setNewComment={setNewComment}
-                onSubmit={postComment}          // ← pass the function reference
-                onDelete={deleteComment}
-                refreshComments={fetchComments}
-            />
+                <div className={"post-card-wrapper"}>
+                    <PostCard
+                        post={post}
+                        user={user}
+                        onLike={toggleLike}
+                    />
+                </div>
 
+                <div className={"comments-card-wrapper"}>
+                    <CommentSection
+                        comments={comments}
+                        user={user}
+                        newComment={newComment}
+                        setNewComment={setNewComment}
+                        onSubmit={postComment}          // ← pass the function reference
+                        onDelete={deleteComment}
+                        refreshComments={fetchComments}
+                    />
+                </div>
+            </div>
         </div>
     );
+
 }

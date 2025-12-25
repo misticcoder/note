@@ -1,0 +1,20 @@
+/* Back button */
+.post-nav {
+    display: flex;
+    justify-content: flex-start;
+    height: 3em;
+    background-color: #1f1f1f;
+    opacity: 80%;
+}
+
+.back-btn {
+    background: transparent;
+    border: none;
+    color: #aaa;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.back-btn:hover {
+    color: #fff;
+}
