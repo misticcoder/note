@@ -8,18 +8,17 @@ public class PostFeedDto {
     public Long id;
     public String author;
     public String content;
-    public List<String> images;
+    public List<ImageDto> images;
     public LocalDateTime createdAt;
-    public long replyCount;
-
     public long likes;
     public boolean myLike;
+    public long replyCount;
 
     public PostFeedDto(
             Long id,
             String author,
             String content,
-            List<String> images,
+            List<ImageDto> images,
             LocalDateTime createdAt,
             long likes,
             boolean myLike,
@@ -35,35 +34,13 @@ public class PostFeedDto {
         this.replyCount = replyCount;
     }
 
-    public Long getId() {
-        return id;
-    }
+    public static class ImageDto {
+        public Long id;
+        public String url;
 
-    public String getAuthor() {
-        return author;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public List<String> getImages() {
-        return images;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public long getReplyCount() {
-        return replyCount;
-    }
-
-    public long getLikes() {
-        return likes;
-    }
-
-    public boolean isMyLike() {
-        return myLike;
+        public ImageDto(Long id, String url) {
+            this.id = id;
+            this.url = url;
+        }
     }
 }

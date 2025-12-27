@@ -1,19 +1,28 @@
 import { useEffect, useState } from "react";
 
 export default function EditPostModal({ post, onClose, onSave }) {
-    const [content, setContent] = useState(post.content || "");
-
-    // Existing images (from DB)
-    const [orderedImages, setOrderedImages] = useState(
-        post.images?.map(img => ({ ...img })) || []
-    );
-
-    // Images to delete
+    const [content, setContent] = useState("");
+    const [orderedImages, setOrderedImages] = useState([]);
     const [removeImageIds, setRemoveImageIds] = useState([]);
-
-    // Newly added images
     const [newImages, setNewImages] = useState([]);
     const [newPreviews, setNewPreviews] = useState([]);
+
+    /* ===================== SYNC POST ===================== */
+
+    useEffect(() => {
+        setContent(post.content || "");
+
+        setOrderedImages(
+            post.images?.map(img => ({
+                id: img.id,
+                url: img.url,
+            })) || []
+        );
+
+        setRemoveImageIds([]);
+        setNewImages([]);
+        setNewPreviews([]);
+    }, [post]);
 
     /* ===================== DRAG & DROP ===================== */
 
@@ -46,13 +55,22 @@ export default function EditPostModal({ post, onClose, onSave }) {
     /* ===================== SAVE ===================== */
 
     const handleSave = () => {
+        console.log("REMOVE IDS:", removeImageIds);
+
+        if (
+            !content.trim() &&
+            orderedImages.length === 0 &&
+            newImages.length === 0
+        ) {
+            alert("Post cannot be empty");
+            return;
+        }
+
         onSave({
             content,
             removeImageIds,
             newImages,
-            imageOrder: orderedImages.map(
-                (img, index) => `${img.id}:${index}`
-            )
+            imageOrder: orderedImages.map(img => img.id),
         });
     };
 
@@ -86,15 +104,25 @@ export default function EditPostModal({ post, onClose, onSave }) {
 
                                 <button
                                     className="remove-image"
-                                    onClick={() => {
+                                    draggable={false}
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                    }}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+
+                                        const id = String(img.id);
+
                                         setRemoveImageIds(prev =>
-                                            prev.includes(img.id)
+                                            prev.includes(id)
                                                 ? prev
-                                                : [...prev, img.id]
+                                                : [...prev, id]
                                         );
 
                                         setOrderedImages(prev =>
-                                            prev.filter(i => i.id !== img.id)
+                                            prev.filter(i => String(i.id) !== id)
                                         );
                                     }}
                                 >
@@ -140,11 +168,25 @@ export default function EditPostModal({ post, onClose, onSave }) {
                         const files = Array.from(e.target.files || []);
                         if (!files.length) return;
 
+                        const total =
+                            orderedImages.length +
+                            newImages.length +
+                            files.length;
+
+                        if (total > 4) {
+                            alert("Maximum 4 images per post");
+                            e.target.value = null;
+                            return;
+                        }
+
                         setNewImages(prev => [...prev, ...files]);
-                        setNewPreviews(prev => [
-                            ...prev,
-                            ...files.map(f => URL.createObjectURL(f))
-                        ]);
+                        setNewPreviews(prev =>
+                            prev.concat(
+                                files.map(f => URL.createObjectURL(f))
+                            )
+                        );
+
+                        e.target.value = null;
                     }}
                 />
 

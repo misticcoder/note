@@ -9,6 +9,10 @@ import com.vlrclone.backend.repository.PostLikeRepository;
 import com.vlrclone.backend.repository.PostRepository;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -16,7 +20,6 @@ public class PostService {
 
     private final PostRepository posts;
     private final PostLikeRepository likes;
-
     private final CommentRepository comments;
 
     public PostService(
@@ -29,26 +32,16 @@ public class PostService {
         this.comments = comments;
     }
 
+    /* ===================== FEED ===================== */
 
     public List<PostFeedDto> getFeed(String username) {
-        return posts.findAllByOrderByCreatedAtDesc().stream()
-                .map(p -> new PostFeedDto(
-                        p.getId(),
-                        p.getAuthor(),
-                        p.getContent(),
-                        p.getImages()
-                                .stream()
-                                .map(PostImage::getUrl)
-                                .toList(),
-                        p.getCreatedAt(),
-                        likes.countByPostId(p.getId()),
-                        username != null && likes.existsByPostIdAndUsername(p.getId(), username),
-                        comments.countByPostIdAndParentIdIsNull(p.getId())
-                ))
-
+        return posts.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(p -> toFeedDto(p, username))
                 .toList();
     }
 
+    /* ===================== LIKE ===================== */
 
     public void like(Long postId, String username) {
         if (!likes.existsByPostIdAndUsername(postId, username)) {
@@ -61,7 +54,7 @@ public class PostService {
         likes.deleteByPostIdAndUsername(postId, username);
     }
 
-    // src/main/java/com/vlrclone/backend/service/PostService.java
+    /* ===================== DELETE POST ===================== */
 
     public void deletePost(Long postId, String requesterUsername, boolean isAdmin) {
         Post post = posts.findById(postId)
@@ -71,9 +64,48 @@ public class PostService {
             throw new RuntimeException("Not allowed");
         }
 
+        post.getImages().forEach(img -> deleteImageFile(img.getUrl()));
+
         likes.deleteAllByPostId(postId);
         comments.deleteAllByPostId(postId);
         posts.delete(post);
     }
 
+    /* ===================== FILE CLEANUP ===================== */
+
+    public void deleteImageFile(String imageUrl) {
+        try {
+            if (imageUrl == null || imageUrl.isBlank()) return;
+
+            Path path = Paths.get(imageUrl.substring(1));
+            if (Files.exists(path)) {
+                Files.delete(path);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to delete image file: " + imageUrl);
+        }
+    }
+
+    /* ===================== DTO MAPPER ===================== */
+
+    public PostFeedDto toFeedDto(Post post, String username) {
+        return new PostFeedDto(
+                post.getId(),
+                post.getAuthor(),
+                post.getContent(),
+                post.getImages()
+                        .stream()
+                        .sorted(Comparator.comparingInt(PostImage::getPosition))
+                        .map(img -> new PostFeedDto.ImageDto(
+                                img.getId(),
+                                img.getUrl()
+                        ))
+                        .toList(),
+                post.getCreatedAt(),
+                likes.countByPostId(post.getId()),
+                username != null &&
+                        likes.existsByPostIdAndUsername(post.getId(), username),
+                comments.countByPostIdAndParentIdIsNull(post.getId())
+        );
+    }
 }

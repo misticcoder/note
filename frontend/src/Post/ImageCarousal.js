@@ -20,7 +20,7 @@ export default function ImageCarousal({ images }) {
     return (
         <div className="x-carousel">
             <img
-                src={images[index]}
+                src={images[index].url}
                 alt=""
                 className="x-carousel-image"
             />
@@ -35,9 +35,9 @@ export default function ImageCarousal({ images }) {
                     </button>
 
                     <div className="x-carousel-dots">
-                        {images.map((_, i) => (
+                        {images.map((img, i) => (
                             <span
-                                key={i}
+                                key={img.id}
                                 className={`dot ${i === index ? "active" : ""}`}
                                 onClick={(e) => {
                                     e.stopPropagation();

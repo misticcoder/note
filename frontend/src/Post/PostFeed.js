@@ -159,7 +159,7 @@ export default function PostFeed() {
 
     const requestDeletePost = (post) => {
         confirm(post, async (p) => {
-            const snapshot = posts; // 🔹 save current state
+            const snapshot = [...posts];
 
             // optimistic remove
             setPosts(prev => prev.filter(x => x.id !== p.id));
@@ -185,9 +185,9 @@ export default function PostFeed() {
 
     const saveEdit = async ({
                                 content,
-                                removeImageIds,
-                                newImages,
-                                imageOrder
+                                removeImageIds = [],
+                                newImages = [],
+                                imageOrder = []
                             }) => {
         const form = new FormData();
 
@@ -198,8 +198,8 @@ export default function PostFeed() {
             form.append("removeImageIds", id)
         );
 
-        imageOrder.forEach((id, index) =>
-            form.append("imageOrder", `${id}:${index}`)
+        imageOrder.forEach(id =>
+            form.append("imageOrder", id)
         );
 
         newImages.forEach(file =>
@@ -211,6 +211,11 @@ export default function PostFeed() {
             { method: "PATCH", body: form }
         );
 
+        if (!res.ok) {
+            alert("Failed to update post");
+            return;
+        }
+
         const updated = await res.json();
 
         setPosts(prev =>
@@ -219,8 +224,6 @@ export default function PostFeed() {
 
         setEditingPost(null);
     };
-
-
 
 
     /* ===================== RENDER ===================== */

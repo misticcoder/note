@@ -3,8 +3,8 @@ package com.vlrclone.backend.controller;
 import com.vlrclone.backend.dto.PostFeedDto;
 import com.vlrclone.backend.model.Post;
 import com.vlrclone.backend.model.PostImage;
-import com.vlrclone.backend.service.PostService;
 import com.vlrclone.backend.repository.PostRepository;
+import com.vlrclone.backend.service.PostService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,10 +13,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -31,12 +29,16 @@ public class PostController {
         this.service = service;
     }
 
+    /* ===================== FEED ===================== */
+
     @GetMapping
     public List<PostFeedDto> feed(
             @RequestParam(required = false) String username
     ) {
         return service.getFeed(username);
     }
+
+    /* ===================== CREATE ===================== */
 
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<?> create(
@@ -52,14 +54,12 @@ public class PostController {
                     .body(Map.of("message", "Post must contain text or image"));
         }
 
-
         Post post = new Post();
         post.setAuthor(author);
         post.setContent(content);
 
         if (images != null) {
             int position = 0;
-
             for (MultipartFile file : images) {
                 if (file.isEmpty()) continue;
 
@@ -68,17 +68,16 @@ public class PostController {
                 PostImage img = new PostImage();
                 img.setUrl(url);
                 img.setPosition(position++);
-                img.setPost(post);
 
-                post.getImages().add(img);
+                post.addImage(img); // helper keeps ownership correct
             }
         }
 
-        return ResponseEntity.ok(posts.save(post));
+        posts.save(post);
+        return ResponseEntity.ok(service.toFeedDto(post, author));
     }
 
-
-
+    /* ===================== LIKE ===================== */
 
     @PostMapping("/{id}/like")
     public void like(
@@ -95,6 +94,112 @@ public class PostController {
     ) {
         service.unlike(id, username);
     }
+
+    /* ===================== DELETE POST ===================== */
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(
+            @PathVariable Long id,
+            @RequestParam String username,
+            @RequestParam(defaultValue = "false") boolean admin
+    ) {
+        try {
+            service.deletePost(id, username, admin);
+            return ResponseEntity.ok(Map.of("status", "deleted"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    /* ===================== EDIT POST ===================== */
+
+    @PatchMapping(
+            value = "/{id}",
+            consumes = "multipart/form-data"
+    )
+    public ResponseEntity<?> editPost(
+            @PathVariable Long id,
+            @RequestParam String username,
+            @RequestParam(required = false) String content,
+            @RequestParam(required = false) List<String> removeImageIds,
+            @RequestParam(required = false) List<String> imageOrder,
+            @RequestParam(required = false) List<MultipartFile> images
+    ) {
+        Post post = posts.findById(id).orElse(null);
+        if (post == null) return ResponseEntity.notFound().build();
+
+        if (!post.getAuthor().equals(username)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "Not allowed"));
+        }
+
+        /* ---------- UPDATE CONTENT ---------- */
+        if (content != null) {
+            if (content.length() > 500) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "Content too long"));
+            }
+            post.setContent(content);
+        }
+
+        /* ---------- REMOVE IMAGES ---------- */
+        if (removeImageIds != null && !removeImageIds.isEmpty()) {
+            post.getImages()
+                    .stream()
+                    .filter(img ->
+                            removeImageIds.contains(String.valueOf(img.getId()))
+                    )
+                    .toList()
+                    .forEach(img -> {
+                        service.deleteImageFile(img.getUrl());
+                        post.removeImage(img);
+                    });
+        }
+
+        /* ---------- REORDER EXISTING IMAGES ---------- */
+        if (imageOrder != null && !imageOrder.isEmpty()) {
+            int position = 0;
+            for (String idStr : imageOrder) {
+                Long imageId;
+                try {
+                    imageId = Long.valueOf(idStr);
+                } catch (NumberFormatException e) {
+                    continue;
+                }
+
+                for (PostImage img : post.getImages()) {
+                    if (img.getId().equals(imageId)) {
+                        img.setPosition(position++);
+                        break;
+                    }
+                }
+            }
+        }
+
+        /* ---------- ADD NEW IMAGES ---------- */
+        if (images != null && !images.isEmpty()) {
+            int startPosition = post.getImages().size();
+
+            for (MultipartFile file : images) {
+                if (file.isEmpty()) continue;
+
+                String url = saveImage(file);
+
+                PostImage img = new PostImage();
+                img.setUrl(url);
+                img.setPosition(startPosition++);
+
+                post.addImage(img);
+            }
+        }
+
+        posts.save(post);
+        return ResponseEntity.ok(service.toFeedDto(post, username));
+    }
+
+    /* ===================== IMAGE SAVE ===================== */
+
     private String saveImage(MultipartFile file) {
         try {
             if (file.isEmpty()) {
@@ -133,99 +238,4 @@ public class PostController {
             throw new RuntimeException("Failed to save image", e);
         }
     }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(
-            @PathVariable Long id,
-            @RequestParam String username,
-            @RequestParam(required = false, defaultValue = "false") boolean admin
-    ) {
-        try {
-            service.deletePost(id, username, admin);
-            return ResponseEntity.ok(Map.of("status", "deleted"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(403)
-                    .body(Map.of("message", e.getMessage()));
-        }
-    }
-
-    @PatchMapping(
-            value = "/{id}",
-            consumes = "multipart/form-data"
-    )
-    public ResponseEntity<?> editPost(
-            @PathVariable Long id,
-            @RequestParam String username,
-            @RequestParam(required = false) String content,
-            @RequestParam(required = false) List<Long> removeImageIds,
-            @RequestParam(required = false) List<String> imageOrder, // 🔥 ADD THIS
-            @RequestParam(required = false) List<MultipartFile> images
-    ) {
-        Post post = posts.findById(id).orElse(null);
-        if (post == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        // 🔐 authorization
-        if (!post.getAuthor().equals(username)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of("message", "Not allowed"));
-        }
-
-        /* ===================== UPDATE CONTENT ===================== */
-        if (content != null) {
-            if (content.length() > 500) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("message", "Content too long"));
-            }
-            post.setContent(content);
-        }
-
-        /* ===================== REMOVE IMAGES ===================== */
-        if (removeImageIds != null && !removeImageIds.isEmpty()) {
-            post.getImages().removeIf(img ->
-                    removeImageIds.contains(img.getId())
-            );
-        }
-
-        /* ===================== ADD NEW IMAGES ===================== */
-        if (images != null && !images.isEmpty()) {
-            int startPosition = post.getImages().size();
-
-            for (int i = 0; i < images.size(); i++) {
-                MultipartFile file = images.get(i);
-                if (file.isEmpty()) continue;
-
-                String url = saveImage(file);
-
-                PostImage img = new PostImage();
-                img.setPost(post);
-                img.setUrl(url);
-                img.setPosition(startPosition + i);
-
-                post.getImages().add(img);
-            }
-        }
-
-        /* ===================== REORDER IMAGES ===================== */
-        if (imageOrder != null && !imageOrder.isEmpty()) {
-            for (String entry : imageOrder) {
-                String[] parts = entry.split(":");
-                if (parts.length != 2) continue;
-
-                Long imageId = Long.valueOf(parts[0]);
-                int position = Integer.parseInt(parts[1]);
-
-                post.getImages().stream()
-                        .filter(img -> img.getId().equals(imageId))
-                        .findFirst()
-                        .ifPresent(img -> img.setPosition(position));
-            }
-        }
-
-        posts.save(post);
-        return ResponseEntity.ok(post);
-    }
-
-
 }

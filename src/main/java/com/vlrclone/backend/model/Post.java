@@ -40,4 +40,15 @@ public class Post {
     public void setAuthor(String author) { this.author = author; }
     public void setContent(String content) { this.content = content; }
     public void setImages(List<PostImage> images) { this.images = images; }
+
+    public void addImage(PostImage image) {
+        images.add(image);
+        image.setPost(this);
+    }
+
+    public void removeImage(PostImage image) {
+        images.remove(image);
+        image.setPost(null);
+    }
+
 }
