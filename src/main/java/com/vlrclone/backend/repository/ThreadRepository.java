@@ -7,5 +7,6 @@ import java.util.List;
 
 public interface ThreadRepository extends JpaRepository<Thread, Long> {
     List<Thread> findAllByOrderByPublishedDesc();
+    List<Thread> findTop10ByTitleContainingIgnoreCase(String name);
 
 }

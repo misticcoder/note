@@ -36,6 +36,25 @@ public class Post {
 
     private LocalDateTime pinnedAt;
 
+    @OneToMany(
+            mappedBy = "post",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<PostReference> references = new ArrayList<>();
+
+
+    public void addReference(PostReference ref) {
+        references.add(ref);
+        ref.setPost(this);
+    }
+
+    public void removeReference(PostReference ref) {
+        references.remove(ref);
+        ref.setPost(null);
+    }
+
+
     public Long getId() { return id; }
     public String getAuthor() { return author; }
     public String getContent() { return content; }
@@ -62,4 +81,6 @@ public class Post {
     public void setPinnedAt(LocalDateTime pinnedAt) {
         this.pinnedAt = pinnedAt;
     }
+    public List<PostReference> getReferences() { return references; }
+    public void setReferences(List<PostReference> references) { this.references = references; }
 }

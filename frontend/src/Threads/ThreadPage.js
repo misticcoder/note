@@ -29,7 +29,7 @@ export default function ThreadPage() {
     /* ===================== THREAD ID ===================== */
 
     const threadId = (() => {
-        const m = (window.location.hash || "").match(/^#\/thread\/(\d+)/i);
+        const m = (window.location.hash || "").match(/^#\/threads\/(\d+)/i);
         return m ? Number(m[1]) : null;
     })();
 

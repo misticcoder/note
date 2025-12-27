@@ -1,12 +1,11 @@
-// src/Posts/PostFeed.jsx
-
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../AuthContext";
 import PostCard from "./PostCard";
 import ConfirmDialog from "../hooks/ConfirmDialog";
 import { useConfirm } from "../hooks/useConfirm";
-import "../styles/Posts.css";
 import EditPostModal from "./EditPostModal";
+import ReferencePicker from "./ReferencePicker";
+import "../styles/Posts.css";
 
 export default function PostFeed() {
     const { user } = useContext(AuthContext);
@@ -20,10 +19,8 @@ export default function PostFeed() {
     const [images, setImages] = useState([]);
     const [imagePreviews, setImagePreviews] = useState([]);
 
+    const [references, setReferences] = useState([]);
     const [editingPost, setEditingPost] = useState(null);
-
-
-    /* ===================== CONFIRM HOOK ===================== */
 
     const {
         confirmState,
@@ -43,7 +40,6 @@ export default function PostFeed() {
 
             const res = await fetch(`/api/posts${usernameParam}`);
             const data = await res.json();
-
             setPosts(Array.isArray(data) ? data : []);
         } catch (e) {
             console.error("Failed to load posts", e);
@@ -52,21 +48,12 @@ export default function PostFeed() {
         }
     };
 
-
     useEffect(() => {
         fetchPosts();
     }, [user?.username]);
 
-    /* Force re-render every minute for timeAgo */
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setPosts(p => [...p]);
-        }, 60000);
+    /* ===================== CLEANUP PREVIEWS ===================== */
 
-        return () => clearInterval(interval);
-    }, []);
-
-    /* Cleanup image preview URLs */
     useEffect(() => {
         return () => {
             imagePreviews.forEach(url => URL.revokeObjectURL(url));
@@ -79,35 +66,36 @@ export default function PostFeed() {
         if (!user) return;
 
         const text = newPost.trim();
-        if (!text && images.length === 0) return;
+        if (!text && images.length === 0 && references.length === 0) return;
 
         const form = new FormData();
         form.append("author", user.username);
         form.append("content", text);
+
         images.forEach(file => form.append("images", file));
+
+        if (references.length > 0) {
+            form.append("references", JSON.stringify(references));
+        }
 
         try {
             setPosting(true);
-
             const res = await fetch("/api/posts", {
                 method: "POST",
                 body: form,
             });
 
             if (!res.ok) {
-                const body = await res.json().catch(() => ({}));
-                alert(body.message || "Failed to create post");
+                alert("Failed to create post");
                 return;
             }
 
             setNewPost("");
             setImages([]);
             setImagePreviews([]);
+            setReferences([]);
 
             await fetchPosts();
-
-        } catch (e) {
-            console.error("Create post failed", e);
         } finally {
             setPosting(false);
         }
@@ -123,32 +111,21 @@ export default function PostFeed() {
         setPosts(prev =>
             prev.map(p =>
                 p.id === post.id
-                    ? {
-                        ...p,
-                        myLike: !liked,
-                        likes: liked ? p.likes - 1 : p.likes + 1,
-                    }
+                    ? { ...p, myLike: !liked, likes: liked ? p.likes - 1 : p.likes + 1 }
                     : p
             )
         );
 
         try {
             await fetch(
-                `/api/posts/${post.id}/like?username=${encodeURIComponent(
-                    user.username
-                )}`,
+                `/api/posts/${post.id}/like?username=${encodeURIComponent(user.username)}`,
                 { method: liked ? "DELETE" : "POST" }
             );
         } catch {
-            // rollback
             setPosts(prev =>
                 prev.map(p =>
                     p.id === post.id
-                        ? {
-                            ...p,
-                            myLike: liked,
-                            likes: liked ? p.likes + 1 : p.likes - 1,
-                        }
+                        ? { ...p, myLike: liked, likes: liked ? p.likes + 1 : p.likes - 1 }
                         : p
                 )
             );
@@ -160,56 +137,49 @@ export default function PostFeed() {
     const requestDeletePost = (post) => {
         confirm(post, async (p) => {
             const snapshot = [...posts];
-
-            // optimistic remove
             setPosts(prev => prev.filter(x => x.id !== p.id));
 
             try {
                 const res = await fetch(
-                    `/api/posts/${p.id}?username=${encodeURIComponent(
-                        user.username
-                    )}&admin=${user.role === "ADMIN"}`,
+                    `/api/posts/${p.id}?username=${encodeURIComponent(user.username)}&admin=${user.role === "ADMIN"}`,
                     { method: "DELETE" }
                 );
 
                 if (!res.ok) throw new Error();
             } catch {
-                // 🔴 rollback on failure
                 setPosts(snapshot);
                 alert("Failed to delete post");
             }
         });
     };
 
-    /* SAVE HANDLER */
+    /* ===================== SAVE EDIT ===================== */
 
     const saveEdit = async ({
                                 content,
                                 removeImageIds = [],
                                 newImages = [],
-                                imageOrder = []
+                                imageOrder = [],
+                                references = [],
                             }) => {
         const form = new FormData();
 
         form.append("username", user.username);
         form.append("content", content);
 
-        removeImageIds.forEach(id =>
-            form.append("removeImageIds", id)
-        );
+        removeImageIds.forEach(id => form.append("removeImageIds", id));
+        imageOrder.forEach(id => form.append("imageOrder", id));
+        newImages.forEach(file => form.append("images", file));
 
-        imageOrder.forEach(id =>
-            form.append("imageOrder", id)
-        );
+        // 🔥 SAME REFERENCE FORMAT
+        references.forEach(ref => {
+            form.append("references", JSON.stringify(ref));
+        });
 
-        newImages.forEach(file =>
-            form.append("images", file)
-        );
-
-        const res = await fetch(
-            `/api/posts/${editingPost.id}`,
-            { method: "PATCH", body: form }
-        );
+        const res = await fetch(`/api/posts/${editingPost.id}`, {
+            method: "PATCH",
+            body: form,
+        });
 
         if (!res.ok) {
             alert("Failed to update post");
@@ -217,13 +187,11 @@ export default function PostFeed() {
         }
 
         const updated = await res.json();
-
-        setPosts(prev =>
-            prev.map(p => (p.id === updated.id ? updated : p))
-        );
-
+        setPosts(prev => prev.map(p => (p.id === updated.id ? updated : p)));
         setEditingPost(null);
     };
+
+    /* ===================== PIN ===================== */
 
     const togglePin = async (post) => {
         const res = await fetch(
@@ -237,63 +205,39 @@ export default function PostFeed() {
         }
 
         const updated = await res.json();
-
-        setPosts(prev => {
-            const updatedList = prev.map(p =>
-                p.id === updated.id ? updated : p
-            );
-
-            // 🔥 re-apply pinned ordering
-            return [...updatedList].sort((a, b) => {
-                if (a.pinned !== b.pinned) return b.pinned - a.pinned;
-                return new Date(b.createdAt) - new Date(a.createdAt);
-            });
-        });
+        setPosts(prev => prev.map(p => (p.id === updated.id ? updated : p)));
     };
-
-
 
     /* ===================== RENDER ===================== */
 
     return (
         <div className="post-feed">
-            {/* ===================== CREATE POST ===================== */}
-
+            {/* CREATE POST */}
             <div className="post-composer">
                 <div className="post-avatar">
                     {user ? user.username[0].toUpperCase() : "?"}
                 </div>
 
                 <div className="composer-main">
-                    {/* ---------- BODY ---------- */}
                     <div className="composer-body">
-                <textarea
-                    placeholder={
-                        user
-                            ? "What’s happening?"
-                            : "Log in to create a post"
-                    }
-                    value={newPost}
-                    onChange={e => setNewPost(e.target.value)}
-                    disabled={!user || posting}
-                    maxLength={500}
-                />
+                        <textarea
+                            placeholder={user ? "What’s happening?" : "Log in to create a post"}
+                            value={newPost}
+                            onChange={e => setNewPost(e.target.value)}
+                            disabled={!user || posting}
+                            maxLength={500}
+                        />
 
-                        {/* Image previews belong in BODY */}
                         {imagePreviews.length > 0 && (
                             <div className={`image-grid grid-${imagePreviews.length}`}>
                                 {imagePreviews.map((src, i) => (
                                     <div key={i} className="image-item">
-                                        <img src={src} alt={`preview-${i}`}/>
+                                        <img src={src} alt="" />
                                         <button
                                             className="remove-image"
                                             onClick={() => {
-                                                setImages(prev =>
-                                                    prev.filter((_, idx) => idx !== i)
-                                                );
-                                                setImagePreviews(prev =>
-                                                    prev.filter((_, idx) => idx !== i)
-                                                );
+                                                setImages(prev => prev.filter((_, idx) => idx !== i));
+                                                setImagePreviews(prev => prev.filter((_, idx) => idx !== i));
                                             }}
                                         >
                                             ✕
@@ -304,24 +248,16 @@ export default function PostFeed() {
                         )}
                     </div>
 
-                    {/* ---------- FOOTER ---------- */}
                     <div className="composer-footer">
-                        {/* Hidden file input */}
                         <input
                             id="post-image-input"
                             type="file"
                             accept="image/*"
                             multiple
-                            disabled={!user || posting}
-                            style={{display: "none"}}
+                            style={{ display: "none" }}
                             onChange={e => {
                                 const files = Array.from(e.target.files || []);
                                 if (!files.length) return;
-
-                                if (images.length + files.length > 4) {
-                                    alert("Maximum 4 images per post");
-                                    return;
-                                }
 
                                 setImages(prev => [...prev, ...files]);
                                 setImagePreviews(prev => [
@@ -331,12 +267,14 @@ export default function PostFeed() {
                             }}
                         />
 
-                        <label
-                            htmlFor="post-image-input"
-                            className={`file-btn ${(!user || posting) ? "disabled" : ""}`}
-                        >
+                        <label htmlFor="post-image-input" className="file-btn">
                             📷 Add images
                         </label>
+
+                        <ReferencePicker
+                            references={references}
+                            setReferences={setReferences}
+                        />
 
                         <button
                             className="post-btn"
@@ -344,7 +282,7 @@ export default function PostFeed() {
                             disabled={
                                 !user ||
                                 posting ||
-                                (!newPost.trim() && images.length === 0)
+                                (!newPost.trim() && images.length === 0 && references.length === 0)
                             }
                         >
                             Post
@@ -353,8 +291,7 @@ export default function PostFeed() {
                 </div>
             </div>
 
-            {/* ===================== POSTS ===================== */}
-
+            {/* POSTS */}
             {loading && <p>Loading posts…</p>}
 
             {posts.map(p => (
@@ -365,10 +302,8 @@ export default function PostFeed() {
                     onLike={() => toggleLike(p)}
                     onDelete={requestDeletePost}
                     onEdit={setEditingPost}
-                    onPin={() => togglePin(p)}   // 🔥 ADD THIS
+                    onPin={() => togglePin(p)}
                 />
-
-
             ))}
 
             {editingPost && (
@@ -379,15 +314,13 @@ export default function PostFeed() {
                 />
             )}
 
-
             <ConfirmDialog
                 open={confirmState.open}
                 title="Delete Post"
-                message="Are you sure you want to delete this post? This action cannot be undone."
+                message="Are you sure you want to delete this post?"
                 onConfirm={handleConfirm}
                 onCancel={handleCancel}
             />
         </div>
-
     );
 }

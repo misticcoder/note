@@ -37,7 +37,7 @@ function App() {
     if (route === "#/admin/users") Page = AdminUsers;
     if (route === "#/threads") Page = ThreadList;
     if (route === "#/admin/threads") Page = ThreadList;
-    if (route.startsWith("#/thread/")) Page = () => <ThreadPage/>
+    if (route.startsWith("#/threads/")) Page = () => <ThreadPage/>
     if (route === "#/admin/clubs") Page = Clubs;
     if (route === "#/clubs") Page = Clubs;
     if (route.startsWith("#/clubs/")) Page = () => <ClubDetail />

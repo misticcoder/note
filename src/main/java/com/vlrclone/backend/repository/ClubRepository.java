@@ -6,5 +6,6 @@ import java.util.*;
 
 public interface ClubRepository extends JpaRepository<Club, Long> {
     boolean existsByName(String name);
+    List<Club> findTop10ByNameContainingIgnoreCase(String name);
 }
 

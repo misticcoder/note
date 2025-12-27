@@ -1,22 +1,43 @@
 import { timeAgo } from "../components/timeAgo";
+import ImageCarousel from "./ImageCarousal";
 import "../styles/Posts.css";
-import ImageCarousal from "./ImageCarousal";
 
-export default function PostCard({ post, user, onLike, onDelete, onEdit, onPin }){
+export default function PostCard({
+                                     post,
+                                     user,
+                                     onLike,
+                                     onDelete,
+                                     onEdit,
+                                     onPin,
+                                 }) {
+    const REF_BADGE_MAP = {
+        CLUB: "badge--yellow",
+        EVENT: "badge--purple",
+        THREAD: "badge--blue",
+        USER: "badge--yellow",
+        POST: "badge--indigo",
+        DEFAULT: "badge--gray",
+    };
+
+    function getRefBadgeClass(type) {
+        return REF_BADGE_MAP[type] ?? REF_BADGE_MAP.DEFAULT;
+    }
+
+
     return (
         <div
             className={`x-post ${post.pinned ? "pinned" : ""}`}
+            onClick={() => {
+                window.location.hash = `#/post/${post.id}`;
+            }}
         >
-
-
-            {/* Body */}
             <div className="x-body">
-                {/* Header */}
+                {/* ===================== HEADER ===================== */}
                 <div className="x-header">
-                    {/* Avatar */}
                     <div className="post-avatar">
                         {post.author?.[0]?.toUpperCase() || "?"}
                     </div>
+
                     <div className="x-user">
                         <span className="x-name">{post.author}</span>
                         <span className="x-handle">@{post.author}</span>
@@ -25,38 +46,49 @@ export default function PostCard({ post, user, onLike, onDelete, onEdit, onPin }
                         </span>
                     </div>
 
-                    <div>
-                        {post.pinned && <span className="pin-badge"
-                        data-tooltip={"Pinned"}>📌</span>}
-                        <button
-                            className="x-more"
-                            data-tooltip="More"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            ⋯
-                        </button>
-                    </div>
-
-                </div>
-
-                <div onClick={() => {
-                    window.location.hash = `#/post/${post.id}`;
-                }}>
-                    {/* Content */}
-                    <div className="x-content">{post.content}</div>
-
-                    {/* Images */}
-                    {post.images?.length > 0 && (
-                        <ImageCarousal images={post.images} />
+                    {post.pinned && (
+                        <span className="pin-badge">📌 Pinned</span>
                     )}
                 </div>
 
+                {/* ===================== CONTENT ===================== */}
+                {post.content && (
+                    <div className="x-content">{post.content}</div>
+                )}
 
-                {/* Actions */}
+                {/* ===================== REFERENCES ===================== */}
+                {post.references?.length > 0 && (
+                    <span className="post-references">
+        {post.references.map(ref => (
+            <a
+                key={`${ref.type}-${ref.targetId}`}
+                href={`/#/${ref.type.toLowerCase()}s/${ref.targetId}`}
+                className={`
+                    badge
+                    post-reference
+                    ref-${ref.type.toLowerCase()}
+                    ${getRefBadgeClass(ref.type)}
+                `}
+                onClick={(e) => e.stopPropagation()}
+            >
+                @{ref.displayText}
+            </a>
+        ))}
+    </span>
+                )}
+
+
+
+
+                {/* ===================== IMAGES ===================== */}
+                {post.images?.length > 0 && (
+                    <ImageCarousel images={post.images.map(img => img.url)} />
+                )}
+
+                {/* ===================== ACTIONS ===================== */}
                 <div className="x-actions">
                     <button
                         className="x-action reply"
-                        data-tooltip="Reply"
                         onClick={(e) => {
                             e.stopPropagation();
                             window.location.hash = `#/post/${post.id}`;
@@ -67,7 +99,6 @@ export default function PostCard({ post, user, onLike, onDelete, onEdit, onPin }
 
                     <button
                         className={`x-action like ${post.myLike ? "active" : ""}`}
-                        data-tooltip={post.myLike ? "Unlike" : "Like"}
                         onClick={(e) => {
                             e.stopPropagation();
                             onLike();
@@ -77,33 +108,12 @@ export default function PostCard({ post, user, onLike, onDelete, onEdit, onPin }
                         ❤️ {post.likes}
                     </button>
 
-                    <button
-                        className="x-action share"
-                        data-tooltip="Share"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        ↗
-                    </button>
-
-                    {user &&
+                    {(user &&
                         (user.username === post.author ||
-                            user.role === "ADMIN") && (
-                            <button
-                                className="x-action danger"
-                                data-tooltip="Delete"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDelete(post);
-                                }}
-                            >
-                                🗑
-                            </button>
-                        )}
-                    {user &&
-                        (user.username === post.author || user.role === "ADMIN") && (
+                            user.role === "ADMIN")) && (
+                        <>
                             <button
                                 className="x-action"
-                                data-tooltip="Edit"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onEdit(post);
@@ -111,12 +121,19 @@ export default function PostCard({ post, user, onLike, onDelete, onEdit, onPin }
                             >
                                 ✏️
                             </button>
-                        )}
-                    { user &&
-                         user.role === "ADMIN" && (
+
                             <button
-                                className={`x-action ${post.pinned ? "active" : ""}`}
-                                data-tooltip={post.pinned ? "Unpin" : "Pin"}
+                                className="x-action danger"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDelete(post);
+                                }}
+                            >
+                                🗑
+                            </button>
+
+                            <button
+                                className="x-action"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onPin(post);
@@ -124,11 +141,40 @@ export default function PostCard({ post, user, onLike, onDelete, onEdit, onPin }
                             >
                                 📌
                             </button>
-
-                        )}
-
+                        </>
+                    )}
                 </div>
             </div>
         </div>
+    );
+}
+
+/* ===================== REFERENCE CHIP ===================== */
+
+function ReferenceChip({ refData }) {
+    const { type, targetId, displayText } = refData;
+
+    const ICONS = {
+        CLUB: "🏟️",
+        EVENT: "📅",
+        THREAD: "💬",
+    };
+
+    const href = `#/${type.toLowerCase()}s/${targetId}`;
+    const icon = ICONS[type] ?? "🔗";
+
+    return (
+        <a
+            href={href}
+            className={`
+                badge
+                reference-chip
+                ref-${type.toLowerCase()}
+                ${getRefBadgeClass(type)}
+            `}
+            onClick={(e) => e.stopPropagation()}
+        >
+            {icon} {displayText}
+        </a>
     );
 }
