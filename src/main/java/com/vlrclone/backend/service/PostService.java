@@ -35,7 +35,7 @@ public class PostService {
     /* ===================== FEED ===================== */
 
     public List<PostFeedDto> getFeed(String username) {
-        return posts.findAllByOrderByCreatedAtDesc()
+        return posts.findAllByOrderByPinnedDescPinnedAtDescCreatedAtDesc()
                 .stream()
                 .map(p -> toFeedDto(p, username))
                 .toList();
@@ -105,7 +105,8 @@ public class PostService {
                 likes.countByPostId(post.getId()),
                 username != null &&
                         likes.existsByPostIdAndUsername(post.getId(), username),
-                comments.countByPostIdAndParentIdIsNull(post.getId())
+                comments.countByPostIdAndParentIdIsNull(post.getId()),
+                post.isPinned()   // 🔥 THIS IS THE ONLY ADDITION
         );
     }
 }

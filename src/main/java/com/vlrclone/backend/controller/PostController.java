@@ -249,4 +249,28 @@ public class PostController {
             throw new RuntimeException("Failed to save image", e);
         }
     }
+
+    @PatchMapping("/{id}/pin")
+    public ResponseEntity<?> togglePin(
+            @PathVariable Long id,
+            @RequestParam String username
+    ) {
+        Post post = posts.findById(id).orElse(null);
+        if (post == null) return ResponseEntity.notFound().build();
+
+        // 🔐 choose rule:
+        // Option A: author only
+        if (!post.getAuthor().equals(username)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "Not allowed"));
+        }
+
+        // toggle
+        post.setPinned(!post.isPinned());
+        post.setPinnedAt(post.isPinned() ? java.time.LocalDateTime.now() : null);
+
+        posts.save(post);
+        return ResponseEntity.ok(service.toFeedDto(post, username));
+    }
+
 }

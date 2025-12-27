@@ -2,13 +2,10 @@ import { timeAgo } from "../components/timeAgo";
 import "../styles/Posts.css";
 import ImageCarousal from "./ImageCarousal";
 
-export default function PostCard({ post, user, onLike, onDelete, onEdit }){
+export default function PostCard({ post, user, onLike, onDelete, onEdit, onPin }){
     return (
         <div
-            className="x-post"
-            onClick={() => {
-                window.location.hash = `#/post/${post.id}`;
-            }}
+            className={`x-post ${post.pinned ? "pinned" : ""}`}
         >
 
 
@@ -28,22 +25,32 @@ export default function PostCard({ post, user, onLike, onDelete, onEdit }){
                         </span>
                     </div>
 
-                    <button
-                        className="x-more"
-                        data-tooltip="More"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        ⋯
-                    </button>
+                    <div>
+                        {post.pinned && <span className="pin-badge"
+                        data-tooltip={"Pinned"}>📌</span>}
+                        <button
+                            className="x-more"
+                            data-tooltip="More"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            ⋯
+                        </button>
+                    </div>
+
                 </div>
 
-                {/* Content */}
-                <div className="x-content">{post.content}</div>
+                <div onClick={() => {
+                    window.location.hash = `#/post/${post.id}`;
+                }}>
+                    {/* Content */}
+                    <div className="x-content">{post.content}</div>
 
-                {/* Images */}
-                {post.images?.length > 0 && (
-                    <ImageCarousal images={post.images} />
-                )}
+                    {/* Images */}
+                    {post.images?.length > 0 && (
+                        <ImageCarousal images={post.images} />
+                    )}
+                </div>
+
 
                 {/* Actions */}
                 <div className="x-actions">
@@ -104,6 +111,20 @@ export default function PostCard({ post, user, onLike, onDelete, onEdit }){
                             >
                                 ✏️
                             </button>
+                        )}
+                    { user &&
+                         user.role === "ADMIN" && (
+                            <button
+                                className={`x-action ${post.pinned ? "active" : ""}`}
+                                data-tooltip={post.pinned ? "Unpin" : "Pin"}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onPin(post);
+                                }}
+                            >
+                                📌
+                            </button>
+
                         )}
 
                 </div>

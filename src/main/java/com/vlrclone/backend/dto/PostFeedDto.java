@@ -13,6 +13,7 @@ public class PostFeedDto {
     public long likes;
     public boolean myLike;
     public long replyCount;
+    public boolean pinned;
 
     public PostFeedDto(
             Long id,
@@ -22,7 +23,8 @@ public class PostFeedDto {
             LocalDateTime createdAt,
             long likes,
             boolean myLike,
-            long replyCount
+            long replyCount,
+            boolean pinned
     ) {
         this.id = id;
         this.author = author;
@@ -32,6 +34,7 @@ public class PostFeedDto {
         this.likes = likes;
         this.myLike = myLike;
         this.replyCount = replyCount;
+        this.pinned = pinned;
     }
 
     public static class ImageDto {

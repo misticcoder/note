@@ -31,6 +31,11 @@ public class Post {
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(nullable = false)
+    private boolean pinned = false;
+
+    private LocalDateTime pinnedAt;
+
     public Long getId() { return id; }
     public String getAuthor() { return author; }
     public String getContent() { return content; }
@@ -51,4 +56,10 @@ public class Post {
         image.setPost(null);
     }
 
+    public LocalDateTime getPinnedAt() { return pinnedAt; }
+    public void setPinned(boolean pinned) { this.pinned = pinned; }
+    public boolean isPinned() { return pinned; }
+    public void setPinnedAt(LocalDateTime pinnedAt) {
+        this.pinnedAt = pinnedAt;
+    }
 }

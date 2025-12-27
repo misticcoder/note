@@ -448,3 +448,26 @@
     border-radius: var(--radius-sm);
     width: 360px;
 }
+
+/* ===================== PINNED POST ===================== */
+
+.pin-badge {
+    margin-left: auto;
+    padding: 2px 8px;
+    margin-right: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #d97706;            /* amber */
+    background-color: #fff7ed; /* light amber */
+    border: 1px solid #fed7aa;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Subtle highlight for pinned posts */
+.x-post.pinned {
+    background-color: #1e293b;
+    border-left: 4px solid #f59e0b;
+}

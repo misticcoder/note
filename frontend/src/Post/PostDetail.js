@@ -229,6 +229,24 @@ export default function PostDetailPage() {
         setEditingPost(null);
     };
 
+    const togglePin = async () => {
+        if (!user || !post) return;
+
+        const res = await fetch(
+            `/api/posts/${post.id}/pin?username=${user.username}`,
+            { method: "PATCH" }
+        );
+
+        if (!res.ok) {
+            alert("Failed to toggle pin");
+            return;
+        }
+
+        const updated = await res.json();
+        setPost(updated);
+    };
+
+
     /* ===================== GUARDS ===================== */
 
     if (!postId) return <p>Invalid post link.</p>;
@@ -257,7 +275,10 @@ export default function PostDetailPage() {
                         onLike={toggleLike}
                         onDelete={requestDeletePost}
                         onEdit={setEditingPost}
+                        onPin={togglePin}
                     />
+
+
                 </div>
 
                 <div className="comments-card-wrapper">

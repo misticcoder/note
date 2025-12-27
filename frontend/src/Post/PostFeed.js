@@ -225,6 +225,33 @@ export default function PostFeed() {
         setEditingPost(null);
     };
 
+    const togglePin = async (post) => {
+        const res = await fetch(
+            `/api/posts/${post.id}/pin?username=${user.username}`,
+            { method: "PATCH" }
+        );
+
+        if (!res.ok) {
+            alert("Failed to toggle pin");
+            return;
+        }
+
+        const updated = await res.json();
+
+        setPosts(prev => {
+            const updatedList = prev.map(p =>
+                p.id === updated.id ? updated : p
+            );
+
+            // 🔥 re-apply pinned ordering
+            return [...updatedList].sort((a, b) => {
+                if (a.pinned !== b.pinned) return b.pinned - a.pinned;
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            });
+        });
+    };
+
+
 
     /* ===================== RENDER ===================== */
 
@@ -338,7 +365,9 @@ export default function PostFeed() {
                     onLike={() => toggleLike(p)}
                     onDelete={requestDeletePost}
                     onEdit={setEditingPost}
+                    onPin={() => togglePin(p)}   // 🔥 ADD THIS
                 />
+
 
             ))}
 
