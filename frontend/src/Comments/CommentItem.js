@@ -37,9 +37,13 @@ export default function CommentItem({
                 </div>
 
                 {/* Body */}
-                <div className="yt-text">
-                    {comment.comment}
+                <div className={"comment-content"}>
+                    <div className="yt-text">
+                        {comment.comment}
+                    </div>
+
                 </div>
+
 
                 {/* Actions */}
                 <div className="yt-actions">

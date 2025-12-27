@@ -1,37 +1,8 @@
 import { timeAgo } from "../components/timeAgo";
 import "../styles/Posts.css";
-import ImageCarousel from "./ImageCarousal";
+import ImageCarousal from "./ImageCarousal";
 
-export default function PostCard({ post, user, onLike, onDelete }) {
-
-
-    const requestDeletePost = (post) => {
-        if (!user) return;
-        setConfirmDelete({ open: true, post });
-    };
-
-    const confirmDeletePost = async () => {
-        const post = confirmDelete.post;
-        if (!post) return;
-
-        // Optimistic removal
-        setPosts(prev => prev.filter(p => p.id !== post.id));
-
-        try {
-            await fetch(
-                `/api/posts/${post.id}?username=${encodeURIComponent(
-                    user.username
-                )}&admin=${user.role === "ADMIN"}`,
-                { method: "DELETE" }
-            );
-        } catch (e) {
-            alert("Failed to delete post");
-            fetchPosts(); // rollback
-        } finally {
-            setConfirmDelete({ open: false, post: null });
-        }
-    };
-
+export default function PostCard({ post, user, onLike, onDelete, onEdit }){
     return (
         <div
             className="x-post"
@@ -39,15 +10,16 @@ export default function PostCard({ post, user, onLike, onDelete }) {
                 window.location.hash = `#/post/${post.id}`;
             }}
         >
-            {/* Avatar */}
-            <div className="x-avatar">
-                {post.author?.[0]?.toUpperCase() || "?"}
-            </div>
+
 
             {/* Body */}
             <div className="x-body">
                 {/* Header */}
                 <div className="x-header">
+                    {/* Avatar */}
+                    <div className="post-avatar">
+                        {post.author?.[0]?.toUpperCase() || "?"}
+                    </div>
                     <div className="x-user">
                         <span className="x-name">{post.author}</span>
                         <span className="x-handle">@{post.author}</span>
@@ -58,7 +30,7 @@ export default function PostCard({ post, user, onLike, onDelete }) {
 
                     <button
                         className="x-more"
-                        data-tooltip="more"
+                        data-tooltip="More"
                         onClick={(e) => e.stopPropagation()}
                     >
                         ⋯
@@ -68,15 +40,16 @@ export default function PostCard({ post, user, onLike, onDelete }) {
                 {/* Content */}
                 <div className="x-content">{post.content}</div>
 
+                {/* Images */}
                 {post.images?.length > 0 && (
-                    <ImageCarousel images={post.images} />
+                    <ImageCarousal images={post.images} />
                 )}
 
                 {/* Actions */}
                 <div className="x-actions">
                     <button
                         className="x-action reply"
-                        data-tooltip="reply"
+                        data-tooltip="Reply"
                         onClick={(e) => {
                             e.stopPropagation();
                             window.location.hash = `#/post/${post.id}`;
@@ -87,7 +60,7 @@ export default function PostCard({ post, user, onLike, onDelete }) {
 
                     <button
                         className={`x-action like ${post.myLike ? "active" : ""}`}
-                        data-tooltip="like"
+                        data-tooltip={post.myLike ? "Unlike" : "Like"}
                         onClick={(e) => {
                             e.stopPropagation();
                             onLike();
@@ -99,26 +72,40 @@ export default function PostCard({ post, user, onLike, onDelete }) {
 
                     <button
                         className="x-action share"
-                        data-tooltip="share"
+                        data-tooltip="Share"
                         onClick={(e) => e.stopPropagation()}
                     >
                         ↗
                     </button>
 
-                    {(user &&
+                    {user &&
                         (user.username === post.author ||
-                            user.role === "ADMIN")) && (
-                        <button
-                            className="x-action danger"
-                            data-tooltip="Delete"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onDelete(post);
-                            }}
-                        >
-                            🗑
-                        </button>
-                    )}
+                            user.role === "ADMIN") && (
+                            <button
+                                className="x-action danger"
+                                data-tooltip="Delete"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDelete(post);
+                                }}
+                            >
+                                🗑
+                            </button>
+                        )}
+                    {user &&
+                        (user.username === post.author || user.role === "ADMIN") && (
+                            <button
+                                className="x-action"
+                                data-tooltip="Edit"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEdit(post);
+                                }}
+                            >
+                                ✏️
+                            </button>
+                        )}
+
                 </div>
             </div>
         </div>

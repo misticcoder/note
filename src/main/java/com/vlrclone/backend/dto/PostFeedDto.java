@@ -34,4 +34,36 @@ public class PostFeedDto {
         this.myLike = myLike;
         this.replyCount = replyCount;
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public List<String> getImages() {
+        return images;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getReplyCount() {
+        return replyCount;
+    }
+
+    public long getLikes() {
+        return likes;
+    }
+
+    public boolean isMyLike() {
+        return myLike;
+    }
 }

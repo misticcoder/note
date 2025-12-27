@@ -356,12 +356,9 @@ function Home() {
                             width: newsWidth,
                             display: "flex",
                             flexDirection: "column",
-                            border: "1px solid #ffffe3",
                             minHeight: "100vh"
                         }}
                     >
-
-
                         <h3 style={styles.col_title}>Feed</h3>
                         <PostFeed/>
                     </div>

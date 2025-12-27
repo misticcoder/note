@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "../styles/Posts.css";
 
-export default function ImageCarousel({ images }) {
+export default function ImageCarousal({ images }) {
     const [index, setIndex] = useState(0);
     const total = images.length;
 

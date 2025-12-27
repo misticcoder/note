@@ -9,6 +9,8 @@ import "./styles/Threads.css";
 function buildCommentTree(comments) {
     const map = new Map();
     const roots = [];
+    const [error, setError] = useState(null);
+
 
     comments.forEach(c => {
         map.set(c.id, { ...c, replies: [] });
@@ -38,6 +40,8 @@ export default function CommentSection({
                                            onDelete,
                                            refreshComments
                                        }) {
+
+    const [error, setError] = useState(null);
     const role = String(user?.role || "").toUpperCase();
     const isAdmin = role === "ADMIN";
 
@@ -73,11 +77,23 @@ export default function CommentSection({
     /* -------- Submit handler -------- */
     const handleSubmit = (e) => {
         e.preventDefault();
+         if (!user) return;
+
+         const text = newComment.trim();
+
+         if (!text) return;
+
+         if (text.length > 400){
+             setError("comment is too long (max 400 characters)")
+             return;
+         }
+
         onSubmit(e, replyTo);
         setReplyTo(null);
     };
 
     return (
+
         <div className="comments-card">
             <h3>Comments</h3>
 
@@ -122,6 +138,14 @@ export default function CommentSection({
                     {replyTo ? "Post Reply" : "Post Comment"}
                 </button>
             </form>
+
+            {error && (
+                <div className="toast-error">
+                    {error}
+                    <button onClick={() => setError(null)}>×</button>
+                </div>
+            )}
+
         </div>
     );
 }

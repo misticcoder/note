@@ -6,6 +6,7 @@ import PostCard from "./PostCard";
 import ConfirmDialog from "../hooks/ConfirmDialog";
 import { useConfirm } from "../hooks/useConfirm";
 import "../styles/Posts.css";
+import EditPostModal from "./EditPostModal";
 
 export default function PostFeed() {
     const { user } = useContext(AuthContext);
@@ -19,6 +20,9 @@ export default function PostFeed() {
     const [images, setImages] = useState([]);
     const [imagePreviews, setImagePreviews] = useState([]);
 
+    const [editingPost, setEditingPost] = useState(null);
+
+
     /* ===================== CONFIRM HOOK ===================== */
 
     const {
@@ -31,6 +35,7 @@ export default function PostFeed() {
     /* ===================== FETCH POSTS ===================== */
 
     const fetchPosts = async () => {
+        setLoading(true);
         try {
             const usernameParam = user?.username
                 ? `?username=${encodeURIComponent(user.username)}`
@@ -46,6 +51,7 @@ export default function PostFeed() {
             setLoading(false);
         }
     };
+
 
     useEffect(() => {
         fetchPosts();
@@ -94,14 +100,12 @@ export default function PostFeed() {
                 return;
             }
 
-            const savedPost = await res.json();
-
-            // Optimistic insert
-            setPosts(prev => [savedPost, ...prev]);
-
             setNewPost("");
             setImages([]);
             setImagePreviews([]);
+
+            await fetchPosts();
+
         } catch (e) {
             console.error("Create post failed", e);
         } finally {
@@ -155,17 +159,69 @@ export default function PostFeed() {
 
     const requestDeletePost = (post) => {
         confirm(post, async (p) => {
-            // Optimistic removal
+            const snapshot = posts; // 🔹 save current state
+
+            // optimistic remove
             setPosts(prev => prev.filter(x => x.id !== p.id));
 
-            await fetch(
-                `/api/posts/${p.id}?username=${encodeURIComponent(
-                    user.username
-                )}&admin=${user.role === "ADMIN"}`,
-                { method: "DELETE" }
-            );
+            try {
+                const res = await fetch(
+                    `/api/posts/${p.id}?username=${encodeURIComponent(
+                        user.username
+                    )}&admin=${user.role === "ADMIN"}`,
+                    { method: "DELETE" }
+                );
+
+                if (!res.ok) throw new Error();
+            } catch {
+                // 🔴 rollback on failure
+                setPosts(snapshot);
+                alert("Failed to delete post");
+            }
         });
     };
+
+    /* SAVE HANDLER */
+
+    const saveEdit = async ({
+                                content,
+                                removeImageIds,
+                                newImages,
+                                imageOrder
+                            }) => {
+        const form = new FormData();
+
+        form.append("username", user.username);
+        form.append("content", content);
+
+        removeImageIds.forEach(id =>
+            form.append("removeImageIds", id)
+        );
+
+        imageOrder.forEach((id, index) =>
+            form.append("imageOrder", `${id}:${index}`)
+        );
+
+        newImages.forEach(file =>
+            form.append("images", file)
+        );
+
+        const res = await fetch(
+            `/api/posts/${editingPost.id}`,
+            { method: "PATCH", body: form }
+        );
+
+        const updated = await res.json();
+
+        setPosts(prev =>
+            prev.map(p => (p.id === updated.id ? updated : p))
+        );
+
+        setEditingPost(null);
+    };
+
+
+
 
     /* ===================== RENDER ===================== */
 
@@ -174,58 +230,31 @@ export default function PostFeed() {
             {/* ===================== CREATE POST ===================== */}
 
             <div className="post-composer">
-                <div className="post-avatar">
+                <div className="composer-avatar">
                     {user ? user.username[0].toUpperCase() : "?"}
                 </div>
 
-                <div className="composer-body">
-                    <textarea
-                        placeholder={
-                            user
-                                ? "What’s happening?"
-                                : "Log in to create a post"
-                        }
-                        value={newPost}
-                        onChange={e => setNewPost(e.target.value)}
-                        disabled={!user || posting}
-                        maxLength={500}
-                    />
+                <div className="composer-main">
+                    {/* ---------- BODY ---------- */}
+                    <div className="composer-body">
+                <textarea
+                    placeholder={
+                        user
+                            ? "What’s happening?"
+                            : "Log in to create a post"
+                    }
+                    value={newPost}
+                    onChange={e => setNewPost(e.target.value)}
+                    disabled={!user || posting}
+                    maxLength={500}
+                />
 
-                    <div className={"composer-footer"}>
-                        {/* Hidden file input */}
-                        <input
-                            id="post-image-input"
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            disabled={!user || posting}
-                            style={{ display: "none" }}
-                            onChange={e => {
-                                const files = Array.from(e.target.files || []);
-                                if (!files.length) return;
-
-                                setImages(prev => [...prev, ...files]);
-                                setImagePreviews(prev => [
-                                    ...prev,
-                                    ...files.map(f => URL.createObjectURL(f)),
-                                ]);
-                            }}
-                        />
-
-                        {/* Custom file button */}
-                        <label
-                            htmlFor="post-image-input"
-                            className={`file-btn ${(!user || posting) ? "disabled" : ""}`}
-                        >
-                            📷 Add images
-                        </label>
-
-
+                        {/* Image previews belong in BODY */}
                         {imagePreviews.length > 0 && (
                             <div className={`image-grid grid-${imagePreviews.length}`}>
                                 {imagePreviews.map((src, i) => (
                                     <div key={i} className="image-item">
-                                        <img src={src} alt={`preview-${i}`} />
+                                        <img src={src} alt={`preview-${i}`}/>
                                         <button
                                             className="remove-image"
                                             onClick={() => {
@@ -243,20 +272,53 @@ export default function PostFeed() {
                                 ))}
                             </div>
                         )}
+                    </div>
 
-                        <div className="composer-actions">
+                    {/* ---------- FOOTER ---------- */}
+                    <div className="composer-footer">
+                        {/* Hidden file input */}
+                        <input
+                            id="post-image-input"
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            disabled={!user || posting}
+                            style={{display: "none"}}
+                            onChange={e => {
+                                const files = Array.from(e.target.files || []);
+                                if (!files.length) return;
 
-                            <button
-                                onClick={createPost}
-                                disabled={
-                                    !user ||
-                                    posting ||
-                                    (!newPost.trim() && images.length === 0)
+                                if (images.length + files.length > 4) {
+                                    alert("Maximum 4 images per post");
+                                    return;
                                 }
-                            >
-                                Post
-                            </button>
-                        </div>
+
+                                setImages(prev => [...prev, ...files]);
+                                setImagePreviews(prev => [
+                                    ...prev,
+                                    ...files.map(f => URL.createObjectURL(f)),
+                                ]);
+                            }}
+                        />
+
+                        <label
+                            htmlFor="post-image-input"
+                            className={`file-btn ${(!user || posting) ? "disabled" : ""}`}
+                        >
+                            📷 Add images
+                        </label>
+
+                        <button
+                            className="post-btn"
+                            onClick={createPost}
+                            disabled={
+                                !user ||
+                                posting ||
+                                (!newPost.trim() && images.length === 0)
+                            }
+                        >
+                            Post
+                        </button>
                     </div>
                 </div>
             </div>
@@ -272,10 +334,19 @@ export default function PostFeed() {
                     user={user}
                     onLike={() => toggleLike(p)}
                     onDelete={requestDeletePost}
+                    onEdit={setEditingPost}
                 />
+
             ))}
 
-            {/* ===================== CONFIRM DIALOG ===================== */}
+            {editingPost && (
+                <EditPostModal
+                    post={editingPost}
+                    onClose={() => setEditingPost(null)}
+                    onSave={saveEdit}
+                />
+            )}
+
 
             <ConfirmDialog
                 open={confirmState.open}
@@ -285,5 +356,6 @@ export default function PostFeed() {
                 onCancel={handleCancel}
             />
         </div>
+
     );
 }

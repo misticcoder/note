@@ -149,4 +149,83 @@ public class PostController {
         }
     }
 
+    @PatchMapping(
+            value = "/{id}",
+            consumes = "multipart/form-data"
+    )
+    public ResponseEntity<?> editPost(
+            @PathVariable Long id,
+            @RequestParam String username,
+            @RequestParam(required = false) String content,
+            @RequestParam(required = false) List<Long> removeImageIds,
+            @RequestParam(required = false) List<String> imageOrder, // 🔥 ADD THIS
+            @RequestParam(required = false) List<MultipartFile> images
+    ) {
+        Post post = posts.findById(id).orElse(null);
+        if (post == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // 🔐 authorization
+        if (!post.getAuthor().equals(username)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "Not allowed"));
+        }
+
+        /* ===================== UPDATE CONTENT ===================== */
+        if (content != null) {
+            if (content.length() > 500) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "Content too long"));
+            }
+            post.setContent(content);
+        }
+
+        /* ===================== REMOVE IMAGES ===================== */
+        if (removeImageIds != null && !removeImageIds.isEmpty()) {
+            post.getImages().removeIf(img ->
+                    removeImageIds.contains(img.getId())
+            );
+        }
+
+        /* ===================== ADD NEW IMAGES ===================== */
+        if (images != null && !images.isEmpty()) {
+            int startPosition = post.getImages().size();
+
+            for (int i = 0; i < images.size(); i++) {
+                MultipartFile file = images.get(i);
+                if (file.isEmpty()) continue;
+
+                String url = saveImage(file);
+
+                PostImage img = new PostImage();
+                img.setPost(post);
+                img.setUrl(url);
+                img.setPosition(startPosition + i);
+
+                post.getImages().add(img);
+            }
+        }
+
+        /* ===================== REORDER IMAGES ===================== */
+        if (imageOrder != null && !imageOrder.isEmpty()) {
+            for (String entry : imageOrder) {
+                String[] parts = entry.split(":");
+                if (parts.length != 2) continue;
+
+                Long imageId = Long.valueOf(parts[0]);
+                int position = Integer.parseInt(parts[1]);
+
+                post.getImages().stream()
+                        .filter(img -> img.getId().equals(imageId))
+                        .findFirst()
+                        .ifPresent(img -> img.setPosition(position));
+            }
+        }
+
+        posts.save(post);
+        return ResponseEntity.ok(post);
+    }
+
+
 }

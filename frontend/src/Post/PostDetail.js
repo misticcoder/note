@@ -80,14 +80,19 @@ export default function PostDetailPage() {
 
     useEffect(() => {
         if (!postId) return;
+        let alive = true;
 
         (async () => {
             setLoading(true);
-            await fetchPost();
-            await fetchComments();
-            setLoading(false);
+            await Promise.all([fetchPost(), fetchComments()]);
+            if (alive) setLoading(false);
         })();
+
+        return () => {
+            alive = false;
+        };
     }, [postId, fetchPost, fetchComments]);
+
 
     /* ===================== POST COMMENT ===================== */
 
@@ -120,10 +125,10 @@ export default function PostDetailPage() {
 
     /* ===================== DELETE POST ===================== */
 
-    const requestDeletePost = (post) => {
-        confirm(post, async (p) => {
+    const requestDeletePost = () => {
+        confirm(null, async () => {
             await fetch(
-                `/api/posts/${p.id}?username=${encodeURIComponent(
+                `/api/posts/${post.id}?username=${encodeURIComponent(
                     user.username
                 )}&admin=${user.role === "ADMIN"}`,
                 { method: "DELETE" }
@@ -132,6 +137,7 @@ export default function PostDetailPage() {
             window.history.back();
         });
     };
+
 
     /* ===================== DELETE COMMENT ===================== */
 
@@ -153,19 +159,32 @@ export default function PostDetailPage() {
     const toggleLike = async () => {
         if (!user || !post) return;
 
+        const liked = post.myLike;
+
+        // optimistic update
+        setPost(prev => ({
+            ...prev,
+            myLike: !liked,
+            likes: liked ? prev.likes - 1 : prev.likes + 1,
+        }));
+
         try {
             await fetch(
                 `/api/posts/${post.id}/like?username=${encodeURIComponent(
                     user.username
                 )}`,
-                { method: post.myLike ? "DELETE" : "POST" }
+                { method: liked ? "DELETE" : "POST" }
             );
-
-            fetchPost();
         } catch (e) {
-            console.error("Like failed", e);
+            // rollback
+            setPost(prev => ({
+                ...prev,
+                myLike: liked,
+                likes: liked ? prev.likes + 1 : prev.likes - 1,
+            }));
         }
     };
+
 
     /* ===================== GUARDS ===================== */
 
@@ -189,11 +208,13 @@ export default function PostDetailPage() {
 
                 <div className="post-card-wrapper">
                     <PostCard
+                        key={post.id}
                         post={post}
                         user={user}
                         onLike={toggleLike}
-                        onDelete={requestDeletePost}
+                        onDelete={() => requestDeletePost(post)}
                     />
+
                 </div>
 
                 <div className="comments-card-wrapper">
