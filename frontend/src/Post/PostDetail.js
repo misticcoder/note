@@ -6,6 +6,7 @@ import PostCard from "./PostCard";
 import CommentSection from "../CommentSection";
 import ConfirmDialog from "../hooks/ConfirmDialog";
 import { useConfirm } from "../hooks/useConfirm";
+import EditPostModal from "./EditPostModal";
 import "../styles/Posts.css";
 
 export default function PostDetailPage() {
@@ -16,6 +17,7 @@ export default function PostDetailPage() {
     const [newComment, setNewComment] = useState("");
     const [loading, setLoading] = useState(true);
     const [postId, setPostId] = useState(null);
+    const [editingPost, setEditingPost] = useState(null);
 
     /* ===================== CONFIRM HOOK ===================== */
 
@@ -42,6 +44,8 @@ export default function PostDetailPage() {
     /* ===================== FETCH POST ===================== */
 
     const fetchPost = useCallback(async () => {
+        if (!postId) return;
+
         const usernameParam = user?.username
             ? `?username=${encodeURIComponent(user.username)}`
             : "";
@@ -59,6 +63,8 @@ export default function PostDetailPage() {
     /* ===================== FETCH COMMENTS ===================== */
 
     const fetchComments = useCallback(async () => {
+        if (!postId) return;
+
         const usernameParam = user?.username
             ? `?username=${encodeURIComponent(user.username)}`
             : "";
@@ -92,7 +98,6 @@ export default function PostDetailPage() {
             alive = false;
         };
     }, [postId, fetchPost, fetchComments]);
-
 
     /* ===================== POST COMMENT ===================== */
 
@@ -138,7 +143,6 @@ export default function PostDetailPage() {
         });
     };
 
-
     /* ===================== DELETE COMMENT ===================== */
 
     const requestDeleteComment = (commentId) => {
@@ -175,7 +179,7 @@ export default function PostDetailPage() {
                 )}`,
                 { method: liked ? "DELETE" : "POST" }
             );
-        } catch (e) {
+        } catch {
             // rollback
             setPost(prev => ({
                 ...prev,
@@ -185,6 +189,45 @@ export default function PostDetailPage() {
         }
     };
 
+    /* ===================== SAVE EDIT ===================== */
+
+    const saveEdit = async ({
+                                content,
+                                removeImageIds = [],
+                                newImages = [],
+                                imageOrder = [],
+                            }) => {
+        const form = new FormData();
+
+        form.append("username", user.username);
+        form.append("content", content);
+
+        removeImageIds.forEach(id =>
+            form.append("removeImageIds", id)
+        );
+
+        imageOrder.forEach(id =>
+            form.append("imageOrder", id)
+        );
+
+        newImages.forEach(file =>
+            form.append("images", file)
+        );
+
+        const res = await fetch(
+            `/api/posts/${post.id}`,
+            { method: "PATCH", body: form }
+        );
+
+        if (!res.ok) {
+            alert("Failed to update post");
+            return;
+        }
+
+        const updated = await res.json();
+        setPost(updated);
+        setEditingPost(null);
+    };
 
     /* ===================== GUARDS ===================== */
 
@@ -212,9 +255,9 @@ export default function PostDetailPage() {
                         post={post}
                         user={user}
                         onLike={toggleLike}
-                        onDelete={() => requestDeletePost(post)}
+                        onDelete={requestDeletePost}
+                        onEdit={setEditingPost}
                     />
-
                 </div>
 
                 <div className="comments-card-wrapper">
@@ -229,6 +272,16 @@ export default function PostDetailPage() {
                     />
                 </div>
             </div>
+
+            {/* ===================== EDIT MODAL ===================== */}
+
+            {editingPost && (
+                <EditPostModal
+                    post={editingPost}
+                    onClose={() => setEditingPost(null)}
+                    onSave={saveEdit}
+                />
+            )}
 
             {/* ===================== CONFIRM DIALOG ===================== */}
 

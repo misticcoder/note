@@ -31,6 +31,17 @@ public class PostController {
 
     /* ===================== FEED ===================== */
 
+    @GetMapping("/{id}")
+    public ResponseEntity<PostFeedDto> getPost(
+            @PathVariable Long id,
+            @RequestParam(required = false) String username
+    ) {
+        Post post = posts.findById(id).orElse(null);
+        if (post == null) return ResponseEntity.notFound().build();
+
+        return ResponseEntity.ok(service.toFeedDto(post, username));
+    }
+
     @GetMapping
     public List<PostFeedDto> feed(
             @RequestParam(required = false) String username
