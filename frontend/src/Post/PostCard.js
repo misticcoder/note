@@ -50,7 +50,11 @@ export default function PostCard({
 
         const shareUrl = `${window.location.origin}/#/post/${post.id}`;
 
-        // Use native share if available (mobile, some desktop)
+        // fire-and-forget share count
+        fetch(`/api/posts/${post.id}/share`, { method: "POST" })
+            .then(res => res.ok && onShare?.())
+            .catch(() => {});
+
         if (navigator.share) {
             try {
                 await navigator.share({
@@ -59,14 +63,14 @@ export default function PostCard({
                     url: shareUrl,
                 });
             } catch {
-                // user cancelled — do nothing
+                // user canceled
             }
         } else {
-            // Fallback: copy link
             await navigator.clipboard.writeText(shareUrl);
             alert("Link copied to clipboard");
         }
     };
+
 
 
     return (
@@ -238,9 +242,9 @@ export default function PostCard({
                         <img
                             src={ShareIcon}
                             className="action-icon reply-icon"
-                        />
+                         alt={"share"}/>
 
-                        {post.replyCount || ""}
+                        {post.shareCount || ""}
                     </button>
 
                 </div>

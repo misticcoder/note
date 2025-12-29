@@ -1,57 +1,145 @@
-// frontend/src/EventDetail.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext, useMemo } from "react";
+import { AuthContext } from "./AuthContext";
+import EventHeader from "./EventHeader";
+import PostFeed from "./Post/PostFeed";
+import "./styles/events.css";
 
-export default function EventDetail() {
+export default function EventPage() {
+    const { user } = useContext(AuthContext);
+
     const [event, setEvent] = useState(null);
-    const [err, setErr] = useState("");
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
-    const id = (() => {
-        const m = (window.location.hash || "").match(/^#\/event\/(\d+)/i);
-        return m ? Number(m[1]) : null;
-    })();
+    const [rsvp, setRsvp] = useState(null);
+    const [counts, setCounts] = useState({ going: 0, maybe: 0 });
 
+    const [attendees, setAttendees] = useState([]);
+    const [attendeesLoading, setAttendeesLoading] = useState(false);
+
+    /* =====================
+       ROUTING
+    ===================== */
+    const { eventId, activeTab } = useMemo(() => {
+        const m = (window.location.hash || "").match(
+            /^#\/events\/(\d+)(?:\/(\w+))?/
+        );
+        return {
+            eventId: m ? Number(m[1]) : null,
+            activeTab: m?.[2] || "overview"
+        };
+    }, [window.location.hash]);
+
+    /* =====================
+       FETCH EVENT
+    ===================== */
     useEffect(() => {
-        if (!id) return;
-        (async () => {
-            try {
-                setLoading(true);
-                const res = await fetch(`/api/events/${id}`);
-                if (!res.ok) throw new Error(`Not found (${res.status})`);
-                const body = await res.json();
-                setEvent(body);
-                setErr("");
-            } catch (e) {
-                setErr(e.message || "Failed to load");
-            } finally {
-                setLoading(false);
-            }
-        })();
-    }, [id]);
+        if (!eventId) return;
 
-    if (!id) return <div style={{ padding: 20 }}><a href="#/events">← Back</a></div>;
+        fetch(`/api/events/${eventId}`)
+            .then(r => {
+                if (!r.ok) throw new Error("Event not found");
+                return r.json();
+            })
+            .then(setEvent)
+            .catch(e => setError(e.message))
+            .finally(() => setLoading(false));
+    }, [eventId]);
+
+    /* =====================
+       RSVP + COUNTS
+    ===================== */
+    useEffect(() => {
+        if (!eventId || !user) return;
+
+        fetch(`/api/events/${eventId}/rsvp?requesterEmail=${encodeURIComponent(user.email)}`)
+            .then(r => r.json())
+            .then(d => setRsvp(d.status || null))
+            .catch(() => {});
+
+        fetch(`/api/events/${eventId}/attendance`)
+            .then(r => r.json())
+            .then(setCounts)
+            .catch(() => {});
+    }, [eventId, user]);
+
+    /* =====================
+       RSVP ACTIONS
+    ===================== */
+    const sendRSVP = async (status) => {
+        await fetch(
+            `/api/events/${eventId}/rsvp?requesterEmail=${encodeURIComponent(user.email)}&status=${status}`,
+            { method: "POST" }
+        );
+        setRsvp(status);
+        setCounts(await fetch(`/api/events/${eventId}/attendance`).then(r => r.json()));
+    };
+
+    const cancelRSVP = async () => {
+        await fetch(
+            `/api/events/${eventId}/rsvp?requesterEmail=${encodeURIComponent(user.email)}`,
+            { method: "DELETE" }
+        );
+        setRsvp(null);
+        setCounts(await fetch(`/api/events/${eventId}/attendance`).then(r => r.json()));
+    };
+
+    /* =====================
+       ATTENDEES TAB
+    ===================== */
+    useEffect(() => {
+        if (activeTab !== "attendees" || !eventId) return;
+
+        setAttendeesLoading(true);
+        fetch(`/api/events/${eventId}/attendees?status=GOING`)
+            .then(r => r.json())
+            .then(setAttendees)
+            .finally(() => setAttendeesLoading(false));
+    }, [activeTab, eventId]);
+
+    if (loading) return <div className="event-page">Loading…</div>;
+    if (error || !event) return <div className="event-page">{error || "Event not found"}</div>;
 
     return (
-        <div style={{ padding: 20, maxWidth: 900, margin: "0 auto" }}>
-            <a href="#/events" style={styles.back}>← Back to Events</a>
-            {loading && <p>Loading…</p>}
-            {err && <p style={{ color: "red" }}>{err}</p>}
-            {event && (
-                <div style={styles.card}>
-                    <h2 style={{ marginTop: 0 }}>{event.name}</h2>
-                    <div style={{ opacity: .8, marginBottom: 8 }}>
-                        {event.startAt ? new Date(event.startAt).toLocaleString() : ""}
-                        {event.endAt ? ` — ${new Date(event.endAt).toLocaleString()}` : ""}
+        <main className="event-page">
+            <EventHeader
+                event={event}
+                activeTab={activeTab}
+                rsvp={rsvp}
+                onRSVP={sendRSVP}
+                onCancelRSVP={cancelRSVP}
+            />
+
+            <section className="event-content">
+                {activeTab === "overview" && (
+                    <div className="event-overview">
+                        <p>{event.description || "No description provided."}</p>
                     </div>
-                    {event.location && <div style={{ marginBottom: 10 }}><strong>Location:</strong> {event.location}</div>}
-                    <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{event.description}</div>
-                </div>
-            )}
-        </div>
+                )}
+
+                {activeTab === "posts" && (
+                    <PostFeed eventId={event.id} />
+                )}
+
+                {activeTab === "attendees" && (
+                    <div className="event-attendees">
+                        {attendeesLoading ? (
+                            <div className="muted">Loading attendees…</div>
+                        ) : attendees.length === 0 ? (
+                            <div className="muted">No attendees yet.</div>
+                        ) : (
+                            attendees.map(a => (
+                                <div key={a.id} className="attendee-row">
+                                    <div className="avatar">
+                                        {a.username[0].toUpperCase()}
+                                    </div>
+                                    <div className="name">{a.username}</div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                )}
+            </section>
+        </main>
     );
 }
-
-const styles = {
-    back: { textDecoration: "none", border: "1px solid #ccc", padding: "6px 10px", borderRadius: 6, background: "#f8f8f8", color: "#333" },
-    card: { background: "#fff", border: "1px solid #ddd", borderRadius: 8, padding: 16, marginTop: 10 }
-};

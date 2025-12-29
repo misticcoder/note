@@ -19,6 +19,7 @@ public class PostFeedDto {
     public boolean myLike;
     public long replyCount;
     public boolean pinned;
+    private int shareCount;
 
     public PostFeedDto(
             Long id,
@@ -30,7 +31,8 @@ public class PostFeedDto {
             long likes,
             boolean myLike,
             long replyCount,
-            boolean pinned
+            boolean pinned,
+            int shareCount
     ) {
         this.id = id;
         this.author = author;
@@ -42,6 +44,7 @@ public class PostFeedDto {
         this.myLike = myLike;
         this.replyCount = replyCount;
         this.pinned = pinned;
+        this.shareCount = shareCount;
     }
 
     /* ===================== INNER DTOs ===================== */

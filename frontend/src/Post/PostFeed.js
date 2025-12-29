@@ -22,6 +22,7 @@ export default function PostFeed() {
     const [references, setReferences] = useState([]);
     const [editingPost, setEditingPost] = useState(null);
 
+
     const {
         confirmState,
         confirm,
@@ -68,6 +69,7 @@ export default function PostFeed() {
             imagePreviews.forEach(url => URL.revokeObjectURL(url));
         };
     }, [imagePreviews]);
+
 
     /* ===================== CREATE POST ===================== */
 
@@ -165,8 +167,6 @@ export default function PostFeed() {
 
     /* ===================== SAVE EDIT ===================== */
 
-    /* ===================== SAVE EDIT ===================== */
-
     const saveEdit = async ({
                                 content,
                                 removeImageIds = [],
@@ -228,22 +228,39 @@ export default function PostFeed() {
 
     };
 
+    const incrementShareCount = (postId) => {
+        setPosts(prev =>
+            prev.map(p =>
+                p.id === postId
+                    ? { ...p, shareCount: (p.shareCount || 0) + 1 }
+                    : p
+            )
+        );
+    };
+
+
     /* ===================== RENDER ===================== */
 
     return (
         <div className="post-feed">
             {/* CREATE POST */}
             <div className="post-composer">
-                <div className="post-avatar">
-                    {user ? user.username[0].toUpperCase() : "?"}
-                </div>
-
                 <div className="composer-main">
+                    <div className={"x-header"}>
+                        <div className="post-avatar">
+                            {user ? user.username[0].toUpperCase() : "?"}
+                        </div>
+                        <div className={"x-user"}>
+                            <span className="x-name">{user ? user.username : "?"}</span>
+                            <span className="x-handle">@{user ? user.username : "?"}</span>
+                        </div>
+                    </div>
                     <div className="composer-body">
                         <textarea
                             placeholder={user ? "What’s happening?" : "Log in to create a post"}
                             value={newPost}
                             onChange={e => setNewPost(e.target.value)}
+
                             disabled={!user || posting}
                             maxLength={500}
                         />
@@ -252,7 +269,7 @@ export default function PostFeed() {
                             <div className={`image-grid grid-${imagePreviews.length}`}>
                                 {imagePreviews.map((src, i) => (
                                     <div key={i} className="image-item">
-                                        <img src={src} alt="" />
+                                        <img src={src} alt=""/>
                                         <button
                                             className="remove-image"
                                             onClick={() => {
@@ -274,7 +291,7 @@ export default function PostFeed() {
                             type="file"
                             accept="image/*"
                             multiple
-                            style={{ display: "none" }}
+                            style={{display: "none"}}
                             onChange={e => {
                                 const files = Array.from(e.target.files || []);
                                 if (!files.length) return;
@@ -287,26 +304,28 @@ export default function PostFeed() {
                             }}
                         />
 
-                        <label htmlFor="post-image-input" className="file-btn">
-                            📷 Add images
+                        <label htmlFor="post-image-input" className="file-btn"> 📷 Add images
                         </label>
 
-                        <ReferencePicker
-                            references={references}
-                            setReferences={setReferences}
-                        />
+                        <div>
+                            <ReferencePicker
+                                references={references}
+                                setReferences={setReferences}
+                            />
+                        </div>
 
-                        <button
-                            className="post-btn"
-                            onClick={createPost}
-                            disabled={
-                                !user ||
-                                posting ||
-                                (!newPost.trim() && images.length === 0 && references.length === 0)
-                            }
-                        >
-                            Post
-                        </button>
+                        <div className={"composer-actions"}>
+                            <button
+                                className="post-btn"
+                                onClick={createPost}
+                                disabled={
+                                    !user ||
+                                    posting ||
+                                    (!newPost.trim() && images.length === 0 && references.length === 0)
+                                }
+                            > Post
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -323,7 +342,9 @@ export default function PostFeed() {
                     onDelete={requestDeletePost}
                     onEdit={setEditingPost}
                     onPin={() => togglePin(p)}
+                    onShare={() => incrementShareCount(p.id)}
                 />
+
             ))}
 
             {editingPost && (

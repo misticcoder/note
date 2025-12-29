@@ -1,0 +1,357 @@
+
+/* ===============================
+   PAGE
+================================ */
+.event-page {
+    min-height: 100vh;
+    background: #2f2f2f;
+    padding: 24px;
+    display: flex;
+    margin-top: 50px;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ===============================
+   EVENT HEADER
+================================ */
+
+.event-header {
+    width: 100%;
+    background: #3f3f3f;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+/* ===============================
+   TOP ROW
+================================ */
+
+.event-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 20px;
+    padding: 20px;
+}
+
+/* ===============================
+   LEFT SIDE
+================================ */
+
+.event-header-left {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    min-width: 0;
+}
+
+.event-banner {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #2f2f2f;
+    flex-shrink: 0;
+}
+
+/* ===============================
+   META
+================================ */
+
+.event-meta {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.event-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #ffffe3;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    line-height: 1.2;
+}
+
+/* LIVE pill */
+.event-live-pill {
+    background: #d50032;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+}
+
+/* Time + Location */
+
+.event-time,
+.event-location {
+    font-size: 14px;
+    color: #d1d5db;
+}
+
+.event-description {
+    margin-top: 6px;
+    font-size: 14px;
+    color: #e5e7eb;
+    line-height: 1.6;
+    max-width: 600px;
+}
+
+/* ===============================
+   RSVP PILL
+================================ */
+
+.event-rsvp-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #2f2f2f;
+    border: 1px solid #555;
+    border-radius: 999px;
+    padding: 6px 10px;
+    height: fit-content;
+    flex-shrink: 0;
+}
+
+.event-user {
+    font-weight: 700;
+    font-size: 14px;
+    color: #ffffe3;
+    padding: 0 6px;
+}
+
+/* ===============================
+   PILLS (shared behavior)
+================================ */
+
+.pill-btn {
+    border: none;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.1s ease;
+    white-space: nowrap;
+}
+
+.pill-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+
+/* Going */
+.pill-join {
+    background: #374151;
+    color: #fff;
+}
+
+/* Maybe */
+.pill-maybe {
+    background: #374151;
+    color: #ffffe3;
+}
+
+/* Active RSVP */
+.pill-active {
+    background: #16a34a;
+    color: #fff;
+}
+
+/* Disabled / non-clickable */
+.pill-disabled {
+    background: #555;
+    color: #ccc;
+    cursor: default;
+}
+
+/* ===============================
+   TABS
+================================ */
+
+.event-tabs {
+    display: flex;
+    gap: 20px;
+    padding: 0 20px;
+    border-top: 1px solid #555;
+    background: #343434;
+}
+
+.event-tabs a {
+    padding: 12px 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: #9aa0a6;
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.event-tabs a:hover {
+    color: #ffffe3;
+}
+
+.event-tabs a.active {
+    color: #ffffe3;
+    border-bottom-color: #d50032;
+}
+
+/* ===============================
+   RESPONSIVE
+================================ */
+
+@media (max-width: 768px) {
+    .event-header-top {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .event-header-left {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .event-banner {
+        width: 100%;
+        height: 180px;
+    }
+
+    .event-description {
+        max-width: 100%;
+    }
+
+    .event-rsvp-pill {
+        align-self: flex-start;
+    }
+}
+
+/* ===============================
+   CONTENT BELOW HEADER
+================================ */
+.event-content {
+    background: #3f3f3f;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+
+.event-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.event-actions button {
+    background: none;
+    border: 1px solid #555;
+    color: #ffffe3;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* ===============================
+   MODAL
+================================ */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal-card {
+    background: #3f3f3f;
+    color: #ffffe3;
+    width: 100%;
+    max-width: 520px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.4);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid #555;
+}
+
+.modal-header button {
+    background: none;
+    border: none;
+    color: #ffffe3;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.modal-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 10px 16px;
+    border-bottom: 1px solid #555;
+}
+
+.modal-tabs button {
+    background: none;
+    border: 1px solid #555;
+    color: #ffffe3;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.modal-tabs button.active {
+    background: #d50032;
+    border-color: #d50032;
+}
+
+.modal-body {
+    padding: 16px;
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.muted {
+    color: #9aa0a6;
+    font-style: italic;
+}
+
+/* ===============================
+   ATTENDEES
+================================ */
+.attendee-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 8px;
+    border-bottom: 1px solid #555;
+}
+
+.attendee-row .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #d50032;
+    color: #fff;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.attendee-row .name {
+    font-weight: 700;
+}
+

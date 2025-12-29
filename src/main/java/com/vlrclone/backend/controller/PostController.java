@@ -300,5 +300,20 @@ public class PostController {
         return service.searchReferences(q);
     }
 
+    @PostMapping("/{id}/share")
+    public ResponseEntity<?> sharePost(@PathVariable Long id) {
+        Post post = posts.findById(id).orElse(null);
+        if (post == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        post.incrementShareCount();
+        posts.save(post);
+
+        return ResponseEntity.ok(Map.of(
+                "shareCount", post.getShareCount()
+        ));
+    }
+
 
 }

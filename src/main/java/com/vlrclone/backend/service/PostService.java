@@ -139,7 +139,8 @@ public class PostService {
                 username != null &&
                         likes.existsByPostIdAndUsername(post.getId(), username),
                 comments.countByPostIdAndParentIdIsNull(post.getId()),
-                post.isPinned()
+                post.isPinned(),
+                post.getShareCount()
         );
     }
 

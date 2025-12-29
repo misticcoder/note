@@ -50,11 +50,15 @@
 
 .post-composer {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     padding: 16px;
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
     background: var(--bg-card);
+}
+
+.composer-header{
+    display: inline;
 }
 
 .post-avatar {
@@ -72,6 +76,7 @@
 
 .composer-body {
     flex: 1;
+    margin: 10px;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -98,13 +103,14 @@
 
 .composer-footer {
     display: flex;
-
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
+
 
 .file-btn {
     padding: 6px 12px;
+    white-space: nowrap;
     font-size: 11px;
     background: #1f2937;
     color: #ffffe3;
@@ -121,6 +127,12 @@
     opacity: 0.5;
     pointer-events: none;
 }
+
+.composer-actions {
+    display: flex;
+    align-items: center; /* ✅ centers Post button vertically */
+}
+
 
 .composer-actions button {
     padding: 6px 14px;
@@ -649,4 +661,34 @@
 
 .x-action.share:hover {
     color: var(--share);
+}
+
+
+.mention-dropdown {
+    position: absolute;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    margin-top: 4px;
+    z-index: 1000;
+    width: 100%;
+}
+
+.mention-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    color: var(--text-main);
+    cursor: pointer;
+}
+
+.mention-item:hover {
+    background: rgba(255,255,255,0.06);
+}
+
+.mention-type {
+    font-size: 11px;
+    color: var(--text-muted);
 }

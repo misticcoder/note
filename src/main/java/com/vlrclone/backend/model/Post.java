@@ -75,6 +75,17 @@ public class Post {
         image.setPost(null);
     }
 
+    @Column(nullable = false)
+    private int shareCount = 0;
+
+    public int getShareCount() {
+        return shareCount;
+    }
+
+    public void incrementShareCount() {
+        this.shareCount++;
+    }
+
     public LocalDateTime getPinnedAt() { return pinnedAt; }
     public void setPinned(boolean pinned) { this.pinned = pinned; }
     public boolean isPinned() { return pinned; }
