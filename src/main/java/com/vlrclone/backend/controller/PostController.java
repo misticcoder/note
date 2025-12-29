@@ -2,19 +2,24 @@ package com.vlrclone.backend.controller;
 
 import com.vlrclone.backend.Enums.ReferenceType;
 import com.vlrclone.backend.dto.PostFeedDto;
+import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.model.Post;
 import com.vlrclone.backend.model.PostImage;
 import com.vlrclone.backend.model.PostReference;
+import com.vlrclone.backend.repository.EventRepository;
 import com.vlrclone.backend.repository.PostRepository;
 import com.vlrclone.backend.service.PostService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -25,10 +30,12 @@ public class PostController {
 
     private final PostRepository posts;
     private final PostService service;
+    private final EventRepository events;
 
-    public PostController(PostRepository posts, PostService service) {
+    public PostController(PostRepository posts, PostService service, EventRepository events) {
         this.posts = posts;
         this.service = service;
+        this.events = events;
     }
 
     /* ===================== FEED ===================== */
@@ -46,9 +53,10 @@ public class PostController {
 
     @GetMapping
     public List<PostFeedDto> feed(
-            @RequestParam(required = false) String username
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) Long eventId
     ) {
-        return service.getFeed(username);
+        return service.getFeed(username, eventId);
     }
 
     /* ===================== CREATE ===================== */
@@ -58,7 +66,10 @@ public class PostController {
             @RequestParam String author,
             @RequestParam String content,
             @RequestParam(required = false) List<MultipartFile> images,
-            @RequestParam(required = false) String references
+            @RequestParam(required = false) String references,
+            @RequestParam(required = false) Long eventId,
+            @RequestParam(defaultValue = "false") boolean announcement,
+            @RequestParam(required = false) String publishAt
     ) {
         boolean hasText = content != null && !content.isBlank();
         boolean hasImage = images != null && !images.isEmpty();
@@ -68,9 +79,36 @@ public class PostController {
                     .body(Map.of("message", "Post must contain text or image"));
         }
 
+
+        if (announcement && !service.isAdmin(author)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "Only admins can post announcements"));
+        }
+
+
+
         Post post = new Post();
         post.setAuthor(author);
         post.setContent(content);
+        post.setAnnouncement(announcement);
+
+        if (publishAt != null && !publishAt.isBlank()) {
+            post.setPublishAt(LocalDateTime.parse(publishAt));
+        }
+
+        if (post.getPublishAt() != null && !post.isAnnouncement()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Only announcements can be scheduled"));
+        }
+
+
+
+        /* ---------- EVENT ---------- */
+        if (eventId != null) {
+            Event event = events.findById(eventId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            post.setEvent(event);
+        }
 
         /* ---------- IMAGES ---------- */
         if (images != null) {
@@ -96,6 +134,7 @@ public class PostController {
         posts.save(post);
         return ResponseEntity.ok(service.toFeedDto(post, author));
     }
+
 
 
     /* ===================== LIKE ===================== */
@@ -143,7 +182,8 @@ public class PostController {
             @RequestParam(required = false) List<String> removeImageIds,
             @RequestParam(required = false) List<String> imageOrder,
             @RequestParam(required = false) List<MultipartFile> images,
-            @RequestParam(required = false) String references
+            @RequestParam(required = false) String references,
+            @RequestParam(required = false) String publishAt
     ) {
         Post post = posts.findById(id).orElse(null);
         if (post == null) return ResponseEntity.notFound().build();
@@ -220,6 +260,22 @@ public class PostController {
             if (!references.isBlank()) {
                 service.parseReferences(references)
                         .forEach(post::addReference);
+            }
+        }
+
+        if (publishAt != null) {
+            if (!service.isAdmin(username)) {
+                return ResponseEntity.status(403)
+                        .body(Map.of("message", "Only admins can reschedule announcements"));
+            }
+
+            try {
+                post.setPublishAt(
+                        publishAt.isBlank() ? null : LocalDateTime.parse(publishAt)
+                );
+            } catch (Exception e) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "Invalid publish date"));
             }
         }
 

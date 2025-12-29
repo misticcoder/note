@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
+import { AuthContext } from "../AuthContext";
 import ReferencePicker from "./ReferencePicker";
 
 export default function EditPostModal({ post, onClose, onSave }) {
+    const { user } = useContext(AuthContext);
+
     const [content, setContent] = useState("");
     const [orderedImages, setOrderedImages] = useState([]);
     const [removeImageIds, setRemoveImageIds] = useState([]);
@@ -9,6 +12,10 @@ export default function EditPostModal({ post, onClose, onSave }) {
     const [newPreviews, setNewPreviews] = useState([]);
     const [references, setReferences] = useState([]);
 
+    // datetime-local needs: "YYYY-MM-DDTHH:mm"
+    const [publishAt, setPublishAt] = useState(
+        post.publishAt ? String(post.publishAt).slice(0, 16) : ""
+    );
 
     /* ===================== SYNC POST ===================== */
 
@@ -22,15 +29,14 @@ export default function EditPostModal({ post, onClose, onSave }) {
             })) || []
         );
 
-        setReferences(
-            Array.isArray(post.references) ? post.references : []
-        );
+        setReferences(Array.isArray(post.references) ? post.references : []);
 
         setRemoveImageIds([]);
         setNewImages([]);
         setNewPreviews([]);
-    }, [post]);
 
+        setPublishAt(post.publishAt ? String(post.publishAt).slice(0, 16) : "");
+    }, [post]);
 
     /* ===================== DRAG & DROP ===================== */
 
@@ -63,8 +69,10 @@ export default function EditPostModal({ post, onClose, onSave }) {
     /* ===================== SAVE ===================== */
 
     const handleSave = () => {
+        const trimmed = content.trim();
+
         if (
-            !content.trim() &&
+            !trimmed &&
             orderedImages.length === 0 &&
             newImages.length === 0 &&
             references.length === 0
@@ -73,17 +81,35 @@ export default function EditPostModal({ post, onClose, onSave }) {
             return;
         }
 
+        // If admin sets a past publishAt, it will publish immediately
+        if (user?.role === "ADMIN" && post.publishAt !== null && publishAt) {
+            const dt = new Date(publishAt);
+            if (!Number.isNaN(dt.getTime()) && dt < new Date()) {
+                const ok = window.confirm(
+                    "This publish time is in the past. The announcement will publish immediately. Continue?"
+                );
+                if (!ok) return;
+            }
+        }
+
         onSave({
-            content,
+            content: trimmed,
             removeImageIds,
             newImages,
-            imageOrder: orderedImages.map(img => img.id),
+            imageOrder: orderedImages.map(img => String(img.id)),
             references,
+
+            // ✅ send publishAt for admin scheduled announcements
+            // - empty string => clear schedule (publish immediately)
+            // - value => schedule/reschedule
+            publishAt: user?.role === "ADMIN" ? publishAt : undefined,
         });
     };
 
-
     /* ===================== RENDER ===================== */
+
+    const showScheduleControl =
+        user?.role === "ADMIN" && post.publishAt !== null; // only for announcements/scheduled posts you intend to edit
 
     return (
         <div className="modal-backdrop">
@@ -101,9 +127,7 @@ export default function EditPostModal({ post, onClose, onSave }) {
                     setReferences={setReferences}
                 />
 
-
                 {/* ===================== EXISTING IMAGES ===================== */}
-
                 {orderedImages.length > 0 && (
                     <div className="image-grid">
                         {orderedImages.map((img, i) => (
@@ -131,9 +155,7 @@ export default function EditPostModal({ post, onClose, onSave }) {
                                         const id = String(img.id);
 
                                         setRemoveImageIds(prev =>
-                                            prev.includes(id)
-                                                ? prev
-                                                : [...prev, id]
+                                            prev.includes(id) ? prev : [...prev, id]
                                         );
 
                                         setOrderedImages(prev =>
@@ -149,7 +171,6 @@ export default function EditPostModal({ post, onClose, onSave }) {
                 )}
 
                 {/* ===================== NEW IMAGE PREVIEWS ===================== */}
-
                 {newPreviews.length > 0 && (
                     <div className="image-grid">
                         {newPreviews.map((src, i) => (
@@ -158,12 +179,8 @@ export default function EditPostModal({ post, onClose, onSave }) {
                                 <button
                                     className="remove-image"
                                     onClick={() => {
-                                        setNewImages(prev =>
-                                            prev.filter((_, idx) => idx !== i)
-                                        );
-                                        setNewPreviews(prev =>
-                                            prev.filter((_, idx) => idx !== i)
-                                        );
+                                        setNewImages(prev => prev.filter((_, idx) => idx !== i));
+                                        setNewPreviews(prev => prev.filter((_, idx) => idx !== i));
                                     }}
                                 >
                                     ✕
@@ -174,7 +191,6 @@ export default function EditPostModal({ post, onClose, onSave }) {
                 )}
 
                 {/* ===================== ADD IMAGES ===================== */}
-
                 <input
                     type="file"
                     accept="image/*"
@@ -183,11 +199,7 @@ export default function EditPostModal({ post, onClose, onSave }) {
                         const files = Array.from(e.target.files || []);
                         if (!files.length) return;
 
-                        const total =
-                            orderedImages.length +
-                            newImages.length +
-                            files.length;
-
+                        const total = orderedImages.length + newImages.length + files.length;
                         if (total > 4) {
                             alert("Maximum 4 images per post");
                             e.target.value = null;
@@ -195,18 +207,29 @@ export default function EditPostModal({ post, onClose, onSave }) {
                         }
 
                         setNewImages(prev => [...prev, ...files]);
-                        setNewPreviews(prev =>
-                            prev.concat(
-                                files.map(f => URL.createObjectURL(f))
-                            )
-                        );
-
+                        setNewPreviews(prev => prev.concat(files.map(f => URL.createObjectURL(f))));
                         e.target.value = null;
                     }}
                 />
 
-                {/* ===================== ACTIONS ===================== */}
+                {/* ===================== SCHEDULE (ADMIN) ===================== */}
+                {showScheduleControl && (
+                    <div className="edit-schedule">
+                        <label>
+                            Publish at:
+                            <input
+                                type="datetime-local"
+                                value={publishAt}
+                                onChange={e => setPublishAt(e.target.value)}
+                            />
+                        </label>
+                        <div className="muted" style={{ marginTop: 6 }}>
+                            Clear the field to publish immediately.
+                        </div>
+                    </div>
+                )}
 
+                {/* ===================== ACTIONS ===================== */}
                 <div className="modal-actions">
                     <button onClick={onClose}>Cancel</button>
                     <button onClick={handleSave}>Save</button>

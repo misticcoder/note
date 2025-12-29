@@ -7,7 +7,7 @@ import EditPostModal from "./EditPostModal";
 import ReferencePicker from "./ReferencePicker";
 import "../styles/Posts.css";
 
-export default function PostFeed() {
+export default function PostFeed({eventId}) {
     const { user } = useContext(AuthContext);
 
     const [posts, setPosts] = useState([]);
@@ -21,6 +21,21 @@ export default function PostFeed() {
 
     const [references, setReferences] = useState([]);
     const [editingPost, setEditingPost] = useState(null);
+
+    const isEventContext = Boolean(eventId);
+    const canAnnounce = isEventContext && user?.role === "ADMIN";
+    const [isAnnouncement, setIsAnnouncement] = useState(false);
+
+    const [scheduleAt, setScheduleAt] = useState("");
+
+
+    useEffect(() => {
+        if (canAnnounce && isEventContext) {
+            setIsAnnouncement(true);
+        } else {
+            setIsAnnouncement(false);
+        }
+    }, [canAnnounce, isEventContext]);
 
 
     const {
@@ -43,11 +58,16 @@ export default function PostFeed() {
     const fetchPosts = async () => {
         setLoading(true);
         try {
-            const usernameParam = user?.username
-                ? `?username=${encodeURIComponent(user.username)}`
-                : "";
+            const params = new URLSearchParams();
 
-            const res = await fetch(`/api/posts${usernameParam}`);
+            if (user?.username) {
+                params.append("username", user.username);
+            }
+            if (eventId) {
+                params.append("eventId", eventId);
+            }
+
+            const res = await fetch(`/api/posts?${params.toString()}`);
             const data = await res.json();
             setPosts(sortPosts(Array.isArray(data) ? data : []));
 
@@ -57,6 +77,7 @@ export default function PostFeed() {
             setLoading(false);
         }
     };
+
 
     useEffect(() => {
         fetchPosts();
@@ -89,6 +110,20 @@ export default function PostFeed() {
             form.append("references", JSON.stringify(references));
         }
 
+        if (eventId) {
+            form.append("eventId", eventId);
+        }
+
+        if (canAnnounce) {
+            form.append("announcement", isAnnouncement);
+        }
+
+        if (scheduleAt) {
+            form.append("publishAt", scheduleAt);
+        }
+
+
+
         try {
             setPosting(true);
             const res = await fetch("/api/posts", {
@@ -105,6 +140,9 @@ export default function PostFeed() {
             setImages([]);
             setImagePreviews([]);
             setReferences([]);
+            setIsAnnouncement(false);
+            setScheduleAt("");
+
 
             await fetchPosts();
         } finally {
@@ -173,6 +211,7 @@ export default function PostFeed() {
                                 newImages = [],
                                 imageOrder = [],
                                 references = [],
+                                publishAt, // ✅ ADD THIS
                             }) => {
         const form = new FormData();
 
@@ -184,6 +223,11 @@ export default function PostFeed() {
         newImages.forEach(file => form.append("images", file));
         form.append("references", JSON.stringify(references ?? []));
 
+        // ✅ SEND SCHEDULE
+        if (publishAt !== undefined) {
+            // empty string => clear schedule
+            form.append("publishAt", publishAt);
+        }
 
         const res = await fetch(`/api/posts/${editingPost.id}`, {
             method: "PATCH",
@@ -201,11 +245,14 @@ export default function PostFeed() {
         }
 
         const updated = await res.json();
+
         setPosts(prev =>
             sortPosts(prev.map(p => (p.id === updated.id ? updated : p)))
         );
+
         setEditingPost(null);
     };
+
 
 
     /* ===================== PIN ===================== */
@@ -313,6 +360,32 @@ export default function PostFeed() {
                                 setReferences={setReferences}
                             />
                         </div>
+
+                        {canAnnounce && (
+                            <label className="announcement-toggle">
+                                <input
+                                    type="checkbox"
+                                    checked={isAnnouncement}
+                                    onChange={e => setIsAnnouncement(e.target.checked)}
+                                    disabled={posting}
+                                />
+                                Announcement
+                            </label>
+                        )}
+
+                        {canAnnounce && isAnnouncement && (
+                            <div className="schedule-row">
+                                <label>
+                                    Publish at:
+                                    <input
+                                        type="datetime-local"
+                                        value={scheduleAt}
+                                        onChange={e => setScheduleAt(e.target.value)}
+                                    />
+                                </label>
+                            </div>
+                        )}
+
 
                         <div className={"composer-actions"}>
                             <button

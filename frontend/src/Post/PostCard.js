@@ -11,6 +11,7 @@ export default function PostCard({
                                      onDelete,
                                      onEdit,
                                      onPin,
+                                     onShare,
                                  }) {
     const REF_BADGE_MAP = {
         CLUB: "badge--yellow",
@@ -27,6 +28,12 @@ export default function PostCard({
     const [menuOpen, setMenuOpen] = useState(false);
     const [showReportPopup, setShowReportPopup] = useState(false);
     const menuRef = useRef(null);
+
+    /* =====================
+       SCHEDULED LOGIC
+    ===================== */
+    const isScheduled =
+        post.publishAt && new Date(post.publishAt) > new Date();
 
     /* ---------- Close menu on outside click ---------- */
     useEffect(() => {
@@ -45,6 +52,7 @@ export default function PostCard({
         };
     }, [menuOpen]);
 
+    /* ---------- Share ---------- */
     const handleShare = async (e) => {
         e.stopPropagation();
 
@@ -71,11 +79,15 @@ export default function PostCard({
         }
     };
 
-
-
     return (
-        <div className={`x-post ${post.pinned ? "pinned" : ""}`}>
+        <div
+            className={`x-post
+                ${post.pinned ? "pinned" : ""}
+                ${isScheduled && user?.role === "ADMIN" ? "scheduled-post" : ""}
+            `}
+        >
             <div className="x-body">
+
                 {/* ===================== HEADER ===================== */}
                 <div className="x-header">
                     <div className="post-avatar">
@@ -88,12 +100,19 @@ export default function PostCard({
                         <span className="x-time">· {timeAgo(post.createdAt)}</span>
                     </div>
 
+                    {/* Scheduled badge (ADMIN only) */}
+                    {isScheduled && user?.role === "ADMIN" && (
+                        <div className="scheduled-badge">
+                            ⏰ Scheduled for{" "}
+                            {new Date(post.publishAt).toLocaleString()}
+                        </div>
+                    )}
+
                     <div style={{ position: "relative" }}>
                         {post.pinned && (
                             <span
                                 className="pin-badge"
                                 data-tooltip="Pinned by admin"
-
                             >
                                 📌
                             </span>
@@ -164,7 +183,6 @@ export default function PostCard({
                                     </button>
                                 )}
 
-
                                 <button
                                     className="post-menu-item cancel"
                                     onClick={() => setMenuOpen(false)}
@@ -193,7 +211,7 @@ export default function PostCard({
                                 <a
                                     key={`${ref.type}-${ref.targetId}`}
                                     href={`/#/${ref.type.toLowerCase()}s/${ref.targetId}`}
-                                    className={`badge post-reference ref-${ref.type.toLowerCase()} ${getRefBadgeClass(ref.type)}`}
+                                    className={`badge post-reference ${getRefBadgeClass(ref.type)}`}
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     @{ref.displayText}
@@ -213,7 +231,7 @@ export default function PostCard({
                 <div className="x-actions">
                     <button
                         className="x-action reply"
-                        data-tooltip = {"Reply"}
+                        data-tooltip="Reply"
                         onClick={(e) => {
                             e.stopPropagation();
                             window.location.hash = `#/post/${post.id}`;
@@ -223,10 +241,8 @@ export default function PostCard({
                     </button>
 
                     <button
-                        className={`x-action like ${
-                            post.myLike ? "active" : ""
-                        }`}
-                        data-tooltip = {"Like"}
+                        className={`x-action like ${post.myLike ? "active" : ""}`}
+                        data-tooltip="Like"
                         onClick={(e) => {
                             e.stopPropagation();
                             onLike();
@@ -236,17 +252,18 @@ export default function PostCard({
                         ❤️ {post.likes}
                     </button>
 
-                    <button className="x-action share"
-                            data-tooltip = {"Share"}
-                            onClick={handleShare}>
+                    <button
+                        className="x-action share"
+                        data-tooltip="Share"
+                        onClick={handleShare}
+                    >
                         <img
                             src={ShareIcon}
                             className="action-icon reply-icon"
-                         alt={"share"}/>
-
+                            alt="share"
+                        />
                         {post.shareCount || ""}
                     </button>
-
                 </div>
             </div>
 

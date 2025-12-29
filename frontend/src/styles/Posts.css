@@ -692,3 +692,46 @@
     font-size: 11px;
     color: var(--text-muted);
 }
+
+/* ===============================
+   SCHEDULED ANNOUNCEMENTS
+================================ */
+
+.schedule-row {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #ffffe3;
+}
+
+.schedule-row input {
+    margin-left: 6px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    border: 1px solid #555;
+    background: #2f2f2f;
+    color: #ffffe3;
+}
+
+.scheduled-badge {
+    font-size: 12px;
+    font-weight: 700;
+    color: #3ea6ff;
+    background: rgba(62,166,255,0.12);
+    border: 1px solid #3ea6ff;
+    padding: 4px 8px;
+    border-radius: 999px;
+    margin-bottom: 6px;
+    display: inline-block;
+}
+
+.scheduled-post {
+    opacity: 0.8;
+}
+
+.x-post.scheduled-post {
+    opacity: 0.8;
+}
+
+.x-post.scheduled-post:hover {
+    opacity: 1;
+}

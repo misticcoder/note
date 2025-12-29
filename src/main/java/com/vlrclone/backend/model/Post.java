@@ -43,6 +43,18 @@ public class Post {
     )
     private List<PostReference> references = new ArrayList<>();
 
+    @Column(nullable = false)
+    private boolean announcement = false;
+
+    @ManyToOne
+    @JoinColumn(name = "event_id")
+    private Event event;
+
+    @Column
+    private LocalDateTime publishAt;
+
+
+
 
     public void addReference(PostReference ref) {
         references.add(ref);
@@ -100,4 +112,27 @@ public class Post {
         }
     }
 
+    public Event getEvent() {
+        return event;
+    }
+
+    public void setEvent(Event event) {
+        this.event = event;
+    }
+
+    public boolean isAnnouncement() {
+        return announcement;
+    }
+
+    public void setAnnouncement(boolean announcement) {
+        this.announcement = announcement;
+    }
+
+    public LocalDateTime getPublishAt() {
+        return publishAt;
+    }
+
+    public void setPublishAt(LocalDateTime publishAt) {
+        this.publishAt = publishAt;
+    }
 }

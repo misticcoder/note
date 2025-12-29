@@ -1,7 +1,6 @@
 package com.vlrclone.backend.dto;
 
 import com.vlrclone.backend.Enums.ReferenceType;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -15,11 +14,12 @@ public class PostFeedDto {
     public List<ReferenceDto> references;
 
     public LocalDateTime createdAt;
+    public LocalDateTime publishAt;   // ✅ ADD
     public long likes;
     public boolean myLike;
     public long replyCount;
     public boolean pinned;
-    private int shareCount;
+    public int shareCount;
 
     public PostFeedDto(
             Long id,
@@ -28,6 +28,7 @@ public class PostFeedDto {
             List<ImageDto> images,
             List<ReferenceDto> references,
             LocalDateTime createdAt,
+            LocalDateTime publishAt,   // ✅ ADD
             long likes,
             boolean myLike,
             long replyCount,
@@ -40,6 +41,7 @@ public class PostFeedDto {
         this.images = images;
         this.references = references;
         this.createdAt = createdAt;
+        this.publishAt = publishAt;   // ✅ ADD
         this.likes = likes;
         this.myLike = myLike;
         this.replyCount = replyCount;

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -51,13 +52,39 @@ public class PostService {
 
     /* ===================== FEED ===================== */
 
-    public List<PostFeedDto> getFeed(String username) {
-        return posts
-                .findAllByOrderByPinnedDescPinnedAtDescCreatedAtDesc()
-                .stream()
-                .map(post -> toFeedDto(post, username))
+    public List<PostFeedDto> getFeed(String username, Long eventId) {
+        List<Post> rawPosts;
+
+        if (eventId != null) {
+            rawPosts = posts.findByEventIdOrderByCreatedAtDesc(eventId);
+        } else {
+            rawPosts = posts.findByEventIsNullOrderByCreatedAtDesc();
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        boolean isAdmin = username != null && isAdmin(username);
+
+        return rawPosts.stream()
+                .filter(p -> {
+                    // always visible
+                    if (p.getPublishAt() == null) return true;
+
+                    // already published
+                    if (!p.getPublishAt().isAfter(now)) return true;
+
+                    // scheduled — admins only
+                    return isAdmin;
+                })
+                .sorted((a, b) -> {
+                    if (a.isAnnouncement() && !b.isAnnouncement()) return -1;
+                    if (!a.isAnnouncement() && b.isAnnouncement()) return 1;
+                    return b.getCreatedAt().compareTo(a.getCreatedAt());
+                })
+                .map(p -> toFeedDto(p, username))
                 .toList();
     }
+
+
 
     /* ===================== LIKE ===================== */
 
@@ -124,7 +151,7 @@ public class PostService {
                         ))
                         .toList(),
 
-                // references (ONCE)
+                // references
                 post.getReferences()
                         .stream()
                         .map(ref -> new PostFeedDto.ReferenceDto(
@@ -135,6 +162,8 @@ public class PostService {
                         .toList(),
 
                 post.getCreatedAt(),
+                post.getPublishAt(),          // ✅ THIS IS THE KEY LINE
+
                 likes.countByPostId(post.getId()),
                 username != null &&
                         likes.existsByPostIdAndUsername(post.getId(), username),
@@ -143,6 +172,7 @@ public class PostService {
                 post.getShareCount()
         );
     }
+
 
 
 

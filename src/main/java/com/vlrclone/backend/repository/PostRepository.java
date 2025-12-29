@@ -7,5 +7,10 @@ import java.util.List;
 public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findAllByOrderByCreatedAtDesc();
     List<Post> findAllByOrderByPinnedDescPinnedAtDescCreatedAtDesc();
+    List<Post> findByEventIdOrderByAnnouncementDescCreatedAtDesc(Long eventId);
+    List<Post> findByEventIdOrderByCreatedAtDesc(Long eventId);
+
+    List<Post> findByEventIsNullOrderByCreatedAtDesc();
+
 
 }
