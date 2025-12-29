@@ -279,11 +279,10 @@ public class PostController {
         Post post = posts.findById(id).orElse(null);
         if (post == null) return ResponseEntity.notFound().build();
 
-        // 🔐 choose rule:
-        // Option A: author only
-        if (!post.getAuthor().equals(username)) {
+        // admin-only
+        if (!service.isAdmin(username)) {
             return ResponseEntity.status(403)
-                    .body(Map.of("message", "Not allowed"));
+                    .body(Map.of("message", "Admins only"));
         }
 
         // toggle

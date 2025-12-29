@@ -29,6 +29,14 @@ export default function PostFeed() {
         handleCancel,
     } = useConfirm();
 
+    const sortPosts = (posts) =>
+        [...posts].sort((a, b) => {
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+
+
     /* ===================== FETCH POSTS ===================== */
 
     const fetchPosts = async () => {
@@ -40,7 +48,8 @@ export default function PostFeed() {
 
             const res = await fetch(`/api/posts${usernameParam}`);
             const data = await res.json();
-            setPosts(Array.isArray(data) ? data : []);
+            setPosts(sortPosts(Array.isArray(data) ? data : []));
+
         } catch (e) {
             console.error("Failed to load posts", e);
         } finally {
@@ -141,9 +150,10 @@ export default function PostFeed() {
 
             try {
                 const res = await fetch(
-                    `/api/posts/${p.id}?username=${encodeURIComponent(user.username)}&admin=${user.role === "ADMIN"}`,
+                    `/api/posts/${p.id}?username=${encodeURIComponent(user.username)}`,
                     { method: "DELETE" }
                 );
+
 
                 if (!res.ok) throw new Error();
             } catch {
@@ -172,8 +182,6 @@ export default function PostFeed() {
         removeImageIds.forEach(id => form.append("removeImageIds", id));
         imageOrder.forEach(id => form.append("imageOrder", id));
         newImages.forEach(file => form.append("images", file));
-
-        // ✅ ALWAYS send references (even empty)
         form.append("references", JSON.stringify(references ?? []));
 
 
@@ -182,13 +190,20 @@ export default function PostFeed() {
             body: form,
         });
 
+        if (res.status === 403) {
+            alert("You are not allowed to edit this post.");
+            return;
+        }
+
         if (!res.ok) {
             alert("Failed to update post");
             return;
         }
 
         const updated = await res.json();
-        setPosts(prev => prev.map(p => (p.id === updated.id ? updated : p)));
+        setPosts(prev =>
+            sortPosts(prev.map(p => (p.id === updated.id ? updated : p)))
+        );
         setEditingPost(null);
     };
 
@@ -207,7 +222,10 @@ export default function PostFeed() {
         }
 
         const updated = await res.json();
-        setPosts(prev => prev.map(p => (p.id === updated.id ? updated : p)));
+        setPosts(prev =>
+            sortPosts(prev.map(p => (p.id === updated.id ? updated : p)))
+        );
+
     };
 
     /* ===================== RENDER ===================== */

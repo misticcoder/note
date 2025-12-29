@@ -3,10 +3,7 @@ package com.vlrclone.backend.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vlrclone.backend.Enums.ReferenceType;
 import com.vlrclone.backend.dto.PostFeedDto;
-import com.vlrclone.backend.model.Post;
-import com.vlrclone.backend.model.PostImage;
-import com.vlrclone.backend.model.PostLike;
-import com.vlrclone.backend.model.PostReference;
+import com.vlrclone.backend.model.*;
 import com.vlrclone.backend.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -30,6 +27,7 @@ public class PostService {
     private final ThreadRepository threads;
     private final ObjectMapper objectMapper;
     private final ReferenceRepository references;
+    private final UserRepository users;
 
 
     public PostService(
@@ -38,7 +36,7 @@ public class PostService {
             CommentRepository comments,
             ClubRepository clubs,
             EventRepository events,
-            ThreadRepository threads, ObjectMapper objectMapper, ReferenceRepository references
+            ThreadRepository threads, ObjectMapper objectMapper, ReferenceRepository references, UserRepository users
     ) {
         this.posts = posts;
         this.likes = likes;
@@ -48,6 +46,7 @@ public class PostService {
         this.threads = threads;
         this.objectMapper = objectMapper;
         this.references = references;
+        this.users = users;
     }
 
     /* ===================== FEED ===================== */
@@ -228,6 +227,12 @@ public class PostService {
         }
 
         return posts.save(post);
+    }
+
+    public boolean isAdmin(String username) {
+        return users.findByUsername(username)
+                .map(u -> u.getRole() == User.Role.ADMIN)
+                .orElse(false);
     }
 
 

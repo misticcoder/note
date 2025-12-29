@@ -188,7 +188,6 @@
     margin-top: 12px;
     cursor: pointer;
     position: relative;
-    z-index: 1;
 }
 
 .x-body {
@@ -200,6 +199,11 @@
     justify-content: space-between;
     align-items: center;
 }
+
+.x-header > div {
+    position: relative;
+}
+
 
 .x-user {
     display: flex;
@@ -232,7 +236,8 @@
 .x-actions {
     display: flex;
     gap: 16px;
-    margin-top: 8px;
+    margin:  10px 20px 0;
+    justify-content: space-between;
 }
 
 .x-action {
@@ -243,7 +248,7 @@
     display: flex;
     gap: 4px;
     align-items: center;
-    font-size: 14px;
+    font-size: 16px;
     cursor: pointer;
     padding: 4px 6px;
     border-radius: 999px;
@@ -299,6 +304,7 @@
 }
 
 [data-tooltip]::after {
+    white-space: nowrap;
     content: attr(data-tooltip);
     position: absolute;
     bottom: -28px;
@@ -311,7 +317,7 @@
     border-radius: 4px;
     opacity: 0;
     pointer-events: none;
-    z-index: 9999;
+    z-index: 1000;
 }
 
 [data-tooltip]:hover::after {
@@ -595,4 +601,52 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+
+.post-menu {
+    position: absolute;
+    top: 28px;
+    right: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    z-index: 1000;
+    min-width: 140px;
+    overflow: hidden;
+}
+
+.post-menu-item {
+    width: 100%;
+    padding: 10px 12px;
+    background: none;
+    border: none;
+    text-align: left;
+    color: var(--text-main);
+    cursor: pointer;
+    font-size: 14px;
+    z-index: 200;
+}
+
+.post-menu-item:hover {
+    background: rgba(255,255,255,0.06);
+}
+
+.post-menu-item.danger {
+    color: #ff6b6b;
+}
+
+.reply-icon {
+    filter: invert(48%) sepia(55%) saturate(2200%) hue-rotate(0deg);
+}
+
+.action-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.x-action.share:hover {
+    color: var(--share);
 }
