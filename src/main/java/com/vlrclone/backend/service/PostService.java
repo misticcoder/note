@@ -8,6 +8,7 @@ import com.vlrclone.backend.model.PostImage;
 import com.vlrclone.backend.model.PostLike;
 import com.vlrclone.backend.model.PostReference;
 import com.vlrclone.backend.repository.*;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Files;
@@ -28,6 +29,7 @@ public class PostService {
     private final EventRepository events;
     private final ThreadRepository threads;
     private final ObjectMapper objectMapper;
+    private final ReferenceRepository references;
 
 
     public PostService(
@@ -36,7 +38,7 @@ public class PostService {
             CommentRepository comments,
             ClubRepository clubs,
             EventRepository events,
-            ThreadRepository threads, ObjectMapper objectMapper
+            ThreadRepository threads, ObjectMapper objectMapper, ReferenceRepository references
     ) {
         this.posts = posts;
         this.likes = likes;
@@ -45,6 +47,7 @@ public class PostService {
         this.events = events;
         this.threads = threads;
         this.objectMapper = objectMapper;
+        this.references = references;
     }
 
     /* ===================== FEED ===================== */
@@ -202,6 +205,29 @@ public class PostService {
         } catch (Exception e) {
             throw new RuntimeException("Invalid references payload", e);
         }
+    }
+    @Transactional
+    public Post updatePost(
+            Long postId,
+            String content,
+            List<PostReference> incomingReferences
+    ) {
+        Post post = posts.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        post.setContent(content);
+
+        // 🔥 HARD REPLACE REFERENCES
+        references.deleteByPostId(postId);
+
+        if (incomingReferences != null && !incomingReferences.isEmpty()) {
+            for (PostReference ref : incomingReferences) {
+                ref.setPost(post);
+            }
+            references.saveAll(incomingReferences);
+        }
+
+        return posts.save(post);
     }
 
 

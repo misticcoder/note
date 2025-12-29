@@ -161,14 +161,69 @@ public class PostController {
         }
 
         /* ---------- IMAGES ---------- */
-        // (your existing image logic is already correct)
 
-        /* ---------- REFERENCES (REPLACE, NOT APPEND) ---------- */
-        if (references != null) {
-            post.getReferences().clear();
-            service.parseReferences(references)
-                    .forEach(post::addReference);
+        /* ---------- REMOVE IMAGES ---------- */
+        if (removeImageIds != null && !removeImageIds.isEmpty()) {
+            post.getImages()
+                    .stream()
+                    .filter(img ->
+                            removeImageIds.contains(String.valueOf(img.getId()))
+                    )
+                    .toList()
+                    .forEach(img -> {
+                        service.deleteImageFile(img.getUrl());
+                        post.removeImage(img);
+                    });
         }
+
+        /* ---------- REORDER EXISTING IMAGES ---------- */
+        if (imageOrder != null && !imageOrder.isEmpty()) {
+            int position = 0;
+            for (String idStr : imageOrder) {
+                Long imageId;
+                try {
+                    imageId = Long.valueOf(idStr);
+                } catch (NumberFormatException e) {
+                    continue;
+                }
+
+                for (PostImage img : post.getImages()) {
+                    if (img.getId().equals(imageId)) {
+                        img.setPosition(position++);
+                        break;
+                    }
+                }
+            }
+        }
+
+        /* ---------- ADD NEW IMAGES ---------- */
+        if (images != null && !images.isEmpty()) {
+            int startPosition = post.getImages().size();
+
+            for (MultipartFile file : images) {
+                if (file.isEmpty()) continue;
+
+                String url = saveImage(file);
+
+                PostImage img = new PostImage();
+                img.setUrl(url);
+                img.setPosition(startPosition++);
+
+                post.addImage(img);
+            }
+        }
+
+        /* ---------- REFERENCES (REPLACE) ---------- */
+        if (references != null) {
+            post.clearReferences();
+
+            if (!references.isBlank()) {
+                service.parseReferences(references)
+                        .forEach(post::addReference);
+            }
+        }
+
+
 
         posts.save(post);
         return ResponseEntity.ok(service.toFeedDto(post, username));

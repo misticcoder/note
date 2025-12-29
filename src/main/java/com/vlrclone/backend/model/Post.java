@@ -82,5 +82,11 @@ public class Post {
         this.pinnedAt = pinnedAt;
     }
     public List<PostReference> getReferences() { return references; }
-    public void setReferences(List<PostReference> references) { this.references = references; }
+
+    public void clearReferences() {
+        for (PostReference ref : new ArrayList<>(references)) {
+            removeReference(ref);
+        }
+    }
+
 }

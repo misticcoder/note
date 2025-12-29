@@ -155,6 +155,8 @@ export default function PostFeed() {
 
     /* ===================== SAVE EDIT ===================== */
 
+    /* ===================== SAVE EDIT ===================== */
+
     const saveEdit = async ({
                                 content,
                                 removeImageIds = [],
@@ -171,10 +173,9 @@ export default function PostFeed() {
         imageOrder.forEach(id => form.append("imageOrder", id));
         newImages.forEach(file => form.append("images", file));
 
-        // 🔥 SAME REFERENCE FORMAT
-        references.forEach(ref => {
-            form.append("references", JSON.stringify(ref));
-        });
+        // ✅ ALWAYS send references (even empty)
+        form.append("references", JSON.stringify(references ?? []));
+
 
         const res = await fetch(`/api/posts/${editingPost.id}`, {
             method: "PATCH",
@@ -190,6 +191,7 @@ export default function PostFeed() {
         setPosts(prev => prev.map(p => (p.id === updated.id ? updated : p)));
         setEditingPost(null);
     };
+
 
     /* ===================== PIN ===================== */
 

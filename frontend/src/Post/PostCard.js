@@ -27,9 +27,6 @@ export default function PostCard({
     return (
         <div
             className={`x-post ${post.pinned ? "pinned" : ""}`}
-            onClick={() => {
-                window.location.hash = `#/post/${post.id}`;
-            }}
         >
             <div className="x-body">
                 {/* ===================== HEADER ===================== */}
@@ -46,44 +43,56 @@ export default function PostCard({
                         </span>
                     </div>
 
-                    {post.pinned && (
-                        <span className="pin-badge">📌 Pinned</span>
+                    <div>
+                        {post.pinned && <span className="pin-badge"
+                                              data-tooltip={"Pinned"}>📌</span>}
+                        <button
+                            className="x-more"
+                            data-tooltip="More"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            ⋯
+                        </button>
+                    </div>
+                </div>
+
+
+                <div className={"post-content"}
+                     onClick={() => {
+                         window.location.hash = `#/post/${post.id}`;
+                     }}>
+                    {/* ===================== CONTENT ===================== */}
+                    {post.content && (
+                        <div className="x-content">{post.content}</div>
+                    )}
+
+                    {/* ===================== REFERENCES ===================== */}
+                    {post.references?.length > 0 && (
+                        <span className="post-references">
+                            {post.references.map(ref => (
+                                <a
+                                    key={`${ref.type}-${ref.targetId}`}
+                                    href={`/#/${ref.type.toLowerCase()}s/${ref.targetId}`}
+                                    className={`
+                                        badge
+                                        post-reference
+                                        ref-${ref.type.toLowerCase()}
+                                        ${getRefBadgeClass(ref.type)}
+                                    `}
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    @{ref.displayText}
+                                </a>
+                            ))}
+                        </span>
+                    )}
+
+                    {/* ===================== IMAGES ===================== */}
+                    {post.images?.length > 0 && (
+                        <ImageCarousel images={post.images.map(img => img.url)} />
                     )}
                 </div>
 
-                {/* ===================== CONTENT ===================== */}
-                {post.content && (
-                    <div className="x-content">{post.content}</div>
-                )}
-
-                {/* ===================== REFERENCES ===================== */}
-                {post.references?.length > 0 && (
-                    <span className="post-references">
-        {post.references.map(ref => (
-            <a
-                key={`${ref.type}-${ref.targetId}`}
-                href={`/#/${ref.type.toLowerCase()}s/${ref.targetId}`}
-                className={`
-                    badge
-                    post-reference
-                    ref-${ref.type.toLowerCase()}
-                    ${getRefBadgeClass(ref.type)}
-                `}
-                onClick={(e) => e.stopPropagation()}
-            >
-                @{ref.displayText}
-            </a>
-        ))}
-    </span>
-                )}
-
-
-
-
-                {/* ===================== IMAGES ===================== */}
-                {post.images?.length > 0 && (
-                    <ImageCarousel images={post.images.map(img => img.url)} />
-                )}
 
                 {/* ===================== ACTIONS ===================== */}
                 <div className="x-actions">

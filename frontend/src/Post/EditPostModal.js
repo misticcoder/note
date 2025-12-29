@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import ReferencePicker from "./ReferencePicker";
 
 export default function EditPostModal({ post, onClose, onSave }) {
     const [content, setContent] = useState("");
@@ -6,6 +7,8 @@ export default function EditPostModal({ post, onClose, onSave }) {
     const [removeImageIds, setRemoveImageIds] = useState([]);
     const [newImages, setNewImages] = useState([]);
     const [newPreviews, setNewPreviews] = useState([]);
+    const [references, setReferences] = useState([]);
+
 
     /* ===================== SYNC POST ===================== */
 
@@ -19,10 +22,15 @@ export default function EditPostModal({ post, onClose, onSave }) {
             })) || []
         );
 
+        setReferences(
+            Array.isArray(post.references) ? post.references : []
+        );
+
         setRemoveImageIds([]);
         setNewImages([]);
         setNewPreviews([]);
     }, [post]);
+
 
     /* ===================== DRAG & DROP ===================== */
 
@@ -55,12 +63,11 @@ export default function EditPostModal({ post, onClose, onSave }) {
     /* ===================== SAVE ===================== */
 
     const handleSave = () => {
-        console.log("REMOVE IDS:", removeImageIds);
-
         if (
             !content.trim() &&
             orderedImages.length === 0 &&
-            newImages.length === 0
+            newImages.length === 0 &&
+            references.length === 0
         ) {
             alert("Post cannot be empty");
             return;
@@ -71,8 +78,10 @@ export default function EditPostModal({ post, onClose, onSave }) {
             removeImageIds,
             newImages,
             imageOrder: orderedImages.map(img => img.id),
+            references,
         });
     };
+
 
     /* ===================== RENDER ===================== */
 
@@ -86,6 +95,12 @@ export default function EditPostModal({ post, onClose, onSave }) {
                     onChange={e => setContent(e.target.value)}
                     maxLength={500}
                 />
+
+                <ReferencePicker
+                    references={references}
+                    setReferences={setReferences}
+                />
+
 
                 {/* ===================== EXISTING IMAGES ===================== */}
 

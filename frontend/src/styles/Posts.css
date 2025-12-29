@@ -324,19 +324,23 @@
 
 /* Image / carousel wrapper */
 .x-carousel {
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
-
     margin-top: 10px;
     border-radius: 12px;
     overflow: hidden;
 }
 
 .x-carousel-image {
+    display: block;
     width: 100%;
+    height: auto;
+    max-height: 420px;
     object-fit: contain;
 }
+
 
 .x-carousel-btn {
     position: absolute;

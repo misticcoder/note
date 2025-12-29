@@ -1,43 +1,38 @@
-import { useState } from "react";
+import {useState} from "react";
 import "../styles/Posts.css";
 
-export default function ImageCarousal({ images }) {
+export default function ImageCarousel({ images }) {
     const [index, setIndex] = useState(0);
-    const total = images.length;
 
-    if (!images || total === 0) return null;
+    if (!images || images.length === 0) return null;
 
     const prev = (e) => {
         e.stopPropagation();
-        setIndex((index - 1 + total) % total);
+        setIndex((index - 1 + images.length) % images.length);
     };
 
     const next = (e) => {
         e.stopPropagation();
-        setIndex((index + 1) % total);
+        setIndex((index + 1) % images.length);
     };
 
     return (
         <div className="x-carousel">
             <img
-                src={images[index].url}
+                src={images[index]}
                 alt=""
                 className="x-carousel-image"
             />
 
-            {total > 1 && (
+            {images.length > 1 && (
                 <>
-                    <button className="x-carousel-btn left" onClick={prev}>
-                        ‹
-                    </button>
-                    <button className="x-carousel-btn right" onClick={next}>
-                        ›
-                    </button>
+                    <button className="x-carousel-btn left" onClick={prev}>‹</button>
+                    <button className="x-carousel-btn right" onClick={next}>›</button>
 
                     <div className="x-carousel-dots">
-                        {images.map((img, i) => (
+                        {images.map((_, i) => (
                             <span
-                                key={img.id}
+                                key={i}
                                 className={`dot ${i === index ? "active" : ""}`}
                                 onClick={(e) => {
                                     e.stopPropagation();
