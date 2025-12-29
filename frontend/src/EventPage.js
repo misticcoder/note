@@ -15,7 +15,13 @@ export default function EventPage() {
     const [counts, setCounts] = useState({ going: 0, maybe: 0 });
 
     const [attendees, setAttendees] = useState([]);
+    const [goingAttendees, setGoingAttendees] = useState([]);
+    const [maybeAttendees, setMaybeAttendees] = useState([]);
     const [attendeesLoading, setAttendeesLoading] = useState(false);
+
+    const [attendeeQuery, setAttendeeQuery] = useState("");
+
+
 
     /* =====================
        ROUTING
@@ -29,6 +35,33 @@ export default function EventPage() {
             activeTab: m?.[2] || "overview"
         };
     }, [window.location.hash]);
+
+    useEffect(() => {
+        if (activeTab !== "attendees" || !eventId) return;
+
+        setAttendeesLoading(true);
+
+        Promise.all([
+            fetch(`/api/events/${eventId}/attendees?status=GOING`).then(r => r.json()),
+            fetch(`/api/events/${eventId}/attendees?status=MAYBE`).then(r => r.json())
+        ])
+            .then(([going, maybe]) => {
+                setGoingAttendees(Array.isArray(going) ? going : []);
+                setMaybeAttendees(Array.isArray(maybe) ? maybe : []);
+            })
+            .finally(() => setAttendeesLoading(false));
+
+    }, [activeTab, eventId]);
+
+    const filteredGoing = goingAttendees.filter(a =>
+        a.username.toLowerCase().includes(attendeeQuery.toLowerCase())
+    );
+
+    const filteredMaybe = maybeAttendees.filter(a =>
+        a.username.toLowerCase().includes(attendeeQuery.toLowerCase())
+    );
+
+
 
     /* =====================
        FETCH EVENT
@@ -113,32 +146,97 @@ export default function EventPage() {
             <section className="event-content">
                 {activeTab === "overview" && (
                     <div className="event-overview">
-                        <p>{event.description || "No description provided."}</p>
+                        <h3>Description</h3>
+                        <p>{event.content || "No description provided."}</p>
                     </div>
-                )}
-
-                {activeTab === "posts" && (
-                    <PostFeed eventId={event.id} />
                 )}
 
                 {activeTab === "attendees" && (
                     <div className="event-attendees">
-                        {attendeesLoading ? (
+
+                        {/* SEARCH */}
+                        <div className="attendee-search">
+                            <input
+                                type="text"
+                                placeholder="Search attendees…"
+                                value={attendeeQuery}
+                                onChange={e => setAttendeeQuery(e.target.value)}
+                            />
+                        </div>
+
+                        {attendeesLoading && (
                             <div className="muted">Loading attendees…</div>
-                        ) : attendees.length === 0 ? (
-                            <div className="muted">No attendees yet.</div>
-                        ) : (
-                            attendees.map(a => (
-                                <div key={a.id} className="attendee-row">
-                                    <div className="avatar">
-                                        {a.username[0].toUpperCase()}
-                                    </div>
-                                    <div className="name">{a.username}</div>
+                        )}
+
+                        {!attendeesLoading && (
+                            <div className="event-attendees-grid">
+
+                                {/* GOING */}
+                                <div className="attendee-column">
+                                    <h3 className="attendee-heading">
+                                        Going ({filteredGoing.length})
+                                    </h3>
+
+                                    {filteredGoing.length === 0 ? (
+                                        <div className="muted">No matches.</div>
+                                    ) : (
+                                        filteredGoing.map(a => (
+                                            <div
+                                                key={a.id}
+                                                className={`attendee-row ${user && a.username === user.username ? "is-me" : ""}`}
+                                            >
+
+                                                <div className="avatar">
+                                                    {a.username[0].toUpperCase()}
+                                                </div>
+                                                <div className="name">
+                                                    {a.username}
+                                                    {user && a.username === user.username && (
+                                                        <span className="you-badge">You</span>
+                                                    )}
+                                                </div>
+
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
-                            ))
+
+                                {/* MAYBE */}
+                                <div className="attendee-column">
+                                    <h3 className="attendee-heading">
+                                        Maybe ({filteredMaybe.length})
+                                    </h3>
+
+                                    {filteredMaybe.length === 0 ? (
+                                        <div className="muted">No matches.</div>
+                                    ) : (
+                                        filteredMaybe.map(a => (
+                                            <div
+                                                key={a.id}
+                                                className={`attendee-row ${user && a.username === user.username ? "is-me" : ""}`}
+                                            >
+
+                                                <div className="avatar">
+                                                    {a.username[0].toUpperCase()}
+                                                </div>
+                                                <div className="name">
+                                                    {a.username}
+                                                    {user && a.username === user.username && (
+                                                        <span className="you-badge">You</span>
+                                                    )}
+                                                </div>
+
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+
+                            </div>
                         )}
                     </div>
                 )}
+
+
             </section>
         </main>
     );

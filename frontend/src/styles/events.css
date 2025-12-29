@@ -355,3 +355,134 @@
     font-weight: 700;
 }
 
+/* ===============================
+   EVENT CONTENT
+================================ */
+
+.event-content {
+    background: #3f3f3f;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+
+.event-overview {
+    color: #ffffe3;
+    line-height: 1.6;
+}
+
+.event-attendees {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ===============================
+   ATTENDEE ROW
+================================ */
+
+.attendee-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 8px;
+    border-bottom: 1px solid #555;
+}
+
+.attendee-row:last-child {
+    border-bottom: none;
+}
+
+.attendee-row .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #d50032;
+    color: #fff;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.attendee-row .name {
+    font-weight: 700;
+    color: #ffffe3;
+}
+
+.muted {
+    color: #9aa0a6;
+    font-style: italic;
+}
+
+
+/* ===============================
+   ATTENDEES — TWO COLUMN LAYOUT
+================================ */
+
+.event-attendees-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+/* Individual column */
+.attendee-column {
+    background: #353535;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+/* Responsive: collapse to one column */
+@media (max-width: 768px) {
+    .event-attendees-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* ===============================
+   ATTENDEE SEARCH
+================================ */
+
+.attendee-search {
+    margin-bottom: 16px;
+}
+
+.attendee-search input {
+    width: 100%;
+    max-width: 320px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #555;
+    background: #2f2f2f;
+    color: #ffffe3;
+    font-size: 14px;
+}
+
+.attendee-search input::placeholder {
+    color: #9aa0a6;
+}
+
+/* ===============================
+   HIGHLIGHT CURRENT USER
+================================ */
+
+.attendee-row.is-me {
+    background: rgba(213, 0, 50, 0.12);
+    border-radius: 6px;
+}
+
+.attendee-row.is-me .avatar {
+    box-shadow: 0 0 0 2px #d50032;
+}
+
+.you-badge {
+    margin-left: 8px;
+    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 999px;
+    background: #d50032;
+    color: #fff;
+}
+
