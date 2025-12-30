@@ -3,6 +3,7 @@ import ImageCarousel from "./ImageCarousal";
 import "../styles/Posts.css";
 import { useState, useRef, useEffect } from "react";
 import ShareIcon from "../components/Icons/share.png";
+import { getRefBadgeClass } from "../components/referenceBadges";
 
 export default function PostCard({
                                      post,
@@ -13,17 +14,7 @@ export default function PostCard({
                                      onPin,
                                      onShare,
                                  }) {
-    const REF_BADGE_MAP = {
-        CLUB: "badge--yellow",
-        EVENT: "badge--purple",
-        THREAD: "badge--blue",
-        USER: "badge--yellow",
-        POST: "badge--indigo",
-        DEFAULT: "badge--gray",
-    };
 
-    const getRefBadgeClass = (type) =>
-        REF_BADGE_MAP[type] ?? REF_BADGE_MAP.DEFAULT;
 
     const [menuOpen, setMenuOpen] = useState(false);
     const [showReportPopup, setShowReportPopup] = useState(false);

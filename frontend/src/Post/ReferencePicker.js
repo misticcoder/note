@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "../styles/Posts.css";
+import { getRefBadgeClass } from "../components/referenceBadges";
 
 export default function ReferencePicker({ references, setReferences }) {
     const [query, setQuery] = useState("");
@@ -63,15 +64,20 @@ export default function ReferencePicker({ references, setReferences }) {
                 </div>
             )}
 
-            {references.length > 0 && (
-                <div className="reference-selected">
-                    {references.map((r, i) => (
-                        <span key={i} onClick={() => removeReference(i)}>
-              @{r.displayText} ✕
-            </span>
-                    ))}
-                </div>
-            )}
+            {references.map((r, i) => (
+                <span
+                    key={`${r.type}-${r.targetId}`}
+                    className={`badge post-reference ${getRefBadgeClass(r.type)}`}>
+                    @{r.displayText}
+                    <span
+                        className="badge-remove"
+                        onClick={() => removeReference(i)}
+                    >
+                        ×
+                    </span>
+                </span>
+            ))}
+
         </div>
     );
 }

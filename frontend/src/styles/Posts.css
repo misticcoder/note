@@ -606,6 +606,7 @@
 
 .reference-result{
     background-color: #1e293b;
+    cursor: pointer;
     padding: 10px;
     border: 1px solid #000000;
     color: #ffffe3;
@@ -613,7 +614,32 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    /* transition */
+    transition:
+            background-color 150ms ease,
+            border-color 150ms ease,
+            transform 120ms ease,
+            box-shadow 120ms ease;
 }
+
+.reference-result:hover {
+    background-color: #24324a;
+    border-color: #334155;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.reference-result:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.reference-result:focus-visible {
+    outline: none;
+    border-color: #60a5fa;
+}
+
+
 
 
 .post-menu {

@@ -173,9 +173,6 @@ public class PostService {
         );
     }
 
-
-
-
     public List<Map<String, Object>> searchReferences(String q) {
         if (q == null || q.isBlank()) return List.of();
 
