@@ -56,16 +56,17 @@ public class EventController {
                     .body(Map.of("message", "Admin only"));
         }
 
-        var name = body.getOrDefault("name", "").trim();
-        var description = body.getOrDefault("description", "").trim();
+        var title = body.getOrDefault("title", "").trim();
+        var content = body.getOrDefault("content", "").trim();
         var location = body.getOrDefault("location", "").trim();
         var startStr = body.get("startAt");
         var endStr = body.get("endAt");
 
-        if (name.isBlank() || startStr == null || startStr.isBlank()) {
+        if (title.isBlank() || startStr == null || startStr.isBlank()) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("message", "name and startAt are required"));
+                    .body(Map.of("message", "title and startAt are required"));
         }
+
 
         LocalDateTime startAt;
         LocalDateTime endAt = null;
@@ -81,8 +82,8 @@ public class EventController {
         }
 
         var ev = new Event();
-        ev.setTitle(name);
-        ev.setContent(description);
+        ev.setTitle(title);
+        ev.setContent(content);
         ev.setLocation(location.isBlank() ? null : location);
         ev.setStartAt(startAt);
         ev.setEndAt(endAt);
@@ -94,8 +95,15 @@ public class EventController {
     @PatchMapping("/{id}")
     public ResponseEntity<?> update(
             @PathVariable Long id,
+            @RequestParam String requesterEmail,
             @RequestBody Map<String, Object> body
     ) {
+        var me = byEmail(requesterEmail);
+        if (!isAdmin(me)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "Admin only"));
+        }
+
         var opt = events.findById(id);
         if (opt.isEmpty()) {
             return ResponseEntity.status(404)
@@ -104,24 +112,39 @@ public class EventController {
 
         var ev = opt.get();
 
-        if (body.containsKey("name")) {
-            ev.setTitle(String.valueOf(body.get("name")));
+        if (ev.getStatus() == Event.EventStatus.ENDED) {
+            return ResponseEntity.status(409)
+                    .body(Map.of("message", "Ended events cannot be modified"));
         }
-        if (body.containsKey("description")) {
-            ev.setContent(String.valueOf(body.get("description")));
-        }
-        if (body.containsKey("location")) {
-            ev.setLocation(String.valueOf(body.get("location")));
-        }
-        if (body.containsKey("startAt")) {
-            ev.setStartAt(LocalDateTime.parse(String.valueOf(body.get("startAt"))));
-        }
-        if (body.containsKey("endAt")) {
-            ev.setEndAt(LocalDateTime.parse(String.valueOf(body.get("endAt"))));
+
+        try {
+            if (body.containsKey("title")) {
+                ev.setTitle(String.valueOf(body.get("title")).trim());
+            }
+            if (body.containsKey("content")) {
+                ev.setContent(String.valueOf(body.get("content")).trim());
+            }
+            if (body.containsKey("location")) {
+                var loc = String.valueOf(body.get("location")).trim();
+                ev.setLocation(loc.isBlank() ? null : loc);
+            }
+            if (body.containsKey("startAt")) {
+                ev.setStartAt(LocalDateTime.parse(String.valueOf(body.get("startAt"))));
+            }
+            if (body.containsKey("endAt")) {
+                var end = String.valueOf(body.get("endAt"));
+                ev.setEndAt(end == null || end.isBlank()
+                        ? null
+                        : LocalDateTime.parse(end));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Invalid date format. Use ISO-8601."));
         }
 
         return ResponseEntity.ok(events.save(ev));
     }
+
 
     // ---------------- DELETE ----------------
     @DeleteMapping("/{id}")
@@ -134,11 +157,15 @@ public class EventController {
             return ResponseEntity.status(403)
                     .body(Map.of("message", "Admin only"));
         }
-        if (!events.existsById(id)) {
+
+        var opt = events.findById(id);
+        if (opt.isEmpty()) {
             return ResponseEntity.status(404)
                     .body(Map.of("message", "Event not found"));
         }
-        events.deleteById(id);
+
+        events.delete(opt.get());
         return ResponseEntity.ok(Map.of("status", "deleted", "id", id));
     }
+
 }

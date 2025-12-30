@@ -7,7 +7,10 @@ export default function EventHeader({
                                         activeTab,
                                         rsvp,                 // "GOING" | "MAYBE" | null
                                         onRSVP,
-                                        onCancelRSVP
+                                        onCancelRSVP,
+                                        isAdmin,              // ✅ NEW
+                                        onEdit,               // ✅ NEW
+                                        onDelete              // ✅ NEW
                                     }) {
     const { user } = useContext(AuthContext);
 
@@ -23,7 +26,9 @@ export default function EventHeader({
 
     return (
         <div className="event-header">
-            {/* TOP ROW */}
+            {/* =====================
+               TOP ROW
+            ===================== */}
             <div className="event-header-top">
                 {/* LEFT */}
                 <div className="event-header-left">
@@ -32,7 +37,7 @@ export default function EventHeader({
                         alt={event.title}
                         className="event-banner"
                         onError={(e) => {
-                            e.currentTarget.onerror = null; // prevent infinite loop
+                            e.currentTarget.onerror = null;
                             e.currentTarget.src = "./components/default.png";
                         }}
                     />
@@ -41,91 +46,112 @@ export default function EventHeader({
                         <h1 className="event-title">
                             {event.title}
                             {status === "LIVE" && (
-                                <span className="event-live-pill">LIVE</span>
+                                <span className="event-live-pill">
+                                    LIVE
+                                </span>
                             )}
                         </h1>
 
-                        {/* Time */}
+                        {/* TIME */}
                         {(start || end) && (
                             <div className="event-time">
                                 {start && (
                                     <span>
-                                        {"start "}- {start.toLocaleString()}
+                                        start – {start.toLocaleString()}
                                     </span>
                                 )}
                                 {end && (
                                     <span>
-                                        {"end "}– {end.toLocaleString()}
+                                        {" "}
+                                        | end – {end.toLocaleString()}
                                     </span>
                                 )}
                             </div>
                         )}
 
-                        {/* Location */}
+                        {/* LOCATION */}
                         {event.location && (
                             <div className="event-location">
                                 📍 {event.location}
                             </div>
                         )}
-
-                        {/* Description */}
-                        {event.description && (
-                            <div className="event-description">
-                                {event.description}
-                            </div>
-                        )}
                     </div>
                 </div>
 
-                {/* RIGHT: RSVP */}
-                {user && (
-                    <div className="event-rsvp-pill">
-                        <span className="event-user">
-                            {user.username}
-                        </span>
+                {/* RIGHT SIDE */}
+                <div className="event-header-right">
+                    {/* RSVP */}
+                    {user && (
+                        <div className="event-rsvp-pill">
+                            <span className="event-user">
+                                {user.username}
+                            </span>
 
-                        {rsvp === "GOING" ? (
-                            <button
-                                className="pill-btn pill-active"
-                                onClick={onCancelRSVP}
-                            >
-                                Going ✓
-                            </button>
-                        ) : rsvp === "MAYBE" ? (
-                            <button
-                                className="pill-btn pill-active"
-                                onClick={onCancelRSVP}
-                            >
-                                Maybe ✓
-                            </button>
-                        ) : (
-                            <>
+                            {rsvp === "GOING" ? (
                                 <button
-                                    className="pill-btn pill-join"
-                                    onClick={() => onRSVP("GOING")}
+                                    className="pill-btn pill-active"
+                                    onClick={onCancelRSVP}
                                 >
-                                    Going
+                                    Going ✓
                                 </button>
+                            ) : rsvp === "MAYBE" ? (
                                 <button
-                                    className="pill-btn pill-maybe"
-                                    onClick={() => onRSVP("MAYBE")}
+                                    className="pill-btn pill-active"
+                                    onClick={onCancelRSVP}
                                 >
-                                    Maybe
+                                    Maybe ✓
                                 </button>
-                            </>
-                        )}
-                    </div>
-                )}
+                            ) : (
+                                <>
+                                    <button
+                                        className="pill-btn pill-join"
+                                        onClick={() => onRSVP("GOING")}
+                                    >
+                                        Going
+                                    </button>
+                                    <button
+                                        className="pill-btn pill-maybe"
+                                        onClick={() => onRSVP("MAYBE")}
+                                    >
+                                        Maybe
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {/* ADMIN ACTIONS */}
+                    {isAdmin && (
+                        <div className="event-admin-actions">
+                            <button
+                                className="admin-btn"
+                                onClick={onEdit}
+                            >
+                                Edit
+                            </button>
+                            <button
+                                className="admin-btn danger"
+                                onClick={onDelete}
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* TABS */}
+            {/* =====================
+               TABS
+            ===================== */}
             <nav className="event-tabs">
-                {TABS.map(tab => (
+                {TABS.map((tab) => (
                     <a
                         key={tab}
                         href={`#/events/${event.id}/${tab}`}
                         className={activeTab === tab ? "active" : ""}
-                        aria-current={activeTab === tab ? "page" : undefined}
+                        aria-current={
+                            activeTab === tab ? "page" : undefined
+                        }
                     >
                         {tab.toUpperCase()}
                     </a>

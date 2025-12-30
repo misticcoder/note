@@ -2,6 +2,7 @@ import { useEffect, useState, useContext, useMemo } from "react";
 import { AuthContext } from "./AuthContext";
 import EventHeader from "./EventHeader";
 import PostFeed from "./Post/PostFeed";
+import EditEventModal from "./Events/EditEventModal";
 import "./styles/events.css";
 
 export default function EventPage() {
@@ -11,13 +12,25 @@ export default function EventPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
+    /* =====================
+       ADMIN STATE
+    ===================== */
+    const [editingEvent, setEditingEvent] = useState(null);
+    const isAdmin =
+        String(user?.role || "").toUpperCase() === "ADMIN";
+
+    /* =====================
+       RSVP STATE
+    ===================== */
     const [rsvp, setRsvp] = useState(null);
     const [counts, setCounts] = useState({ going: 0, maybe: 0 });
 
+    /* =====================
+       ATTENDEES STATE
+    ===================== */
     const [goingAttendees, setGoingAttendees] = useState([]);
     const [maybeAttendees, setMaybeAttendees] = useState([]);
     const [attendeesLoading, setAttendeesLoading] = useState(false);
-
     const [attendeeQuery, setAttendeeQuery] = useState("");
 
     /* =====================
@@ -75,6 +88,8 @@ export default function EventPage() {
        RSVP ACTIONS
     ===================== */
     const sendRSVP = async (status) => {
+        if (!user) return;
+
         await fetch(
             `/api/events/${eventId}/rsvp?requesterEmail=${encodeURIComponent(
                 user.email
@@ -91,6 +106,8 @@ export default function EventPage() {
     };
 
     const cancelRSVP = async () => {
+        if (!user) return;
+
         await fetch(
             `/api/events/${eventId}/rsvp?requesterEmail=${encodeURIComponent(
                 user.email
@@ -107,7 +124,7 @@ export default function EventPage() {
     };
 
     /* =====================
-       ATTENDEES (GOING + MAYBE)
+       ATTENDEES
     ===================== */
     useEffect(() => {
         if (activeTab !== "attendees" || !eventId) return;
@@ -150,6 +167,55 @@ export default function EventPage() {
     );
 
     /* =====================
+       ADMIN: EDIT / DELETE
+    ===================== */
+    const saveEvent = async (updates) => {
+        if (!user || !event) return;
+
+        const res = await fetch(
+            `/api/events/${event.id}?requesterEmail=${encodeURIComponent(
+                user.email
+            )}`,
+            {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updates),
+            }
+        );
+
+        const body = await res.json();
+        if (!res.ok) {
+            alert(body.message || "Failed to update event");
+            return;
+        }
+
+        setEvent(body);
+        setEditingEvent(null);
+    };
+
+    const deleteEvent = async () => {
+        if (!user || !event) return;
+
+        if (!window.confirm("Delete this event? This cannot be undone.")) {
+            return;
+        }
+
+        const res = await fetch(
+            `/api/events/${event.id}?requesterEmail=${encodeURIComponent(
+                user.email
+            )}`,
+            { method: "DELETE" }
+        );
+
+        if (!res.ok) {
+            alert("Failed to delete event");
+            return;
+        }
+
+        window.location.hash = "#/events";
+    };
+
+    /* =====================
        STATES
     ===================== */
     if (loading) return <div className="event-page">Loading…</div>;
@@ -171,6 +237,9 @@ export default function EventPage() {
                 rsvp={rsvp}
                 onRSVP={sendRSVP}
                 onCancelRSVP={cancelRSVP}
+                isAdmin={isAdmin}
+                onEdit={() => setEditingEvent(event)}
+                onDelete={deleteEvent}
             />
 
             <section className="event-content">
@@ -178,10 +247,7 @@ export default function EventPage() {
                 {activeTab === "overview" && (
                     <div className="event-overview">
                         <h3>Description</h3>
-                        <p>
-                            {event.content ||
-                                "No description provided."}
-                        </p>
+                        <p>{event.content || "No description provided."}</p>
                     </div>
                 )}
 
@@ -294,6 +360,15 @@ export default function EventPage() {
                     </div>
                 )}
             </section>
+
+            {/* EDIT MODAL */}
+            {editingEvent && (
+                <EditEventModal
+                    event={editingEvent}
+                    onSave={saveEvent}
+                    onClose={() => setEditingEvent(null)}
+                />
+            )}
         </main>
     );
 }

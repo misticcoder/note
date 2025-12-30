@@ -486,3 +486,169 @@
     color: #fff;
 }
 
+/* =========================
+   PAGE WRAPPER
+========================= */
+.events-page {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+/* =========================
+   HEADER / TOOLBAR
+========================= */
+.events-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.events-top h1 {
+    margin: 0;
+    font-size: 26px;
+}
+
+.events-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.events-controls input,
+.events-controls select {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+/* =========================
+   TABLE CONTAINER
+========================= */
+.events-table {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* =========================
+   HEADER ROW
+========================= */
+.events-header {
+    display: grid;
+    grid-template-columns: 60px 1fr 120px 100px;
+    padding: 10px 12px;
+    background: #f4f4f4;
+    font-weight: 600;
+    font-size: 13px;
+    color: #555;
+}
+
+/* =========================
+   DATA ROW
+========================= */
+.events-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 120px 100px;
+    align-items: center;
+    padding: 12px;
+    border-top: 1px solid #eee;
+}
+
+.events-row:hover {
+    background: #fafafa;
+}
+
+/* =========================
+   RANK COLUMN
+========================= */
+.rank {
+    text-align: right;
+    padding-right: 10px;
+    font-weight: 600;
+    color: #666;
+}
+
+/* =========================
+   EVENT MAIN INFO
+========================= */
+.event-main {
+    display: flex;
+    flex-direction: column;
+}
+
+.event-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111;
+}
+
+.event-meta {
+    font-size: 12px;
+    color: #777;
+    margin-top: 2px;
+}
+
+/* =========================
+   STATUS COLUMN
+========================= */
+.event-status {
+    text-align: center;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+/* Status colors */
+.event-status.upcoming {
+    color: #2563eb;
+}
+
+.event-status.live {
+    color: #16a34a;
+}
+
+.event-status.ended {
+    color: #9ca3af;
+}
+
+/* =========================
+   ACTIONS COLUMN
+========================= */
+.event-actions {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.event-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    padding: 4px;
+}
+
+.event-actions button:hover {
+    opacity: 0.7;
+}
+
+.event-actions .danger {
+    color: #b91c1c;
+}
+
+/* =========================
+   STATES
+========================= */
+.muted {
+    color: #777;
+}
+
+.error {
+    color: #b91c1c;
+}
+
+
+
