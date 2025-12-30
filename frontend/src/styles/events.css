@@ -493,7 +493,6 @@
     width: 100%;
     max-width: 1100px;
     margin: 0 auto;
-    padding: 40px 20px;
 }
 
 /* =========================
@@ -504,11 +503,14 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
+    margin-top: 60px;
+    padding: 10px;
 }
 
 .events-top h1 {
     margin: 0;
     font-size: 26px;
+    color: #ffffe3;
 }
 
 .events-controls {
@@ -530,7 +532,7 @@
 .events-table {
     background: #ffffff;
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 2px;
     overflow: hidden;
 }
 
@@ -539,12 +541,13 @@
 ========================= */
 .events-header {
     display: grid;
-    grid-template-columns: 60px 1fr 120px 100px;
+    grid-template-columns: 10% 35% 15% 15% 20%;
     padding: 10px 12px;
     background: #f4f4f4;
     font-weight: 600;
     font-size: 13px;
     color: #555;
+    height: 2em;
 }
 
 /* =========================
@@ -552,9 +555,9 @@
 ========================= */
 .events-row {
     display: grid;
-    grid-template-columns: 60px 1fr 120px 100px;
+    grid-template-columns: 10% 35% 15% 15% 20%;
     align-items: center;
-    padding: 12px;
+    padding: 15px;
     border-top: 1px solid #eee;
 }
 
@@ -566,7 +569,7 @@
    RANK COLUMN
 ========================= */
 .rank {
-    text-align: right;
+
     padding-right: 10px;
     font-weight: 600;
     color: #666;
@@ -596,7 +599,6 @@
    STATUS COLUMN
 ========================= */
 .event-status {
-    text-align: center;
     font-weight: 600;
     font-size: 13px;
 }
@@ -618,9 +620,11 @@
    ACTIONS COLUMN
 ========================= */
 .event-actions {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
+   justify-content: center;
+    gap: 30px;
+}
+.table-actions{
+    margin-left: 90px;
 }
 
 .event-actions button {
@@ -629,6 +633,7 @@
     cursor: pointer;
     font-size: 15px;
     padding: 4px;
+    color: #1f1f1f;
 }
 
 .event-actions button:hover {
@@ -650,5 +655,55 @@
     color: #b91c1c;
 }
 
+/* Clickable rows */
+.events-row.clickable {
+    cursor: pointer;
+}
 
+.events-row.clickable:hover {
+    background: #f9fafb;
+}
+
+/* Prevent text selection feeling */
+.events-row * {
+    user-select: none;
+}
+
+.events-row.clickable:hover .event-title {
+    text-decoration: underline;
+}
+
+
+.event-rating {
+    margin-top: 16px;
+}
+
+.rating-meta {
+    font-size: 13px;
+    color: #555;
+    margin-top: 4px;
+}
+
+.rating-hint {
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.event-rating-inline {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.event-rating-inline .star {
+    color: #f59e0b;
+    font-size: 14px;
+}
+
+.rating-count {
+    color: #6b7280;
+    font-size: 12px;
+}
 

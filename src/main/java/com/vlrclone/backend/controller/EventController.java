@@ -2,13 +2,17 @@
 package com.vlrclone.backend.controller;
 
 import com.vlrclone.backend.model.Event;
+import com.vlrclone.backend.model.EventRating;
 import com.vlrclone.backend.model.User;
+import com.vlrclone.backend.repository.EventRatingRepository;
 import com.vlrclone.backend.repository.EventRepository;
 import com.vlrclone.backend.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -17,10 +21,12 @@ public class EventController {
 
     private final EventRepository events;
     private final UserRepository users;
+    private final EventRatingRepository eventRatings;
 
-    public EventController(EventRepository events, UserRepository users) {
+    public EventController(EventRepository events, UserRepository users, EventRatingRepository eventRatings) {
         this.events = events;
         this.users = users;
+        this.eventRatings = eventRatings;
     }
 
     private boolean isAdmin(User u) {
@@ -167,5 +173,91 @@ public class EventController {
         events.delete(opt.get());
         return ResponseEntity.ok(Map.of("status", "deleted", "id", id));
     }
+
+    @GetMapping("/{id}/rating")
+    public ResponseEntity<?> getRating(
+            @PathVariable Long id,
+            @RequestParam(required = false) String requesterEmail
+    ) {
+        User user = requesterEmail != null ? byEmail(requesterEmail) : null;
+
+        List<EventRating> ratings = eventRatings.findByEvent_Id(id);
+
+        double average = ratings.isEmpty()
+                ? 0.0
+                : ratings.stream()
+                .mapToInt(EventRating::getRating)
+                .average()
+                .orElse(0.0);
+
+        int count = ratings.size();
+
+        Integer myRating = null;
+        if (user != null) {
+            myRating = eventRatings
+                    .findByEvent_IdAndUser_Id(id, user.getId())
+                    .map(EventRating::getRating)
+                    .orElse(null);
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("average", average);
+        response.put("count", count);
+        response.put("myRating", myRating); // null is allowed here
+
+        return ResponseEntity.ok(response);
+
+    }
+
+    @PostMapping("/{id}/rating")
+    public ResponseEntity<?> rateEvent(
+            @PathVariable Long id,
+            @RequestParam String requesterEmail,
+            @RequestBody Map<String, Integer> body
+    ) {
+        User user = byEmail(requesterEmail);
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "User not found"));
+        }
+
+        Event event = events.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        if (event == null) {
+            return ResponseEntity.status(404)
+                    .body(Map.of("message", "Event not found"));
+        }
+
+
+        if (event.getStatus() != Event.EventStatus.ENDED) {
+            return ResponseEntity.status(409)
+                    .body(Map.of("message", "Event not ended"));
+        }
+
+        int rating = body.getOrDefault("rating", 0);
+        if (rating < 1 || rating > 5) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Rating must be 1–5"));
+        }
+
+        EventRating er = eventRatings
+                .findByEvent_IdAndUser_Id(id, user.getId())
+                .orElseGet(EventRating::new);
+
+        er.setEvent(event);
+        er.setUser(user);
+        er.setRating(rating);
+        if (er.getId() == null) {
+            er.setCreatedAt(LocalDateTime.now());
+        }
+        er.setUpdatedAt(LocalDateTime.now());
+
+
+        eventRatings.save(er);
+
+        return getRating(id, requesterEmail);
+
+    }
+
 
 }
