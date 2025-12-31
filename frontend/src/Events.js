@@ -26,6 +26,13 @@ export default function Events() {
         endAt: ""
     });
 
+    const [status, setStatus] = useState("upcoming");      // upcoming | ongoing | past | all
+    const [allTags, setAllTags] = useState([]);            // list of tag names from backend
+    const [selectedTags, setSelectedTags] = useState([]);  // selected tag names
+
+
+
+
     /* =====================
        HELPERS
     ===================== */
@@ -70,18 +77,46 @@ export default function Events() {
         (async () => {
             try {
                 setLoading(true);
-                const res = await fetch("/api/events");
+
+                const params = new URLSearchParams();
+                if (q.trim()) params.set("q", q.trim());
+                if (selectedTags.length) params.set("tags", selectedTags.join(","));
+                if (status) params.set("status", status);
+
+                const res = await fetch(`/api/events?${params.toString()}`);
                 if (!res.ok) throw new Error("Failed to load events");
+
                 const data = await res.json();
                 setEvents(Array.isArray(data) ? data : []);
                 setErr("");
+                setRatings({});
+
             } catch (e) {
                 setErr(e.message);
             } finally {
                 setLoading(false);
             }
         })();
+    }, [q, selectedTags, status]);
+
+
+    /* =====================
+       LOAD TAGS
+    ===================== */
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch("/api/tags");
+                if (!res.ok) return;
+                const data = await res.json();
+                setAllTags(Array.isArray(data) ? data : []);
+            } catch {
+                // ignore for MVP
+            }
+        })();
     }, []);
+
 
     /* =====================
        LOAD RATINGS (per event)
@@ -112,9 +147,9 @@ export default function Events() {
     }, [events]);
 
     /* =====================
-       SEARCH
-    ===================== */
-    const filtered = useMemo(() => {
+       Local SEARCH
+
+       const filtered = useMemo(() => {
         const t = q.toLowerCase();
         return events.filter((e) =>
             (e.title || "").toLowerCase().includes(t) ||
@@ -123,13 +158,30 @@ export default function Events() {
         );
     }, [events, q]);
 
+    ===================== */
+
+
     /* =====================
        SORT (IMDb STYLE)
        - Default grouping: LIVE -> UPCOMING -> ENDED
        - Then applies selected sort within each group
     ===================== */
+    const visibleEvents = useMemo(() => {
+        if (status === "all") return events;
+
+        return events.filter(ev => {
+            const s = getEventStatus(ev);
+
+            if (status === "upcoming") return s === "UPCOMING";
+            if (status === "ongoing") return s === "LIVE";
+            if (status === "past") return s === "ENDED";
+
+            return true;
+        });
+    }, [events, status]);
+
     const sorted = useMemo(() => {
-        const arr = [...filtered];
+        const arr = [...visibleEvents];
 
         arr.sort((a, b) => {
             const statusA = getEventStatus(a);
@@ -138,25 +190,19 @@ export default function Events() {
             const sa = STATUS_ORDER[statusA] ?? 1;
             const sb = STATUS_ORDER[statusB] ?? 1;
 
-            // 1) Status grouping always first
             if (sa !== sb) return sa - sb;
 
-            // 2) Within same status: apply dropdown sort
             if (sort === "title") {
                 return (a.title || "").localeCompare(b.title || "");
             }
 
-            if (sort === "status") {
-                // already grouped; fall back to date for stable order
-                return new Date(a.startAt || 0) - new Date(b.startAt || 0);
-            }
-
-            // default: date
             return new Date(a.startAt || 0) - new Date(b.startAt || 0);
         });
 
         return arr;
-    }, [filtered, sort]);
+    }, [visibleEvents, sort]);
+
+
 
     /* =====================
        ADMIN: EDIT
@@ -286,6 +332,56 @@ export default function Events() {
                     </select>
                 </div>
 
+                <div className="event-status-tabs">
+                    {[
+                        {key: "upcoming", label: "Upcoming"},
+                        {key: "ongoing", label: "Ongoing"},
+                        {key: "past", label: "Past"},
+                        {key: "all", label: "All"},
+                    ].map(t => (
+                        <button
+                            key={t.key}
+                            type="button"
+                            className={status === t.key ? "active" : ""}
+                            onClick={() => setStatus(t.key)}
+                        >
+                            {t.label}
+                        </button>
+                    ))}
+                </div>
+
+                {allTags.length > 0 && (
+                    <div className="event-tags-filter">
+                        {allTags.map(tag => {
+                            const active = selectedTags.includes(tag);
+                            return (
+                                <span
+                                    key={tag}
+                                    className={`tag-chip ${active ? "active" : ""}`}
+                                    onClick={() => {
+                                        setSelectedTags(prev =>
+                                            active ? prev.filter(t => t !== tag) : [...prev, tag]
+                                        );
+                                    }}
+                                >
+                    {tag}
+                </span>
+                            );
+                        })}
+                        {selectedTags.length > 0 && (
+                            <button
+                                type="button"
+                                className="clear-tags"
+                                onClick={() => setSelectedTags([])}
+                            >
+                                Clear
+                            </button>
+                        )}
+                    </div>
+                )}
+
+
+
                 {isAdmin && (
                     <button className={"button"} onClick={() => setShowAdd(true)}>
                         + Add Event
@@ -295,14 +391,14 @@ export default function Events() {
                 {/* ADD MODAL */}
                 {isAdmin && showAdd && (
                     <div className={"events-controls"}>
-                        <div >
+                        <div>
                             <h3>Add Event</h3>
-                            <form onSubmit={createEvent} style={{ display: "grid", gap: 10 }}>
+                            <form onSubmit={createEvent} style={{display: "grid", gap: 10}}>
 
                                 <input
                                     name="title"
                                     placeholder="Event Name"
-                                    value={form.name}
+                                    value={form.title}
                                     onChange={handleChange}
                                     required
                                     className={"input"}
@@ -311,7 +407,7 @@ export default function Events() {
                                 <textarea
                                     name="content"
                                     placeholder="Description"
-                                    value={form.description}
+                                    value={form.content}
                                     onChange={handleChange}
                                     rows={4}
                                     className={"textarea"}
@@ -342,8 +438,8 @@ export default function Events() {
 
                                 />
 
-                                <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-                                    <button type="button" onClick={() => setShowAdd(false)} className={"cancel-btn"} >
+                                <div style={{display: "flex", justifyContent: "flex-end", gap: 8}}>
+                                    <button type="button" onClick={() => setShowAdd(false)} className={"cancel-btn"}>
                                         Cancel
                                     </button>
                                     <button type="submit" className={"btn-primary"}>
@@ -353,8 +449,8 @@ export default function Events() {
                             </form>
                         </div>
                     </div>
-                        )}
-                    </header>
+                )}
+            </header>
 
             {loading && <p className="muted">Loading…</p>}
             {err && <p className="error">{err}</p>}
@@ -392,6 +488,15 @@ export default function Events() {
                                             : "TBA"}
                                         {ev.location && ` · ${ev.location}`}
                                     </div>
+
+
+                                    {ev.tags?.length > 0 && (
+                                        <div className="event-tags">
+                                            {ev.tags.map(t => (
+                                                <span key={t} className="event-tag">{t}</span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Status */}

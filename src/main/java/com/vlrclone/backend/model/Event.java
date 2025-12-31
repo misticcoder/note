@@ -3,6 +3,8 @@ package com.vlrclone.backend.model;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 public class Event {
@@ -38,6 +40,18 @@ public class Event {
     public void setStartAt(LocalDateTime startAt) { this.startAt = startAt; }
     public LocalDateTime getEndAt() { return endAt; }
     public void setEndAt(LocalDateTime endAt) { this.endAt = endAt; }
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "event_tags",
+            joinColumns = @JoinColumn(name = "event_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private Set<Tag> tags = new HashSet<>();
+
+    public Set<Tag> getTags() { return tags; }
+    public void setTags(Set<Tag> tags) { this.tags = tags; }
+
 
     @Transient
     public EventStatus getStatus() {

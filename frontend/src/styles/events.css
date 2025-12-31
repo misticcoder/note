@@ -707,3 +707,54 @@
     font-size: 12px;
 }
 
+
+.event-status-tabs {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    margin-bottom: 8px;
+}
+
+.event-status-tabs button.active {
+    font-weight: 700;
+    border-bottom: 2px solid currentColor;
+}
+
+.event-tags-filter {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.tag-chip {
+    padding: 4px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 12px;
+    background: rgba(255,255,255,0.08);
+}
+
+.tag-chip.active {
+    background: rgba(99,102,241,0.9);
+}
+
+.event-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.event-tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.10);
+}
+
+.clear-tags {
+    margin-left: 6px;
+}
+

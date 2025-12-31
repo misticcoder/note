@@ -9,6 +9,8 @@ import com.vlrclone.backend.repository.EventRepository;
 import com.vlrclone.backend.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.vlrclone.backend.service.EventService;
+
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -22,11 +24,14 @@ public class EventController {
     private final EventRepository events;
     private final UserRepository users;
     private final EventRatingRepository eventRatings;
+    private final EventService eventService;
 
-    public EventController(EventRepository events, UserRepository users, EventRatingRepository eventRatings) {
+
+    public EventController(EventRepository events, UserRepository users, EventRatingRepository eventRatings, EventService eventService) {
         this.events = events;
         this.users = users;
         this.eventRatings = eventRatings;
+        this.eventService = eventService;
     }
 
     private boolean isAdmin(User u) {
@@ -38,9 +43,16 @@ public class EventController {
     }
 
     @GetMapping
-    public ResponseEntity<?> list() {
-        return ResponseEntity.ok(events.findAll());
+    public ResponseEntity<?> list(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) List<String> tags,
+            @RequestParam(defaultValue = "upcoming") String status
+    ) {
+        return ResponseEntity.ok(
+                eventService.searchEvents(q, tags, status)
+        );
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<?> get(@PathVariable Long id) {
