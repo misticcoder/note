@@ -88,4 +88,46 @@ public class EventService {
                 )
                 .collect(Collectors.toSet());
     }
+
+    public List<Event> findByTag(String tagName, String status) {
+        Tag tag = tagRepo.findByName(tagName)
+                .orElseThrow(() -> new RuntimeException("Tag not found"));
+
+        List<Event> events = eventRepo.findByTagsContaining(tag);
+
+        return filterByStatus(events, status);
+    }
+    private List<Event> filterByStatus(List<Event> events, String status) {
+        if (status == null || status.equalsIgnoreCase("all")) {
+            return events;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        return events.stream().filter(ev -> {
+            LocalDateTime start = ev.getStartAt();
+            LocalDateTime end = ev.getEndAt();
+
+            // fallback: +2 hours if end is missing
+            if (start != null && end == null) {
+                end = start.plusHours(2);
+            }
+
+            return switch (status.toLowerCase()) {
+                case "upcoming" ->
+                        start != null && now.isBefore(start);
+
+                case "ongoing", "live" ->
+                        start != null && end != null &&
+                                !now.isBefore(start) && !now.isAfter(end);
+
+                case "past", "ended" ->
+                        end != null && now.isAfter(end);
+
+                default -> true;
+            };
+        }).toList();
+    }
+
+
 }

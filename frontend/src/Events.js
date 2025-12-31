@@ -33,6 +33,31 @@ export default function Events() {
     const [selectedTags, setSelectedTags] = useState([]);  // selected tag names
 
 
+    const [hash, setHash] = useState(window.location.hash);
+
+    useEffect(() => {
+        const onHashChange = () => setHash(window.location.hash);
+        window.addEventListener("hashchange", onHashChange);
+        return () => window.removeEventListener("hashchange", onHashChange);
+    }, []);
+
+    const tagFromRoute = useMemo(() => {
+        const m = hash.match(/^#\/events\/tag\/([^/]+)/);
+        return m ? decodeURIComponent(m[1]) : null;
+    }, [hash]);
+
+    useEffect(() => {
+        if (!tagFromRoute) return;
+
+        setSelectedTags(prev =>
+            prev.length === 1 && prev[0] === tagFromRoute
+                ? prev
+                : [tagFromRoute]
+        );
+
+        setStatus("all");
+    }, [tagFromRoute]);
+
 
 
     /* =====================
@@ -80,31 +105,36 @@ export default function Events() {
             try {
                 setLoading(true);
 
-                const params = new URLSearchParams();
-                if (q.trim()) params.set("q", q.trim());
-                if (selectedTags.length > 0) {
-                    params.set("tags", selectedTags.join(","));
-                } else {
-                    params.delete("tags");
+                let url;
+
+                if (tagFromRoute) {
+                    url = `/api/events/tag/${encodeURIComponent(tagFromRoute)}?status=${status}`;
+                }
+                else {
+                    // 🔁 NORMAL MODE
+                    const params = new URLSearchParams();
+                    if (q.trim()) params.set("q", q.trim());
+                    if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
+                    if (status) params.set("status", status);
+
+                    url = `/api/events?${params.toString()}`;
                 }
 
-                if (status) params.set("status", status);
-
-                const res = await fetch(`/api/events?${params.toString()}`);
+                const res = await fetch(url);
                 if (!res.ok) throw new Error("Failed to load events");
 
                 const data = await res.json();
                 setEvents(Array.isArray(data) ? data : []);
                 setErr("");
                 setRatings({});
-
             } catch (e) {
                 setErr(e.message);
             } finally {
                 setLoading(false);
             }
         })();
-    }, [q, selectedTags, status]);
+    }, [q, selectedTags, status, tagFromRoute]);
+
 
 
     /* =====================
@@ -373,11 +403,7 @@ export default function Events() {
                                     className={`tag-chip ${active ? "active" : ""}`}
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        setSelectedTags(prev =>
-                                            active
-                                                ? prev.filter(t => t !== tagName)
-                                                : [...prev, tagName]
-                                        );
+                                        window.location.hash = `#/events/tag/${encodeURIComponent(tagName)}`;
                                     }}
 
                                 >
@@ -390,14 +416,18 @@ export default function Events() {
                             type="button"
                             className="clear-tags"
                             disabled={selectedTags.length === 0}
-                            onClick={() => setSelectedTags(() => [])}
+                            onClick={() => {
+                                setSelectedTags([]);
+                                setStatus("upcoming");
+                                window.location.hash = "#/events";
+                            }}
                         >
                             Clear
                         </button>
 
+
                     </div>
                 )}
-
 
 
                 {isAdmin && (
@@ -493,6 +523,12 @@ export default function Events() {
                         <div className="table-actions">Actions</div>
                     </div>
 
+                    {sorted.length === 0 && (
+                        <div className="muted" style={{ padding: "20px", textAlign: "center" }}>
+                            No events match this filter.
+                        </div>
+                    )}
+
                     {sorted.map((ev, i) => {
                         const status = getEventStatus(ev);
 
@@ -521,9 +557,11 @@ export default function Events() {
                                     {ev.tags?.map(tag => {
                                         const label = typeof tag === "string" ? tag : tag.name;
                                         return (
-                                            <span key={label} className="event-tag">
-            {label}
-        </span>
+                                            <span className="event-tag">
+                                                {tag.name}
+                                            </span>
+
+
                                         );
                                     })}
 

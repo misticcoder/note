@@ -36,6 +36,16 @@ export default function EventPage() {
     const [attendeesLoading, setAttendeesLoading] = useState(false);
     const [attendeeQuery, setAttendeeQuery] = useState("");
 
+    const [hash, setHash] = useState(window.location.hash);
+
+
+
+    useEffect(() => {
+        const onHashChange = () => setHash(window.location.hash);
+        window.addEventListener("hashchange", onHashChange);
+        return () => window.removeEventListener("hashchange", onHashChange);
+    }, []);
+
     /* =====================
        ⭐ RATING
     ===================== */
@@ -49,14 +59,13 @@ export default function EventPage() {
        ROUTING
     ===================== */
     const { eventId, activeTab } = useMemo(() => {
-        const m = (window.location.hash || "").match(
-            /^#\/events\/(\d+)(?:\/(\w+))?/
-        );
+        const m = (hash || "").match(/^#\/events\/(\d+)(?:\/(\w+))?/);
         return {
             eventId: m ? Number(m[1]) : null,
             activeTab: m?.[2] || "overview",
         };
-    }, [window.location.hash]);
+    }, [hash]);
+
 
     /* =====================
        EVENT STATUS (JS)
@@ -138,12 +147,16 @@ export default function EventPage() {
     const sendRSVP = async (status) => {
         if (!user) return;
 
-        await fetch(
+        const res = await fetch(
             `/api/events/${eventId}/rsvp?requesterEmail=${encodeURIComponent(
                 user.email
             )}&status=${status}`,
             { method: "POST" }
         );
+        if (!res.ok) {
+            alert("Unable to update RSVP");
+            return;
+        }
 
         setRsvp(status);
         setCounts(
@@ -154,12 +167,17 @@ export default function EventPage() {
     const cancelRSVP = async () => {
         if (!user) return;
 
-        await fetch(
+        const res = await fetch(
             `/api/events/${eventId}/rsvp?requesterEmail=${encodeURIComponent(
                 user.email
             )}`,
             { method: "DELETE" }
         );
+
+        if (!res.ok) {
+            alert("Unable to cancel RSVP");
+            return;
+        }
 
         setRsvp(null);
         setCounts(
@@ -171,7 +189,13 @@ export default function EventPage() {
        ATTENDEES
     ===================== */
     useEffect(() => {
-        if (activeTab !== "attendees" || !eventId) return;
+        if (
+            activeTab !== "attendees" ||
+            !eventId ||
+            goingAttendees.length ||
+            maybeAttendees.length
+        ) return;
+
 
         setAttendeesLoading(true);
 
@@ -305,6 +329,7 @@ export default function EventPage() {
                 isAdmin={isAdmin}
                 onEdit={() => setEditingEvent(event)}
                 onDelete={deleteEvent}
+                canEdit={isAdmin && eventStatus !== "ENDED"}
             />
 
             <section className="event-content">

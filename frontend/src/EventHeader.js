@@ -75,7 +75,34 @@ export default function EventHeader({
                                 📍 {event.location}
                             </div>
                         )}
+
+                        {event.tags && event.tags.length > 0 && (
+                            <div className="event-tags">
+                                Tags:
+                                {event.tags.map((tag) => {
+                                    const label =
+                                        typeof tag === "string" ? tag : tag.name;
+
+                                    return (
+                                        <span
+                                            key={label}
+                                            className="event-tag clickable"
+                                            onClick={() => {
+                                                window.location.hash = `#/events/tag/${encodeURIComponent(label)}`;
+
+                                            }}
+                                        >
+                                            {label}
+                                        </span>
+
+                                    );
+                                })}
+                            </div>
+                        )}
+
                     </div>
+
+
                 </div>
 
                 {/* RIGHT SIDE */}

@@ -758,3 +758,9 @@
     margin-left: 6px;
 }
 
+.event-tags {
+    margin-top: 6px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}

@@ -49,13 +49,20 @@ public class EventController {
     @GetMapping
     public ResponseEntity<?> list(
             @RequestParam(required = false) String q,
-            @RequestParam(required = false) List<String> tags,
+            @RequestParam(required = false) String tags,
             @RequestParam(defaultValue = "upcoming") String status
     ) {
+        List<String> tagList = null;
+
+        if (tags != null && !tags.isBlank()) {
+            tagList = List.of(tags.split(","));
+        }
+
         return ResponseEntity.ok(
-                eventService.searchEvents(q, tags, status)
+                eventService.searchEvents(q, tagList, status)
         );
     }
+
 
 
     @GetMapping("/{id}")
@@ -256,6 +263,18 @@ public class EventController {
         return getRating(id, requesterEmail);
 
     }
+
+    @GetMapping("/tag/{tagName}")
+    public ResponseEntity<?> getByTag(
+            @PathVariable String tagName,
+            @RequestParam(defaultValue = "all") String status
+    ) {
+        return ResponseEntity.ok(
+                eventService.findByTag(tagName, status)
+        );
+    }
+
+
 
 
 }

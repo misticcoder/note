@@ -1,6 +1,7 @@
 package com.vlrclone.backend.repository;
 
 import com.vlrclone.backend.model.Event;
+import com.vlrclone.backend.model.Tag;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
@@ -11,4 +12,6 @@ public interface EventRepository
 
     boolean existsByTitle(String name);
     List<Event> findTop10ByTitleContainingIgnoreCase(String name);
+    List<Event> findByTagsContaining(Tag tag);
+
 }
