@@ -82,7 +82,12 @@ export default function Events() {
 
                 const params = new URLSearchParams();
                 if (q.trim()) params.set("q", q.trim());
-                if (selectedTags.length) params.set("tags", selectedTags.join(","));
+                if (selectedTags.length > 0) {
+                    params.set("tags", selectedTags.join(","));
+                } else {
+                    params.delete("tags");
+                }
+
                 if (status) params.set("status", status);
 
                 const res = await fetch(`/api/events?${params.toString()}`);
@@ -366,28 +371,30 @@ export default function Events() {
                                 <span
                                     key={tagName}
                                     className={`tag-chip ${active ? "active" : ""}`}
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                        e.stopPropagation();
                                         setSelectedTags(prev =>
                                             active
                                                 ? prev.filter(t => t !== tagName)
                                                 : [...prev, tagName]
                                         );
                                     }}
+
                                 >
-            {tagName}
-        </span>
+                                    {tagName}
+                                </span>
                             );
                         })}
 
-                        {selectedTags.length > 0 && (
-                            <button
-                                type="button"
-                                className="clear-tags"
-                                onClick={() => setSelectedTags([])}
-                            >
-                                Clear
-                            </button>
-                        )}
+                        <button
+                            type="button"
+                            className="clear-tags"
+                            disabled={selectedTags.length === 0}
+                            onClick={() => setSelectedTags(() => [])}
+                        >
+                            Clear
+                        </button>
+
                     </div>
                 )}
 
@@ -511,11 +518,15 @@ export default function Events() {
                                     </div>
 
 
-                                    {ev.tags.map(tag => (
-                                        <span key={tag.id} className="event-tag">
-                                            {tag.name}
-                                        </span>
-                                    ))}
+                                    {ev.tags?.map(tag => {
+                                        const label = typeof tag === "string" ? tag : tag.name;
+                                        return (
+                                            <span key={label} className="event-tag">
+            {label}
+        </span>
+                                        );
+                                    })}
+
 
                                 </div>
 

@@ -7,6 +7,7 @@ import com.vlrclone.backend.model.EventRating;
 import com.vlrclone.backend.model.User;
 import com.vlrclone.backend.repository.EventRatingRepository;
 import com.vlrclone.backend.repository.EventRepository;
+import com.vlrclone.backend.repository.TagRepository;
 import com.vlrclone.backend.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,13 +27,15 @@ public class EventController {
     private final UserRepository users;
     private final EventRatingRepository eventRatings;
     private final EventService eventService;
+    private final TagRepository tags;
 
 
-    public EventController(EventRepository events, UserRepository users, EventRatingRepository eventRatings, EventService eventService) {
+    public EventController(EventRepository events, UserRepository users, EventRatingRepository eventRatings, EventService eventService, TagRepository tags) {
         this.events = events;
         this.users = users;
         this.eventRatings = eventRatings;
         this.eventService = eventService;
+        this.tags = tags;
     }
 
     private boolean isAdmin(User u) {
@@ -134,8 +137,14 @@ public class EventController {
         if (dto.endAt != null) ev.setEndAt(dto.endAt);
 
         if (dto.tags != null) {
-            ev.setTags(eventService.resolveTags(dto.tags));
+            if (dto.tags.isEmpty()) {
+                ev.getTags().clear();   // <-- THIS enables clearing all tags
+            } else {
+                ev.setTags(eventService.resolveTags(dto.tags));
+            }
         }
+
+
 
         return ResponseEntity.ok(events.save(ev));
     }

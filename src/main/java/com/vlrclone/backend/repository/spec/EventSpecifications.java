@@ -19,10 +19,14 @@ public class EventSpecifications {
 
             String like = "%" + q.trim().toLowerCase() + "%";
 
-            return cb.like(
-                    cb.lower(cb.coalesce(root.get("title"), "")),
-                    like
+            Join<Event, Tag> tagJoin = root.join("tags", JoinType.LEFT);
+
+            return cb.or(
+                    cb.like(cb.lower(root.get("title")), like),
+                    cb.like(cb.lower(root.get("location")), like),
+                    cb.like(cb.lower(tagJoin.get("name")), like)
             );
+
         };
     }
 
@@ -33,11 +37,13 @@ public class EventSpecifications {
             if (tags == null || tags.isEmpty()) return null;
 
             query.distinct(true);
-            Join<Event, Tag> tagJoin = root.join("tags", JoinType.LEFT);
+            Join<Event, Tag> tagJoin = root.join("tags", JoinType.INNER);
 
-            return tagJoin.get("name").in(tags);
+            return cb.lower(tagJoin.get("name"))
+                    .in(tags.stream().map(String::toLowerCase).toList());
         };
     }
+
 
     public static Specification<Event> hasStatus(String status, LocalDateTime now) {
         return (root, query, cb) -> {

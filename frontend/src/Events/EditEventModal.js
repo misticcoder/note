@@ -11,12 +11,20 @@ export default function EditEventModal({ event, onSave, onClose }) {
         location: event.location || "",
         startAt: normalize(event.startAt),
         endAt: normalize(event.endAt),
-        tags: (event.tags || []).map(t => t.name).join(", ")
+        tags: (event.tags || [])
+            .map(t => (typeof t === "string" ? t : t.name))
+            .join(", ")
+
     });
 
     const submit = async (e) => {
         e.preventDefault();
         setSaving(true);
+
+        if (!form.title.trim()) {
+            setSaving(false);
+            return;
+        }
 
         await onSave({
             title: form.title.trim(),
@@ -25,12 +33,19 @@ export default function EditEventModal({ event, onSave, onClose }) {
             startAt: form.startAt,
             endAt: form.endAt || null,
             tags: form.tags
-                ? form.tags.split(",").map(t => t.trim()).filter(Boolean)
+                ? [...new Set(
+                    form.tags
+                        .split(",")
+                        .map(t => t.trim())
+                        .filter(Boolean)
+                )]
                 : []
         });
 
         setSaving(false);
+        onClose();
     };
+
 
     return (
         <div style={s.backdrop}>
