@@ -154,9 +154,9 @@ export default function Clubs() {
                         {isAdmin && <div style={{width: 180, textAlign: "right"}}>Actions</div>}
                     </div>
 
-                    {filtered.map((cl) => (
+                    {filtered.map((cl, idx) => (
                         <div key={cl.id} style={styles.row}>
-                            <div style={{width: 80}}>{cl.id}</div>
+                            <div style={{width: 80}}>{idx + 1}</div>
                             <div style={{width: 120}}>{cl.category}</div>
 
 
