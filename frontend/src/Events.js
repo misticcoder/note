@@ -23,8 +23,10 @@ export default function Events() {
         content: "",
         location: "",
         startAt: "",
-        endAt: ""
+        endAt: "",
+        tags: ""
     });
+
 
     const [status, setStatus] = useState("upcoming");      // upcoming | ongoing | past | all
     const [allTags, setAllTags] = useState([]);            // list of tag names from backend
@@ -280,8 +282,12 @@ export default function Events() {
             content: form.content.trim(),
             location: form.location.trim(),
             startAt: form.startAt,
-            endAt: form.endAt || ""
+            endAt: form.endAt || "",
+            tags: form.tags
+                ? form.tags.split(",").map(t => t.trim()).filter(Boolean)
+                : []
         };
+
 
         console.log("CREATE EVENT PAYLOAD:", payload);
 
@@ -353,21 +359,26 @@ export default function Events() {
                 {allTags.length > 0 && (
                     <div className="event-tags-filter">
                         {allTags.map(tag => {
-                            const active = selectedTags.includes(tag);
+                            const tagName = typeof tag === "string" ? tag : tag.name;
+                            const active = selectedTags.includes(tagName);
+
                             return (
                                 <span
-                                    key={tag}
+                                    key={tagName}
                                     className={`tag-chip ${active ? "active" : ""}`}
                                     onClick={() => {
                                         setSelectedTags(prev =>
-                                            active ? prev.filter(t => t !== tag) : [...prev, tag]
+                                            active
+                                                ? prev.filter(t => t !== tagName)
+                                                : [...prev, tagName]
                                         );
                                     }}
                                 >
-                    {tag}
-                </span>
+            {tagName}
+        </span>
                             );
                         })}
+
                         {selectedTags.length > 0 && (
                             <button
                                 type="button"
@@ -421,6 +432,7 @@ export default function Events() {
                                     className={"input"}
                                 />
 
+
                                 <input
                                     type="datetime-local"
                                     name="startAt"
@@ -437,6 +449,15 @@ export default function Events() {
                                     onChange={handleChange}
 
                                 />
+
+                                <input
+                                    placeholder="Tags (comma separated)"
+                                    value={form.tags || ""}
+                                    onChange={e =>
+                                        setForm(prev => ({...prev, tags: e.target.value}))
+                                    }
+                                />
+
 
                                 <div style={{display: "flex", justifyContent: "flex-end", gap: 8}}>
                                     <button type="button" onClick={() => setShowAdd(false)} className={"cancel-btn"}>
@@ -490,13 +511,12 @@ export default function Events() {
                                     </div>
 
 
-                                    {ev.tags?.length > 0 && (
-                                        <div className="event-tags">
-                                            {ev.tags.map(t => (
-                                                <span key={t} className="event-tag">{t}</span>
-                                            ))}
-                                        </div>
-                                    )}
+                                    {ev.tags.map(tag => (
+                                        <span key={tag.id} className="event-tag">
+                                            {tag.name}
+                                        </span>
+                                    ))}
+
                                 </div>
 
                                 {/* Status */}

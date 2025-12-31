@@ -1,6 +1,7 @@
 // src/main/java/com/vlrclone/backend/controller/EventController.java
 package com.vlrclone.backend.controller;
 
+import com.vlrclone.backend.dto.EventUpdateDto;
 import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.model.EventRating;
 import com.vlrclone.backend.model.User;
@@ -66,7 +67,7 @@ public class EventController {
     @PostMapping
     public ResponseEntity<?> create(
             @RequestParam String requesterEmail,
-            @RequestBody Map<String, String> body
+            @RequestBody EventUpdateDto dto
     ) {
         var me = byEmail(requesterEmail);
         if (!isAdmin(me)) {
@@ -74,47 +75,34 @@ public class EventController {
                     .body(Map.of("message", "Admin only"));
         }
 
-        var title = body.getOrDefault("title", "").trim();
-        var content = body.getOrDefault("content", "").trim();
-        var location = body.getOrDefault("location", "").trim();
-        var startStr = body.get("startAt");
-        var endStr = body.get("endAt");
-
-        if (title.isBlank() || startStr == null || startStr.isBlank()) {
+        if (dto.title == null || dto.title.isBlank() || dto.startAt == null) {
             return ResponseEntity.badRequest()
                     .body(Map.of("message", "title and startAt are required"));
         }
 
+        Event ev = new Event();
+        ev.setTitle(dto.title.trim());
+        ev.setContent(dto.content != null ? dto.content.trim() : null);
+        ev.setLocation(dto.location != null && !dto.location.isBlank()
+                ? dto.location.trim()
+                : null);
+        ev.setStartAt(dto.startAt);
+        ev.setEndAt(dto.endAt);
 
-        LocalDateTime startAt;
-        LocalDateTime endAt = null;
-
-        try {
-            startAt = LocalDateTime.parse(startStr);
-            if (endStr != null && !endStr.isBlank()) {
-                endAt = LocalDateTime.parse(endStr);
-            }
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Invalid date format. Use ISO-8601."));
+        if (dto.tags != null && !dto.tags.isEmpty()) {
+            ev.setTags(eventService.resolveTags(dto.tags));
         }
-
-        var ev = new Event();
-        ev.setTitle(title);
-        ev.setContent(content);
-        ev.setLocation(location.isBlank() ? null : location);
-        ev.setStartAt(startAt);
-        ev.setEndAt(endAt);
 
         return ResponseEntity.ok(events.save(ev));
     }
+
 
     // ---------------- UPDATE ----------------
     @PatchMapping("/{id}")
     public ResponseEntity<?> update(
             @PathVariable Long id,
             @RequestParam String requesterEmail,
-            @RequestBody Map<String, Object> body
+            @RequestBody EventUpdateDto dto
     ) {
         var me = byEmail(requesterEmail);
         if (!isAdmin(me)) {
@@ -135,29 +123,18 @@ public class EventController {
                     .body(Map.of("message", "Ended events cannot be modified"));
         }
 
-        try {
-            if (body.containsKey("title")) {
-                ev.setTitle(String.valueOf(body.get("title")).trim());
-            }
-            if (body.containsKey("content")) {
-                ev.setContent(String.valueOf(body.get("content")).trim());
-            }
-            if (body.containsKey("location")) {
-                var loc = String.valueOf(body.get("location")).trim();
-                ev.setLocation(loc.isBlank() ? null : loc);
-            }
-            if (body.containsKey("startAt")) {
-                ev.setStartAt(LocalDateTime.parse(String.valueOf(body.get("startAt"))));
-            }
-            if (body.containsKey("endAt")) {
-                var end = String.valueOf(body.get("endAt"));
-                ev.setEndAt(end == null || end.isBlank()
-                        ? null
-                        : LocalDateTime.parse(end));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Invalid date format. Use ISO-8601."));
+        if (dto.title != null) ev.setTitle(dto.title.trim());
+        if (dto.content != null) ev.setContent(dto.content.trim());
+
+        if (dto.location != null) {
+            ev.setLocation(dto.location.isBlank() ? null : dto.location.trim());
+        }
+
+        if (dto.startAt != null) ev.setStartAt(dto.startAt);
+        if (dto.endAt != null) ev.setEndAt(dto.endAt);
+
+        if (dto.tags != null) {
+            ev.setTags(eventService.resolveTags(dto.tags));
         }
 
         return ResponseEntity.ok(events.save(ev));

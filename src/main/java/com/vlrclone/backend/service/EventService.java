@@ -76,7 +76,7 @@ public class EventService {
     /* =========================
        TAG RESOLUTION (NEW)
     ========================= */
-    private Set<Tag> resolveTags(List<String> names) {
+    public Set<Tag> resolveTags(List<String> names) {
         return names.stream()
                 .map(s -> s.trim().toLowerCase())
                 .filter(s -> !s.isBlank())
