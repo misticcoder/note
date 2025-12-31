@@ -15,6 +15,9 @@ export default function Clubs() {
     const [showEdit, setShowEdit] = useState(false);
     const [editClub, setEditClub] = useState(null); // {id, name, description}
 
+    const [category, setCategory] = useState("ALL");
+
+
     useEffect(() => {
         document.title = "Clubs Directory | InfCom";
         (async () => {
@@ -26,9 +29,11 @@ export default function Clubs() {
                 const rows = (Array.isArray(data) ? data : (data.content || []))
                     .map(c => ({
                         id: c.id,
-                        name: c.name ?? c.title ?? "",
-                        description: c.description ?? c.desc ?? ""
+                        name: c.name ?? "",
+                        description: c.description ?? "",
+                        category: c.category ?? "OTHER"
                     }));
+
                 setClubs(rows);
                 setErr("");
             } catch (e) {
@@ -42,12 +47,20 @@ export default function Clubs() {
 
     const filtered = useMemo(() => {
         const t = (q || "").toLowerCase();
-        return clubs.filter(cl =>
-            (cl.name || "").toLowerCase().includes(t) ||
-            (cl.description || "").toLowerCase().includes(t) ||
-            String(cl.id).includes(t)
-        );
-    }, [clubs, q]);
+
+        return clubs.filter(cl => {
+            const matchesText =
+                (cl.name || "").toLowerCase().includes(t) ||
+                (cl.description || "").toLowerCase().includes(t) ||
+                String(cl.id).includes(t);
+
+            const matchesCategory =
+                category === "ALL" || cl.category === category;
+
+            return matchesText && matchesCategory;
+        });
+    }, [clubs, q, category]);
+
 
     // Admin actions
     const openEdit = (cl) => {
@@ -101,40 +114,61 @@ export default function Clubs() {
             <div style={styles.headerRow}>
                 <h2>Clubs</h2>
                 <div>
+                    <select
+                        value={category}
+                        onChange={e => setCategory(e.target.value)}
+                        style={{...styles.search, marginRight: 8}}
+                    >
+                        <option value="ALL">All categories</option>
+                        <option value="SPORTS">Sports</option>
+                        <option value="ACADEMIC">Academic</option>
+                        <option value="SOCIETY">Society</option>
+                        <option value="FAMILY">Family</option>
+                        <option value="SOCIAL">Social</option>
+                        <option value="OTHER">Other</option>
+                    </select>
+
                     <input
                         placeholder="Search by name/description/ID…"
                         value={q}
                         onChange={(e) => setQ(e.target.value)}
                         style={styles.search}
                     />
+
                     <a href="#/" style={styles.backLink}>← Back</a>
                 </div>
+
             </div>
 
             {loading && <p>Loading…</p>}
-            {err && <p style={{ color: "red" }}>{err}</p>}
+            {err && <p style={{color: "red"}}>{err}</p>}
 
             {!loading && !err && (
                 <div style={styles.tableWrap}>
-                    <div style={{ ...styles.row, ...styles.head }}>
-                        <div style={{ width: 80 }}>ID</div>
-                        <div style={{ flex: 2 }}>Name</div>
-                        <div style={{ flex: 4 }}>Description</div>
-                        {isAdmin && <div style={{ width: 180, textAlign: "right" }}>Actions</div>}
+                    <div style={{...styles.row, ...styles.head}}>
+                        <div style={{width: 80}}>ID</div>
+                        <div style={{width: 120}}>Category</div>
+
+                        <div style={{flex: 2}}>Name</div>
+                        <div style={{flex: 4}}>Description</div>
+                        {isAdmin && <div style={{width: 180, textAlign: "right"}}>Actions</div>}
                     </div>
 
                     {filtered.map((cl) => (
                         <div key={cl.id} style={styles.row}>
-                            <div style={{ width: 80 }}>{cl.id}</div>
-                            <div style={{ flex: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                <a href={`#/clubs/${cl.id}`} style={{ textDecoration: "none" }}>{cl.name}</a>
+                            <div style={{width: 80}}>{cl.id}</div>
+                            <div style={{width: 120}}>{cl.category}</div>
+
+
+                            <div style={{flex: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
+                                <a href={`#/clubs/${cl.id}`} style={{textDecoration: "none"}}>{cl.name}</a>
                             </div>
-                            <div style={{ flex: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            <div style={{flex: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
                                 {cl.description}
                             </div>
 
                             {isAdmin && (
-                                <div style={{ width: 180, textAlign: "right" }}>
+                                <div style={{width: 180, textAlign: "right"}}>
                                     <button style={styles.editBtn} onClick={() => openEdit(cl)}>Edit</button>
                                     <button style={styles.delBtn} onClick={() => deleteClub(cl)}>Delete</button>
                                 </div>
