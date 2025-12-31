@@ -329,6 +329,11 @@ function Home() {
                             </button>
                         )}
 
+                        {clubs.length === 0 && (
+                            <div style={styles.emptyText}>No clubs yet.</div>
+                        )}
+
+
                         {Object.entries(clubsByCategory).map(([category, list]) => (
                             <div key={category}>
                                 <h4 className={"col-title"}>
