@@ -1,26 +1,32 @@
 import { useState } from "react";
 
-
 export default function EditEventModal({ event, onSave, onClose }) {
     const normalize = (v) => (v ? v.slice(0, 16) : "");
 
-    const [title, setTitle] = useState(event.title || "");
-    const [content, setContent] = useState(event.content || "");
-    const [location, setLocation] = useState(event.location || "");
-    const [startAt, setStartAt] = useState(normalize(event.startAt));
-    const [endAt, setEndAt] = useState(normalize(event.endAt));
     const [saving, setSaving] = useState(false);
+
+    const [form, setForm] = useState({
+        title: event.title || "",
+        content: event.content || "",
+        location: event.location || "",
+        startAt: normalize(event.startAt),
+        endAt: normalize(event.endAt),
+        tags: (event.tags || []).map(t => t.name).join(", ")
+    });
 
     const submit = async (e) => {
         e.preventDefault();
         setSaving(true);
 
         await onSave({
-            title,
-            content,
-            location,
-            startAt,
-            endAt: endAt || null
+            title: form.title.trim(),
+            content: form.content.trim(),
+            location: form.location.trim(),
+            startAt: form.startAt,
+            endAt: form.endAt || null,
+            tags: form.tags
+                ? form.tags.split(",").map(t => t.trim()).filter(Boolean)
+                : []
         });
 
         setSaving(false);
@@ -33,40 +39,47 @@ export default function EditEventModal({ event, onSave, onClose }) {
 
                 <form onSubmit={submit} style={{ display: "grid", gap: 10 }}>
                     <input
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+                        value={form.title}
+                        onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                         required
                         placeholder="Title"
                         style={s.input}
                     />
 
                     <textarea
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
+                        value={form.content}
+                        onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
                         rows={4}
                         placeholder="Description"
                         style={s.textarea}
                     />
 
                     <input
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
+                        value={form.location}
+                        onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
                         placeholder="Location"
                         style={s.input}
                     />
 
                     <input
                         type="datetime-local"
-                        value={startAt}
-                        onChange={(e) => setStartAt(e.target.value)}
+                        value={form.startAt}
+                        onChange={e => setForm(f => ({ ...f, startAt: e.target.value }))}
                         required
                         style={s.input}
                     />
 
                     <input
                         type="datetime-local"
-                        value={endAt}
-                        onChange={(e) => setEndAt(e.target.value)}
+                        value={form.endAt}
+                        onChange={e => setForm(f => ({ ...f, endAt: e.target.value }))}
+                        style={s.input}
+                    />
+
+                    <input
+                        placeholder="Tags (comma separated)"
+                        value={form.tags}
+                        onChange={e => setForm(f => ({ ...f, tags: e.target.value }))}
                         style={s.input}
                     />
 
