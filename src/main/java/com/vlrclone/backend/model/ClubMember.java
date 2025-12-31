@@ -1,26 +1,62 @@
 package com.vlrclone.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-@Entity @Table(name= "club_members")
+@Entity
+@Table(name = "club_members")
 public class ClubMember {
-    public enum Role { LEADER, CO_LEADER, MEMBER}
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
-    @Column(nullable = false) private Long userId;
-    @Column(nullable = false) private Long clubId;
-    @Enumerated(EnumType.STRING) @Column(nullable = false) private Role role = Role.MEMBER;
-    @Column(nullable = false) private LocalDateTime joinedAt = LocalDateTime.now();
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    public Long getId() {return id;}
-    public Long getClubId() {return id;}
-    public void setClubId(Long clubId) {this.clubId = clubId;}
-    public Long getUserId() {return userId;}
-    public void setUserId(Long userId) {this.userId = userId;}
-    public Role getRole() {return role;}
-    public void setRole(Role role) {this.role = role;}
-    public LocalDateTime getJoinedAt() {return joinedAt;}
-    public void setJoinedAt(LocalDateTime joinedAt) {this.joinedAt = joinedAt;}
+    @ManyToOne
+    @JoinColumn(name = "club_id")
+    @JsonIgnore
+    private Club club;
 
+
+    @Column(nullable = false)
+    private Long userId;
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
+    public enum Role {
+        LEADER, CO_LEADER, MEMBER
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Club getClub() {
+        return club;
+    }
+
+    public void setClub(Club club) {
+        this.club = club;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
 }

@@ -1,7 +1,9 @@
 package com.vlrclone.backend.model;
 
+import com.vlrclone.backend.Enums.ClubCategory;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "clubs")
@@ -9,6 +11,12 @@ public class Club {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ClubCategory category;
+
+
     @Column(length = 50)
     private String name;
     @Column
@@ -18,6 +26,10 @@ public class Club {
 
     @Column
     private String logoUrl;
+
+    @OneToMany(mappedBy = "club")
+    private List<ClubMember> members;
+
 
     // Getters and setters
     public Long getId() { return id; }
@@ -34,5 +46,11 @@ public class Club {
 
     public String getLogoUrl() { return logoUrl; }
     public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
+
+    public ClubCategory getCategory() { return category; }
+    public void setCategory(ClubCategory category) { this.category = category; }
+
+    public List<ClubMember> getMembers() { return members; }
+    public void setMembers(List<ClubMember> members) { this.members = members; }
 
 }

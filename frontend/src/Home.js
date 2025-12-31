@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from "react";
+import {useEffect, useState, useContext, useMemo} from "react";
 import { AuthContext } from "./AuthContext";
 import ThreadSection from "./Threads/ThreadSection";
 
@@ -26,7 +26,14 @@ function Home() {
 
     // Club modal state
     const [showClubModal, setShowClubModal] = useState(false);
-    const [newClub, setNewClub] = useState({logo: null, name: "", description: "", leaderUserId: "" });
+    const [newClub, setNewClub] = useState({
+        logo: null,
+        name: "",
+        description: "",
+        leaderUserId: "",
+        category: ""
+    });
+
     const isAdmin = String(user?.role || "").toUpperCase() === "ADMIN";
 
     // Hover state
@@ -60,62 +67,30 @@ function Home() {
     const threadsWidth = "20%";
     const eventsWidth = hideThreads ? "25%" : "20%";
 
-    const headNews = news.length > 0 ? news[0] : null;
-    const otherNews = news.length > 1 ? news.slice(1) : [];
+    // Group clubs by category and sort by member count
+    const clubsByCategory = useMemo(() => {
+        const map = {};
 
-    // Thread modal handlers
-    const handleThreadChange = (e) => {
-        const { name, value } = e.target;
-        setNewThread(prev => ({ ...prev, [name]: value }));
-    };
+        clubs.forEach(club => {
+            const category = club.category || "OTHER";
+            if (!map[category]) map[category] = [];
 
-    const handleThreadSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const res = await fetch(`/api/threads?requesterEmail=${encodeURIComponent(user.email)}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(newThread),
-            });
-            const savedThread = await res.json();
-            if (!res.ok) {
-                alert(savedThread.message || "Failed to create thread");
-                return;
-            }
-            setThreads(prev => [savedThread, ...prev]);
-            setNewThread({ title: "", content: "" });
-            setShowThreadModal(false);
-        } catch (err) {
-            console.error("Failed to save thread", err);
-            alert("Failed to save thread");
-        }
-    };
+            map[category].push(club);
+        });
 
-    // Request to join a club
-    const requestJoin = async (clubId, e) => {
-        e.stopPropagation(); // prevent navigating when clicking the button
-        if (!user) {
-            alert("Please log in to request to join.");
-            return;
-        }
-        try {
-            const res = await fetch(`/api/clubs/${clubId}/join?requesterEmail=${encodeURIComponent(user.email)}`, {
-                method: "POST"
-            });
-            const body = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                alert(body.message || "Failed to send request");
-                return;
-            }
-            alert("Join request sent!");
-        } catch (err) {
-            alert("Failed to send request");
-        }
-    };
+        // Sort each category by member count (descending)
+        Object.keys(map).forEach(cat => {
+            map[cat].sort(
+                (a, b) => (b.members?.length || 0) - (a.members?.length || 0)
+            );
+        });
+
+        return map;
+    }, [clubs]);
 
     // Club modal handlers
     const openClubModal = () => {
-        setNewClub({logo:null, name: "", description: "", leaderUserId: "" });
+        setNewClub({logo:null, name: "", description: "", leaderUserId: "", category: ""});
         setShowClubModal(true);
         // Ensure users list is fresh (in case admin opened later)
         if (isAdmin && users.length === 0) {
@@ -131,34 +106,22 @@ function Home() {
     const handleClubSubmit = async (e) => {
         e.preventDefault();
         if (!isAdmin) return;
+
         if (!newClub.name.trim() || !newClub.description.trim()) {
             alert("Please fill club name and description.");
             return;
         }
-        if (!newClub.leaderUserId) {
-            if (!window.confirm("No leader selected. Create club without a leader?")) return;
-        }
+
         const ClubForm = new FormData();
         ClubForm.append("name", newClub.name);
         ClubForm.append("description", newClub.description);
+        ClubForm.append("category", newClub.category);
 
         if (newClub.logo) {
             ClubForm.append("logo", newClub.logo);
         }
 
-        const form = new FormData();
-        form.append("author", user.username);
-        form.append("content", newPost);
-        if (media) form.append("image", media);
-
-        fetch("/api/posts", {
-            method: "POST",
-            body: form
-        });
-
-
         try {
-            // 1) Create club
             const res = await fetch(
                 `/api/clubs?requesterEmail=${encodeURIComponent(user.email)}`,
                 {
@@ -166,39 +129,33 @@ function Home() {
                     body: ClubForm
                 }
             );
-            const created = await res.json().catch(() => ({}));
+
+            const created = await res.json();
             if (!res.ok) {
                 alert(created.message || "Failed to create club");
                 return;
             }
 
-            // 2) Optionally assign leader
             if (newClub.leaderUserId) {
-                const assignRes = await fetch(`/api/clubs/${created.id}/leader?requesterEmail=${encodeURIComponent(user.email)}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userId: Number(newClub.leaderUserId) })
-                });
-                const assignBody = await assignRes.json().catch(() => ({}));
-                if (!assignRes.ok) {
-                    alert(assignBody.message || "Club created, but assigning leader failed");
-                    // We still proceed to add the club to UI
-                }
+                await fetch(
+                    `/api/clubs/${created.id}/leader?requesterEmail=${encodeURIComponent(user.email)}`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ userId: Number(newClub.leaderUserId) })
+                    }
+                );
             }
 
-            // 3) Update UI and close
             setClubs(prev => [...prev, created]);
             setShowClubModal(false);
-            setNewClub({ logo: null, name: "", description: "", leaderUserId: "" });
+            setNewClub({ logo: null, name: "", description: "", leaderUserId: "", category: "" });
 
-            // 4) (Optional) Navigate to club page
-            // window.location.hash = `#/clubs/${created.id}`;
         } catch (err) {
             console.error(err);
             alert("Failed to create club");
         }
     };
-
 
     // News modal handlers
     const handleNewsChange = (e) => {
@@ -366,43 +323,55 @@ function Home() {
 
                     {/* Clubs */}
                     <div style={{width: clubsWidth, display: "flex", flexDirection: "column"}}>
-
-                    {isAdmin && (
-                            <button style={styles.addBtn} onClick={openClubModal}>Add Club</button>
+                        {isAdmin && (
+                            <button style={styles.addBtn} onClick={openClubModal}>
+                                Add Club
+                            </button>
                         )}
 
-                        <h3 style={styles.col_title}>Clubs</h3>
+                        {Object.entries(clubsByCategory).map(([category, list]) => (
+                            <div key={category}>
+                                <h4 className={"col-title"}>
+                                    {category}
+                                </h4>
 
+                                {list.slice(0, 5).map(club => (
+                                    <div
+                                        key={club.id}
+                                        style={{
+                                            ...styles.Clubs,
+                                            ...(hoveredId === `club-${club.id}` ? boxHover : {})
+                                        }}
+                                        onMouseEnter={() => setHoveredId(`club-${club.id}`)}
+                                        onMouseLeave={() => setHoveredId(null)}
+                                        onClick={() => {
+                                            window.location.hash = `#/clubs/${club.id}`;
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                flex: 1,
+                                                overflow: "hidden",
+                                                whiteSpace: "nowrap",
+                                                textOverflow: "ellipsis"
+                                            }}
+                                        >
+                                            {club.name}
+                                        </div>
 
-                        {clubs.map((club) => (
-                            <div
-                                key={club.id}
-                                style={{
-                                    ...styles.Clubs,
-                                    ...(hoveredId === `club-${club.id}` ? boxHover : {})
-                                }}
-                                onMouseEnter={() => setHoveredId(`club-${club.id}`)}
-                                onMouseLeave={() => setHoveredId(null)}
-                                onClick={() => {
-                                    window.location.hash = `#/clubs/${club.id}`;
-                                }}
-                            >
+                                        <span style={{
+                                            fontSize: "11px",
+                                            opacity: 0.8
+                                        }}>
+                                            {club.members?.length || 0}
+                                        </span>
+                                    </div>
+                                ))}
 
-                                <div style={{
-                                    flex: 1,
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap"
-                                }}>
-                                    {club.name}
-                                </div>
                             </div>
                         ))}
-
-                        {clubs.length === 0 && (
-                            <div style={{...styles.Clubs, justifyContent: "center"}}>No clubs yet.</div>
-                        )}
                     </div>
+
 
                     {/* Events */}
 
@@ -487,6 +456,19 @@ function Home() {
                     <div style={styles.ThreadContent}>
                         <h3>Create Club</h3>
                         <form onSubmit={handleClubSubmit}>
+                            <select
+                                value={newClub.category}
+                                onChange={e => setNewClub(c => ({...c, category: e.target.value}))}
+                                required
+                            >
+                                <option value="">Select category</option>
+                                <option value="SPORTS">Sports</option>
+                                <option value="ACADEMIC">Academic</option>
+                                <option value="SOCIETY">Society</option>
+                                <option value="FAMILY">Family Initiative</option>
+                                <option value="SOCIAL">Social</option>
+                            </select>
+
                             <input
                                 type="file"
                                 accept="image/*"

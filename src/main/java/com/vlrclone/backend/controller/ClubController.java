@@ -1,11 +1,13 @@
 // src/main/java/com/vlrclone/backend/controller/ClubController.java
 package com.vlrclone.backend.controller;
 
+import com.vlrclone.backend.Enums.ClubCategory;
 import com.vlrclone.backend.model.*;
 import com.vlrclone.backend.model.ClubMember.Role;
 import com.vlrclone.backend.model.JoinRequest.Status;
 import com.vlrclone.backend.model.Club;
 import com.vlrclone.backend.repository.*;
+import com.vlrclone.backend.service.ClubService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,13 +27,15 @@ public class ClubController {
     private final JoinRequestRepository requests;
     private final ClubNewsRepository news;
     private final UserRepository users;
+    private final ClubService clubService;
 
-    public ClubController(ClubRepository c, ClubMemberRepository m, JoinRequestRepository r, ClubNewsRepository n, UserRepository u) {
+    public ClubController(ClubRepository c, ClubMemberRepository m, JoinRequestRepository r, ClubNewsRepository n, UserRepository u, ClubService clubService) {
         this.clubs = c;
         this.members = m;
         this.requests = r;
         this.news = n;
         this.users = u;
+        this.clubService = clubService;
     }
 
     /* Utility */
@@ -50,10 +54,14 @@ public class ClubController {
         return members.existsByClubIdAndUserIdAndRole(clubId, userId, Role.CO_LEADER);
     }
 
-    /* Public */
     @GetMapping
-    public List<Club> listClubs() {
-        return clubs.findAll();
+    public List<Club> listClubs(
+            @RequestParam(required = false) ClubCategory category
+    ) {
+        if (category == null) {
+            return clubService.findAll();
+        }
+        return clubService.findByCategory(category);
     }
 
     @GetMapping("/{clubId}")
@@ -77,8 +85,10 @@ public class ClubController {
             @RequestParam String requesterEmail,
             @RequestParam String name,
             @RequestParam String description,
+            @RequestParam ClubCategory category,
             @RequestParam(required = false) MultipartFile logo
     ) throws IOException {
+
 
         var me = byEmail(requesterEmail).orElse(null);
         if (!isAdmin(me)) {
@@ -87,6 +97,7 @@ public class ClubController {
 
         Club club = new Club();
         club.setName(name);
+        club.setCategory(category);
         club.setDescription(description);
 
         if (logo != null && !logo.isEmpty()) {
@@ -130,7 +141,7 @@ public class ClubController {
         ClubMember member = members.findByClubIdAndUserId(clubId, userId)
                 .orElseGet(() -> {
                     ClubMember m = new ClubMember();
-                    m.setClubId(clubId);
+                    m.setClub(club);
                     m.setUserId(userId);
                     return m;
                 });
@@ -192,7 +203,7 @@ public class ClubController {
             members.findByClubIdAndUserId(clubId, jr.getUserId())
                     .orElseGet(() -> {
                         var m = new ClubMember();
-                        m.setClubId(clubId);
+                        m.setClub(clubs.getReferenceById(clubId));
                         m.setUserId(jr.getUserId());
                         m.setRole(Role.MEMBER);
                         return members.save(m);
@@ -406,6 +417,11 @@ public class ClubController {
         if (body.containsKey("description")) {
             c.setDescription(Objects.toString(body.get("description"), c.getDescription()));
         }
+
+        if (body.containsKey("category")) {
+            c.setCategory(ClubCategory.valueOf(body.get("category").toString()));
+        }
+
         var saved = clubs.save(c);
         // Return the updated club (or a simple JSON map if you prefer)
         return ResponseEntity.ok(saved);
@@ -417,6 +433,12 @@ public class ClubController {
         }
         clubs.deleteById(id);
         return ResponseEntity.ok(Map.of("status","success"));
+    }
+    @GetMapping("/top-by-category")
+    public Map<ClubCategory, List<Club>> topByCategory(
+            @RequestParam(defaultValue = "5") int limit
+    ) {
+        return clubService.topClubsByCategory(limit);
     }
 
 }
