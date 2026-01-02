@@ -302,6 +302,15 @@ public class EventController {
         );
     }
 
+    @GetMapping("/club/{clubId}")
+    public ResponseEntity<?> getByClub(
+            @PathVariable Long clubId,
+            @RequestParam(defaultValue = "all") String status
+    ) {
+        return ResponseEntity.ok(
+                eventService.findByClub(clubId, status)
+        );
+    }
 
 
 

@@ -50,6 +50,12 @@ export default function Events() {
         return m ? decodeURIComponent(m[1]) : null;
     }, [hash]);
 
+    const clubFromRoute = useMemo(() => {
+        const m = hash.match(/^#\/events\/club\/(\d+)/);
+        return m ? Number(m[1]) : null;
+    }, [hash]);
+
+
     useEffect(() => {
         (async () => {
             try {
@@ -75,6 +81,15 @@ export default function Events() {
 
         setStatus("all");
     }, [tagFromRoute]);
+
+    useEffect(() => {
+        if (!clubFromRoute) return;
+
+        setSelectedTags([]);
+        setQ("");
+        setStatus("all");
+    }, [clubFromRoute]);
+
 
 
 
@@ -125,11 +140,13 @@ export default function Events() {
 
                 let url;
 
-                if (tagFromRoute) {
+                if (clubFromRoute) {
+                    url = `/api/events/club/${clubFromRoute}?status=${status}`;
+                }
+                else if (tagFromRoute) {
                     url = `/api/events/tag/${encodeURIComponent(tagFromRoute)}?status=${status}`;
                 }
                 else {
-                    // 🔁 NORMAL MODE
                     const params = new URLSearchParams();
                     if (q.trim()) params.set("q", q.trim());
                     if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
@@ -137,6 +154,7 @@ export default function Events() {
 
                     url = `/api/events?${params.toString()}`;
                 }
+
 
                 const res = await fetch(url);
                 if (!res.ok) throw new Error("Failed to load events");
@@ -151,7 +169,8 @@ export default function Events() {
                 setLoading(false);
             }
         })();
-    }, [q, selectedTags, status, tagFromRoute]);
+    }, [q, selectedTags, status, tagFromRoute, clubFromRoute]);
+
 
 
 
@@ -433,7 +452,7 @@ export default function Events() {
 
                         <button
                             type="button"
-                            className="clear-tags"
+                            className="cancel-btn"
                             disabled={selectedTags.length === 0}
                             onClick={() => {
                                 setSelectedTags([]);

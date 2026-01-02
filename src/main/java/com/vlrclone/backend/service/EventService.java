@@ -125,5 +125,10 @@ public class EventService {
         }).toList();
     }
 
+    public List<Event> findByClub(Long clubId, String status) {
+        List<Event> events = eventRepo.findByClub_Id(clubId);
+        return filterByStatus(events, status);
+    }
+
 
 }

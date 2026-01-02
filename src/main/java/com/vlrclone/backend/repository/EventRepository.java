@@ -16,5 +16,6 @@ public interface EventRepository
     List<Event> findByTagsContaining(Tag tag);
     List<Event> findByClubId(Long clubId);
     List<Event> findByClubIdAndStartAtAfter(Long clubId, LocalDateTime now);
+    List<Event> findByClub_Id(Long clubId);
 
 }

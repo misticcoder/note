@@ -789,7 +789,7 @@
 .event-club-badge {
     font-size: 11px;
     padding: 3px 8px;
-    border-radius: 999px;
+    border-radius: 2px;
     background: #1e293b;
     color: #e5e7eb;
     border: 1px solid #334155;
