@@ -20,9 +20,11 @@ public class EventService {
     private final EventRepository eventRepo;
     private final TagRepository tagRepo;
 
+
     public EventService(EventRepository eventRepo, TagRepository tagRepo) {
         this.eventRepo = eventRepo;
         this.tagRepo = tagRepo;
+
     }
 
     /* =========================
@@ -108,22 +110,16 @@ public class EventService {
             LocalDateTime start = ev.getStartAt();
             LocalDateTime end = ev.getEndAt();
 
-            // fallback: +2 hours if end is missing
             if (start != null && end == null) {
                 end = start.plusHours(2);
             }
 
             return switch (status.toLowerCase()) {
-                case "upcoming" ->
-                        start != null && now.isBefore(start);
-
+                case "upcoming" -> start != null && now.isBefore(start);
                 case "ongoing", "live" ->
                         start != null && end != null &&
-                                !now.isBefore(start) && !now.isAfter(end);
-
-                case "past", "ended" ->
-                        end != null && now.isAfter(end);
-
+                                now.isAfter(start) && now.isBefore(end);
+                case "past", "ended" -> end != null && now.isAfter(end);
                 default -> true;
             };
         }).toList();

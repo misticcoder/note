@@ -44,7 +44,18 @@ function Home() {
         document.title = "Home | InfCom";
         fetch("/api/threads").then(res => res.json()).then(setThreads).catch(() => setThreads([]));
         fetch("/api/news").then(res => res.json()).then(setNews).catch(() => setNews([]));
-        fetch("/api/events?status=all").then(res => res.json()).then(setEvents).catch(() => setEvents([]));
+        fetch("/api/events?status=all")
+            .then(res => res.json())
+            .then(data => {
+                const list = Array.isArray(data)
+                    ? data
+                    : Array.isArray(data.content)
+                        ? data.content
+                        : [];
+                setEvents(list);
+            })
+            .catch(() => setEvents([]));
+
         fetch("/api/clubs").then(res => res.json()).then(data => {
             setClubs(Array.isArray(data) ? data : []);
         }).catch(() => setClubs([]));

@@ -17,6 +17,10 @@ public class Event {
     @Column private LocalDateTime startAt;
     @Column private LocalDateTime endAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "club_id")
+    private Club club;
+
     public enum EventStatus {
         UPCOMING,
         LIVE,
@@ -40,6 +44,8 @@ public class Event {
     public void setStartAt(LocalDateTime startAt) { this.startAt = startAt; }
     public LocalDateTime getEndAt() { return endAt; }
     public void setEndAt(LocalDateTime endAt) { this.endAt = endAt; }
+
+
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -74,4 +80,6 @@ public class Event {
         return EventStatus.UPCOMING;
     }
 
+    public Club getClub() { return club; }
+    public void setClub(Club club) { this.club = club; }
 }

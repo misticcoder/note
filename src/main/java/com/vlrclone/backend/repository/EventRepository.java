@@ -5,6 +5,7 @@ import com.vlrclone.backend.model.Tag;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface EventRepository
@@ -13,5 +14,7 @@ public interface EventRepository
     boolean existsByTitle(String name);
     List<Event> findTop10ByTitleContainingIgnoreCase(String name);
     List<Event> findByTagsContaining(Tag tag);
+    List<Event> findByClubId(Long clubId);
+    List<Event> findByClubIdAndStartAtAfter(Long clubId, LocalDateTime now);
 
 }

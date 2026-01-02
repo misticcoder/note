@@ -17,6 +17,9 @@ export default function Events() {
     const [editingEvent, setEditingEvent] = useState(null);
     const [ratings, setRatings] = useState({});
 
+    const [clubs, setClubs] = useState([]);
+
+
     const [showAdd, setShowAdd] = useState(false);
     const [form, setForm] = useState({
         title: "",
@@ -24,7 +27,8 @@ export default function Events() {
         location: "",
         startAt: "",
         endAt: "",
-        tags: ""
+        tags: "",
+        clubId:""
     });
 
 
@@ -45,6 +49,20 @@ export default function Events() {
         const m = hash.match(/^#\/events\/tag\/([^/]+)/);
         return m ? decodeURIComponent(m[1]) : null;
     }, [hash]);
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch("/api/clubs");
+                if (!res.ok) return;
+                const data = await res.json();
+                setClubs(Array.isArray(data) ? data : []);
+            } catch {
+                setClubs([]);
+            }
+        })();
+    }, []);
+
 
     useEffect(() => {
         if (!tagFromRoute) return;
@@ -320,7 +338,8 @@ export default function Events() {
             endAt: form.endAt || "",
             tags: form.tags
                 ? form.tags.split(",").map(t => t.trim()).filter(Boolean)
-                : []
+                : [],
+            clubId: form.clubId !== "" ? form.clubId : null
         };
 
 
@@ -443,6 +462,17 @@ export default function Events() {
                             <h3>Add Event</h3>
                             <form onSubmit={createEvent} style={{display: "grid", gap: 10}}>
 
+                                <select
+                                    value={form.clubId || ""}
+                                    onChange={e => setForm(f => ({...f, clubId: e.target.value}))}
+                                >
+                                    <option value="">No Club (Independent)</option>
+                                    {clubs.map(c => (
+                                        <option key={c.id} value={c.id}>{c.name}</option>
+                                    ))}
+                                </select>
+
+
                                 <input
                                     name="title"
                                     placeholder="Event Name"
@@ -557,13 +587,12 @@ export default function Events() {
                                     {ev.tags?.map(tag => {
                                         const label = typeof tag === "string" ? tag : tag.name;
                                         return (
-                                            <span className="event-tag">
-                                                {tag.name}
+                                            <span key={label} className="event-tag">
+                                                {label}
                                             </span>
-
-
                                         );
                                     })}
+
 
 
                                 </div>

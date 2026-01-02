@@ -13,6 +13,8 @@ export default function ClubDetail() {
     const [users, setUsers] = useState([]); // for username/email lookup
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
+    const [events, setEvents] = useState([]);
+
 
     const [myStatus, setMyStatus] = useState({
         isMember: false,
@@ -188,6 +190,16 @@ export default function ClubDetail() {
         })();
     }, [clubId, user?.email, canApproveRequests]);
 
+    useEffect(() => {
+        fetch(`/api/clubs/${clubId}/events`)
+            .then(r => r.ok ? r.json() : [])
+            .then(data => setEvents(Array.isArray(data) ? data : []))
+            .catch(() => setEvents([]));
+    }, [clubId]);
+
+
+
+
     const decide = async (requestId, decision) => {
         const url = `/api/clubs/${clubId}/join-requests/${requestId}/decision?requesterEmail=${encodeURIComponent(
             user.email
@@ -260,12 +272,18 @@ export default function ClubDetail() {
                 alert(body.message || "Failed to set leader");
                 return;
             }
-            setMembers((prev) =>
-                prev.map((m) =>
-                    m.userId === targetUserId ? { ...m, role: "LEADER" } : { ...m.role === "LEADER" ?
-                            { ...m, role: "CO_LEADER" } : { ...m, role: "MEMBER" }}
-                )
+            setMembers(prev =>
+                prev.map(m => {
+                    if (m.userId === targetUserId) {
+                        return { ...m, role: "LEADER" };
+                    }
+                    if (m.role === "LEADER") {
+                        return { ...m, role: "CO_LEADER" };
+                    }
+                    return { ...m, role: "MEMBER" };
+                })
             );
+
             setOpenMember(null);
         } catch {
             alert("Failed to set leader");
@@ -570,7 +588,7 @@ export default function ClubDetail() {
                                         <div key={r.id} style={s.pendingRow}>
                                             <div>
                                                 <div style={{fontWeight: 600}}>{userLabel(r.userId)}</div>
-                             a                   <div style={s.meta}>Request ID: {r.id}</div>
+                                                <div style={s.meta}>Request ID: {r.id}</div>
                                             </div>
                                             <div style={s.actions}>
                                                 <button
@@ -647,49 +665,27 @@ export default function ClubDetail() {
             {activeTab === "events" && (
                 <div>
                     <div style={s.sectionHeader}>
-                        <h3 style={s.h3}>Club News</h3>
+                        <h3 style={s.h3}>Club Events</h3>
                     </div>
 
-                    {canPostNews && (
-                        <form onSubmit={postNews} style={s.newsForm}>
-                            <input
-                                placeholder="Title"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                required
-                                style={s.input}
-                            />
-                            <textarea
-                                placeholder="Content"
-                                value={content}
-                                onChange={(e) => setContent(e.target.value)}
-                                required
-                                style={s.textarea}
-                            />
-                            <div style={{textAlign: "right"}}>
-                                <button type="submit" style={s.primaryBtn}>
-                                    Post
-                                </button>
-                            </div>
-                        </form>
+                    {events.length === 0 && (
+                        <p className="muted">No events scheduled.</p>
                     )}
 
-                    {news.length === 0 && <div style={s.card}>No news yet.</div>}
+                    {events.map(ev => (
+                        <div
+                            key={ev.id}
+                            className="club-event-row"
+                            onClick={() => window.location.hash = `#/events/${ev.id}`}
+                        >
+                            <strong>{ev.title}</strong>
+                            <span>
+                                {ev.startAt ? new Date(ev.startAt).toLocaleString() : "TBA"}
+                            </span>
 
-                    {news.map((n) => (
-                        <div key={n.id} style={s.card}>
-                            <div style={s.cardHead}>
-                                <strong style={{fontSize: 16}}>{n.title}</strong>
-                                {canPostNews && (
-                                    <button onClick={() => deleteNews(n.id)} style={s.dangerBtn}>
-                                        Delete
-                                    </button>
-                                )}
-                            </div>
-                            <div style={{whiteSpace: "pre-wrap", lineHeight: 1.5}}>{n.content}</div>
-                            <div style={s.meta}>{n.createdAt ? new Date(n.createdAt).toLocaleString() : ""}</div>
                         </div>
                     ))}
+
                 </div>
             )}
 

@@ -1,5 +1,6 @@
 package com.vlrclone.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.vlrclone.backend.Enums.ClubCategory;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -7,6 +8,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "clubs")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Club {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

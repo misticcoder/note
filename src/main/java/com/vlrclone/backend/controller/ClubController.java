@@ -28,14 +28,16 @@ public class ClubController {
     private final ClubNewsRepository news;
     private final UserRepository users;
     private final ClubService clubService;
+    private final EventRepository events;
 
-    public ClubController(ClubRepository c, ClubMemberRepository m, JoinRequestRepository r, ClubNewsRepository n, UserRepository u, ClubService clubService) {
+    public ClubController(ClubRepository c, ClubMemberRepository m, JoinRequestRepository r, ClubNewsRepository n, UserRepository u, ClubService clubService, EventRepository events) {
         this.clubs = c;
         this.members = m;
         this.requests = r;
         this.news = n;
         this.users = u;
         this.clubService = clubService;
+        this.events = events;
     }
 
     /* Utility */
@@ -440,5 +442,16 @@ public class ClubController {
     ) {
         return clubService.topClubsByCategory(limit);
     }
+
+    @GetMapping("/{clubId}/events")
+    public ResponseEntity<?> clubEvents(@PathVariable Long clubId) {
+        if (!clubs.existsById(clubId)) {
+            return ResponseEntity.status(404).body(Map.of("message", "Club not found"));
+        }
+
+
+        return ResponseEntity.ok(events.findByClubId(clubId));
+    }
+
 
 }

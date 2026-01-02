@@ -5,10 +5,7 @@ import com.vlrclone.backend.dto.EventUpdateDto;
 import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.model.EventRating;
 import com.vlrclone.backend.model.User;
-import com.vlrclone.backend.repository.EventRatingRepository;
-import com.vlrclone.backend.repository.EventRepository;
-import com.vlrclone.backend.repository.TagRepository;
-import com.vlrclone.backend.repository.UserRepository;
+import com.vlrclone.backend.repository.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.vlrclone.backend.service.EventService;
@@ -28,14 +25,16 @@ public class EventController {
     private final EventRatingRepository eventRatings;
     private final EventService eventService;
     private final TagRepository tags;
+    private final ClubRepository clubs;
 
 
-    public EventController(EventRepository events, UserRepository users, EventRatingRepository eventRatings, EventService eventService, TagRepository tags) {
+    public EventController(EventRepository events, UserRepository users, EventRatingRepository eventRatings, EventService eventService, TagRepository tags, ClubRepository clubs) {
         this.events = events;
         this.users = users;
         this.eventRatings = eventRatings;
         this.eventService = eventService;
         this.tags = tags;
+        this.clubs = clubs;
     }
 
     private boolean isAdmin(User u) {
@@ -53,15 +52,24 @@ public class EventController {
             @RequestParam(defaultValue = "upcoming") String status
     ) {
         List<String> tagList = null;
-
         if (tags != null && !tags.isBlank()) {
             tagList = List.of(tags.split(","));
         }
 
+        // 🔧 NORMALIZE STATUS FROM FRONTEND
+        String normalizedStatus;
+        switch (status.toLowerCase()) {
+            case "ongoing" -> normalizedStatus = "LIVE";
+            case "past" -> normalizedStatus = "ENDED";
+            case "all" -> normalizedStatus = "ALL";
+            default -> normalizedStatus = "UPCOMING";
+        }
+
         return ResponseEntity.ok(
-                eventService.searchEvents(q, tagList, status)
+                eventService.searchEvents(q, tagList, normalizedStatus)
         );
     }
+
 
 
 
@@ -99,6 +107,18 @@ public class EventController {
         ev.setStartAt(dto.startAt);
         ev.setEndAt(dto.endAt);
 
+        // Set club
+        if (dto.clubId != null) {
+            var club = clubs.findById(dto.clubId)
+                    .orElseThrow(() ->
+                            new IllegalArgumentException("Club not found"));
+            ev.setClub(club);
+        } else {
+            // independent event
+            ev.setClub(null);
+        }
+
+        // Tag
         if (dto.tags != null && !dto.tags.isEmpty()) {
             ev.setTags(eventService.resolveTags(dto.tags));
         }
@@ -139,6 +159,14 @@ public class EventController {
         if (dto.location != null) {
             ev.setLocation(dto.location.isBlank() ? null : dto.location.trim());
         }
+
+        if (dto.clubId != null) {
+            ev.setClub(
+                    clubs.findById(dto.clubId)
+                            .orElseThrow(() -> new IllegalArgumentException("Club not found"))
+            );
+        }
+
 
         if (dto.startAt != null) ev.setStartAt(dto.startAt);
         if (dto.endAt != null) ev.setEndAt(dto.endAt);

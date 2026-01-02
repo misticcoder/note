@@ -11,7 +11,5 @@ public class EventUpdateDto {
     public LocalDateTime startAt;
     public LocalDateTime endAt;
     public List<String> tags = new ArrayList<>();
-
-
-
+    public Long clubId;
 }

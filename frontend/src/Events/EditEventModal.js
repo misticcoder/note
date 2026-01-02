@@ -52,10 +52,22 @@ export default function EditEventModal({ event, onSave, onClose }) {
             <div style={s.modal}>
                 <h3>Edit Event</h3>
 
-                <form onSubmit={submit} style={{ display: "grid", gap: 10 }}>
+                <form onSubmit={submit} style={{display: "grid", gap: 10}}>
+
+                    <select
+                        value={form.clubId || ""}
+                        onChange={e => setForm(f => ({...f, clubId: e.target.value}))}
+                    >
+                        <option value="">No Club (Independent)</option>
+                        {clubs.map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                    </select>
+
+
                     <input
                         value={form.title}
-                        onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                        onChange={e => setForm(f => ({...f, title: e.target.value}))}
                         required
                         placeholder="Title"
                         style={s.input}
@@ -63,7 +75,7 @@ export default function EditEventModal({ event, onSave, onClose }) {
 
                     <textarea
                         value={form.content}
-                        onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
+                        onChange={e => setForm(f => ({...f, content: e.target.value}))}
                         rows={4}
                         placeholder="Description"
                         style={s.textarea}
@@ -71,7 +83,7 @@ export default function EditEventModal({ event, onSave, onClose }) {
 
                     <input
                         value={form.location}
-                        onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
+                        onChange={e => setForm(f => ({...f, location: e.target.value}))}
                         placeholder="Location"
                         style={s.input}
                     />
@@ -79,7 +91,7 @@ export default function EditEventModal({ event, onSave, onClose }) {
                     <input
                         type="datetime-local"
                         value={form.startAt}
-                        onChange={e => setForm(f => ({ ...f, startAt: e.target.value }))}
+                        onChange={e => setForm(f => ({...f, startAt: e.target.value}))}
                         required
                         style={s.input}
                     />
@@ -87,18 +99,18 @@ export default function EditEventModal({ event, onSave, onClose }) {
                     <input
                         type="datetime-local"
                         value={form.endAt}
-                        onChange={e => setForm(f => ({ ...f, endAt: e.target.value }))}
+                        onChange={e => setForm(f => ({...f, endAt: e.target.value}))}
                         style={s.input}
                     />
 
                     <input
                         placeholder="Tags (comma separated)"
                         value={form.tags}
-                        onChange={e => setForm(f => ({ ...f, tags: e.target.value }))}
+                        onChange={e => setForm(f => ({...f, tags: e.target.value}))}
                         style={s.input}
                     />
 
-                    <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+                    <div style={{display: "flex", justifyContent: "flex-end", gap: 8}}>
                         <button
                             type="button"
                             onClick={onClose}
