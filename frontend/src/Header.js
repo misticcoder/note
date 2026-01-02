@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "./AuthContext";
 import SideNav from "./components/SideNav";
+import GlobalSearch from "./GlobalSearch";
 
 const Header = () => {
     const [navOpen, setNavOpen] = useState(false);
@@ -81,7 +82,7 @@ const Header = () => {
                 title={"Home"}>InfCom</a>
 
                 {/* Search Bar */}
-                <input type="text" placeholder="Search..." style={styles.search}/>
+                <GlobalSearch />
 
                 {/* Navigation */}
                 <nav style={styles.nav}>
