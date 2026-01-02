@@ -2,6 +2,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "./AuthContext";
 import "./styles/club_header.css";
 import ClubHeader from "./ClubHeader";
+import EventTable from "./Events/EventTable";
 
 
 export default function ClubDetail() {
@@ -663,31 +664,12 @@ export default function ClubDetail() {
             )}
 
             {activeTab === "events" && (
-                <div>
-                    <div style={s.sectionHeader}>
-                        <h3 style={s.h3}>Club Events</h3>
-                    </div>
-
-                    {events.length === 0 && (
-                        <p className="muted">No events scheduled.</p>
-                    )}
-
-                    {events.map(ev => (
-                        <div
-                            key={ev.id}
-                            className="club-event-row"
-                            onClick={() => window.location.hash = `#/events/${ev.id}`}
-                        >
-                            <strong>{ev.title}</strong>
-                            <span>
-                                {ev.startAt ? new Date(ev.startAt).toLocaleString() : "TBA"}
-                            </span>
-
-                        </div>
-                    ))}
-
-                </div>
+                <EventTable
+                    events={events}
+                    showClub={false}
+                />
             )}
+
 
             {activeTab === "members" && (
                 <div style={{ margin: "15px" }}>

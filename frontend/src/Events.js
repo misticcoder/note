@@ -2,6 +2,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "./AuthContext";
 import EditEventModal from "./Events/EditEventModal";
 import "./styles/events.css";
+import EventTable from "./Events/EventTable";
 
 export default function Events() {
     const { user } = useContext(AuthContext);
@@ -563,131 +564,17 @@ export default function Events() {
             {err && <p className="error">{err}</p>}
 
             {!loading && !err && (
-                <div className="events-table">
-                    <div className="events-header">
-                        <div>#</div>
-                        <div>Event</div>
-                        <div> Club </div>
-                        <div>Status</div>
-                        <div>Avg. Rating</div>
-                        <div className="table-actions">Actions</div>
-                    </div>
-
-                    {sorted.length === 0 && (
-                        <div className="muted" style={{ padding: "20px", textAlign: "center" }}>
-                            No events match this filter.
-                        </div>
-                    )}
-
-                    {sorted.map((ev, i) => {
-                        const status = getEventStatus(ev);
-
-                        return (
-                            <div
-                                key={ev.id}
-                                className="events-row clickable"
-                                onClick={() => {
-                                    window.location.hash = `#/events/${ev.id}`;
-                                }}
-                            >
-                                {/* Rank */}
-                                <div className="rank">{i + 1}</div>
-
-                                {/* Event Info */}
-                                <div className="event-main">
-                                    <div className="event-title">{ev.title}</div>
-                                    <div className="event-meta">
-                                        {ev.startAt
-                                            ? new Date(ev.startAt).toLocaleString()
-                                            : "TBA"}
-                                        {ev.location && ` · ${ev.location}`}
-                                    </div>
-
-
-                                    {ev.tags?.map(tag => {
-                                        const label = typeof tag === "string" ? tag : tag.name;
-                                        return (
-                                            <span key={label} className="event-tag">
-                                                {label}
-                                            </span>
-                                        );
-                                    })}
-                                </div>
-
-                                {/* Club badge */}
-                                {ev.club ? (
-                                    <span className="event-club"
-                                          onClick={(e) => {
-                                              e.stopPropagation(); // ⛔ prevent opening event page
-                                              window.location.hash = `#/clubs/${ev.club.id}`;
-                                          }}
-                                          title={`Go to ${ev.club.name}`}>
-                                            {ev.club.logoUrl ? (
-                                                <img
-                                                    src={ev.club.logoUrl}
-                                                    alt={ev.club.name}
-                                                    className="event-club-logo"
-                                                />
-                                            ) : (
-                                                <span className="event-club-badge">
-                                                    {ev.club.name}
-                                                </span>
-                                            )}
-                                        </span>
-                                ) : (
-                                    <span className="event-club-badge muted">
-                                            Independent
-                                        </span>
-                                )}
-
-                                {/* Status */}
-                                <div className={`event-status ${status.toLowerCase()}`}>
-                                    {status}
-                                </div>
-
-                                {/* Ratings */}
-                                <div className="event-rating-inline">
-                                    {ratings[ev.id]?.count > 0 ? (
-                                        <>
-                                            <span className="star">★</span>
-                                            {Number(ratings[ev.id].average).toFixed(1)}
-                                            <span className="rating-count">
-                                                ({ratings[ev.id].count})
-                                            </span>
-                                        </>
-                                    ) : (
-                                        <span className="muted">No ratings</span>
-                                    )}
-                                </div>
-
-                                {/* Admin Actions */}
-                                <div
-                                    className="event-actions"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    {isAdmin && (
-                                        <>
-                                            <button
-                                                onClick={() => setEditingEvent(ev)}
-                                                title="Edit"
-                                            >
-                                                ✎ Edit
-                                            </button>
-                                            <button
-                                                className="danger"
-                                                onClick={() => deleteEvent(ev)}
-                                                title="Delete"
-                                            >
-                                                🗑 Delete
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
+                <EventTable
+                    events={sorted}
+                    loading={loading}
+                    error={err}
+                    showClub={true}
+                    isAdmin={isAdmin}
+                    onEdit={setEditingEvent}
+                    onDelete={deleteEvent}
+                />
             )}
+
 
             {/* EDIT MODAL */}
             {editingEvent && (

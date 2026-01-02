@@ -537,29 +537,34 @@
 }
 
 /* =========================
-   HEADER ROW
+   HEADER + ROW (SHARED)
 ========================= */
-.events-header {
-    display: grid;
-    grid-template-columns: 10% 20% 15% 15% 15% 20%;
-    padding: 10px 12px;
-    background: #f4f4f4;
-    font-weight: 600;
-    font-size: 13px;
-    color: #555;
-    height: 2em;
-}
-
-/* =========================
-   DATA ROW
-========================= */
+.events-header,
 .events-row {
     display: grid;
-    grid-template-columns: 10% 20% 15% 15% 15% 20%;
+    grid-template-columns:
+        48px                /* index */
+        minmax(220px, 2fr)  /* event */
+        minmax(120px, 1fr)  /* club */
+        minmax(90px, 1fr)   /* status */
+        minmax(110px, 1fr)  /* rating */
+        minmax(120px, 1fr); /* actions */
     align-items: center;
-    padding: 15px;
-    border-top: 1px solid #eee;
+    padding: 12px 14px;
+    column-gap: 12px;
 }
+
+.events-header .club-col,
+.events-row .club-col {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.events-row .actions-col:empty {
+    visibility: hidden;
+}
+
 
 .events-row:hover {
     background: #fafafa;
@@ -799,3 +804,21 @@
     opacity: 0.6;
 }
 
+
+@media (max-width: 900px) {
+    .events-header,
+    .events-row {
+        grid-template-columns:
+            40px
+            minmax(180px, 2fr)
+            minmax(80px, 1fr)
+            minmax(90px, 1fr);
+    }
+
+    .events-header .club-col,
+    .events-row .club-col,
+    .events-header .actions-col,
+    .events-row .actions-col {
+        display: none;
+    }
+}
