@@ -541,7 +541,7 @@
 ========================= */
 .events-header {
     display: grid;
-    grid-template-columns: 10% 35% 15% 15% 20%;
+    grid-template-columns: 10% 20% 15% 15% 15% 20%;
     padding: 10px 12px;
     background: #f4f4f4;
     font-weight: 600;
@@ -555,7 +555,7 @@
 ========================= */
 .events-row {
     display: grid;
-    grid-template-columns: 10% 35% 15% 15% 20%;
+    grid-template-columns: 10% 20% 15% 15% 15% 20%;
     align-items: center;
     padding: 15px;
     border-top: 1px solid #eee;
@@ -764,3 +764,38 @@
     gap: 6px;
     flex-wrap: wrap;
 }
+
+
+.event-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.event-club {
+    display: flex;
+    align-items: center;
+}
+
+.event-club-logo {
+    height: 22px;
+    width: 22px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #374151;
+}
+
+.event-club-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #1e293b;
+    color: #e5e7eb;
+    border: 1px solid #334155;
+}
+
+.event-club-badge.muted {
+    opacity: 0.6;
+}
+

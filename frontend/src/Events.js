@@ -548,6 +548,7 @@ export default function Events() {
                     <div className="events-header">
                         <div>#</div>
                         <div>Event</div>
+                        <div> Club </div>
                         <div>Status</div>
                         <div>Avg. Rating</div>
                         <div className="table-actions">Actions</div>
@@ -592,10 +593,33 @@ export default function Events() {
                                             </span>
                                         );
                                     })}
-
-
-
                                 </div>
+
+                                {/* Club badge */}
+                                {ev.club ? (
+                                    <span className="event-club"
+                                          onClick={(e) => {
+                                              e.stopPropagation(); // ⛔ prevent opening event page
+                                              window.location.hash = `#/clubs/${ev.club.id}`;
+                                          }}
+                                          title={`Go to ${ev.club.name}`}>
+                                            {ev.club.logoUrl ? (
+                                                <img
+                                                    src={ev.club.logoUrl}
+                                                    alt={ev.club.name}
+                                                    className="event-club-logo"
+                                                />
+                                            ) : (
+                                                <span className="event-club-badge">
+                                                    {ev.club.name}
+                                                </span>
+                                            )}
+                                        </span>
+                                ) : (
+                                    <span className="event-club-badge muted">
+                                            Independent
+                                        </span>
+                                )}
 
                                 {/* Status */}
                                 <div className={`event-status ${status.toLowerCase()}`}>
