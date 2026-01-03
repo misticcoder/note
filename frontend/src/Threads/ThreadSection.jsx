@@ -85,7 +85,7 @@ export default function ThreadSection({
                     onMouseEnter={() => setHoveredId(thread.id)}
                     onMouseLeave={() => setHoveredId(null)}
                     onClick={() => {
-                        window.location.hash = `#/thread/${thread.id}`;
+                        window.location.hash = `#/threads/${thread.id}`;
                     }}
                 >
                     <div style={{ display: "flex", flexDirection: "column" }}>

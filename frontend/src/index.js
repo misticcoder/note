@@ -13,7 +13,6 @@ import Events from "./Events";
 import EventPage from "./EventPage";
 import NewsPage from "./NewsPage";
 import NewsList from "./NewsList";
-import ClubMembers from "./Clubs/ClubMembers";
 import PostDetailPage from "./Post/PostDetail";
 import TagPage from "./TagPage";
 import SearchResultsPage from "./SearchResultPage";
@@ -55,9 +54,6 @@ function App() {
     else if (route.startsWith("#/events/")) Page = () => <EventPage />
     else if (route.startsWith("#/tags/")) Page = () => <TagPage />
     else if (route.startsWith("#/search")) Page = () => <SearchResultsPage />;
-
-
-
 
 
     return (
