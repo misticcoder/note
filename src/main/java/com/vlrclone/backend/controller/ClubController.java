@@ -57,21 +57,19 @@ public class ClubController {
         return members.existsByClubIdAndUserIdAndRole(clubId, userId, Role.CO_LEADER);
     }
 
+
+
     @GetMapping
-    public List<Club> listClubs(
+    public List<ClubService.ClubWithCounts> listClubs(
             @RequestParam(required = false) ClubCategory category,
             @RequestParam(required = false) ClubSort sort
     ) {
-        // If no sorting requested, preserve existing behaviour
-        if (sort == null) {
-            return (category == null)
-                    ? clubService.findAll()
-                    : clubService.findByCategory(category);
+        if (category == null) {
+            return clubService.findAllWithCounts(sort);
         }
-
-        // Sorted path
-        return clubService.findSorted(category, sort);
+        return clubService.findByCategoryWithCounts(category, sort);
     }
+
 
 
     @GetMapping("/{clubId}")
