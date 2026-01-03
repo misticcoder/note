@@ -1,6 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../AuthContext";
 import "../styles/Threads.css";
+import {timeAgo} from "../components/timeAgo";
 
 export default function ThreadSection({
                                           title = "Threads",
@@ -88,14 +89,14 @@ export default function ThreadSection({
                         window.location.hash = `#/threads/${thread.id}`;
                     }}
                 >
+
                     <div style={{ display: "flex", flexDirection: "column" }}>
-                        <span style={{ fontWeight: 600 }}>
+                        <span style={{ fontWeight: 400 }}>
                             {thread.title}
                         </span>
-                        <span style={{ fontSize: "0.75rem", opacity: 0.7 }}>
-                            {thread.published &&
-                                new Date(thread.published).toLocaleDateString()}
-                            {thread.author && ` · ${thread.author}`}
+                        <span className={"x-time"}>
+                            {timeAgo(thread.published)}
+                            {thread.author && ` by ${thread.author}`}
                         </span>
                     </div>
                 </div>

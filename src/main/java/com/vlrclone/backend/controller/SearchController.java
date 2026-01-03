@@ -19,12 +19,12 @@ public class SearchController {
 
     @GetMapping
     public SearchResponseDto search(
-            @RequestParam(required = false) String q
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "999") int size
     ) {
-        if (q == null || q.trim().length() < 2) {
-            return searchService.defaultResults();
-        }
 
-        return searchService.search(q.trim());
+
+        return searchService.search(q.trim(), page, size);
     }
 }

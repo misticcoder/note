@@ -34,7 +34,7 @@ public interface EventRepository
     List<Event> findByTags_NameIgnoreCase(String name);
 
     List<Event> findByTags_NameIgnoreCaseOrderByStartAtAsc(
-            String name
+            String name, Pageable pageable
     );
 
     List<Event> findDistinctByTitleContainingIgnoreCaseOrTags_NameIgnoreCaseOrderByStartAtDesc(

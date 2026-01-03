@@ -10,6 +10,8 @@ public class SearchResponseDto {
     public List<SearchResultDto> posts;
     public List<SearchResultDto> tags;
 
+    public boolean hasMore;
+
     public SearchResponseDto(
             List<SearchResultDto> events,
             List<SearchResultDto> clubs,
@@ -22,6 +24,7 @@ public class SearchResponseDto {
         this.threads = threads;
         this.posts = posts;
         this.tags = tags;
+
     }
 }
 

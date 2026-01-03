@@ -18,9 +18,11 @@ public class TagController {
 
     @GetMapping("/{name}/events")
     public List<SearchResultDto> getEventsByTag(
-            @PathVariable String name
+            @PathVariable String name,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size
     ) {
-        return tagService.getEventsByTag(name);
+        return tagService.getEventsByTag(name, page, size);
     }
 
 }

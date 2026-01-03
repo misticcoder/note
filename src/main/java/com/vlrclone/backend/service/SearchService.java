@@ -39,7 +39,7 @@ public class SearchService {
        FILTERED SEARCH (HYBRID TAG + TEXT SEARCH)
        ====================================================== */
 
-    public SearchResponseDto search(String q) {
+    public SearchResponseDto search(String q, int page, int size) {
 
         if (q == null) q = "";
         q = q.trim();
@@ -47,17 +47,17 @@ public class SearchService {
         boolean isTagQuery = q.startsWith("#");
         String cleanQuery = isTagQuery ? q.substring(1).trim() : q;
 
-        var limit = PageRequest.of(0, 6);
+        var pageable = PageRequest.of(page, size);
         var dateFmt = DateTimeFormatter.ofPattern("MMM d");
 
         /* ===============================
-           1. TAG-BOOSTED EVENTS
+           1. TAG-BOOSTED EVENTS (PAGED)
            =============================== */
 
         List<SearchResultDto> boostedEvents = tagRepo
                 .findByNameIgnoreCase(cleanQuery)
                 .map(tag -> eventRepo
-                        .findByTags_NameIgnoreCaseOrderByStartAtAsc(cleanQuery)
+                        .findByTags_NameIgnoreCaseOrderByStartAtAsc(cleanQuery, pageable)
                         .stream()
                         .map(e -> new SearchResultDto(
                                 e.getId(),
@@ -71,11 +71,11 @@ public class SearchService {
                 .orElse(List.of());
 
         /* ===============================
-           2. NORMAL EVENT SEARCH
+           2. NORMAL EVENT SEARCH (PAGED)
            =============================== */
 
         List<SearchResultDto> normalEvents = eventRepo
-                .findByTitleContainingIgnoreCaseOrderByStartAtDesc(cleanQuery, limit)
+                .findByTitleContainingIgnoreCaseOrderByStartAtDesc(cleanQuery, pageable)
                 .stream()
                 .map(e -> new SearchResultDto(
                         e.getId(),
@@ -95,18 +95,18 @@ public class SearchService {
         boostedEvents.forEach(e -> eventMap.put(e.getId(), e));
 
         for (var e : normalEvents) {
-            if (eventMap.size() >= 6) break;
+            if (eventMap.size() >= size) break;
             eventMap.putIfAbsent(e.getId(), e);
         }
 
         List<SearchResultDto> events = List.copyOf(eventMap.values());
 
         /* ===============================
-           4. OTHER ENTITIES (TEXT SEARCH)
+           4. OTHER ENTITIES (PAGED)
            =============================== */
 
         var clubs = clubRepo
-                .findByNameContainingIgnoreCase(cleanQuery, limit)
+                .findByNameContainingIgnoreCase(cleanQuery, pageable)
                 .stream()
                 .map(c -> new SearchResultDto(
                         c.getId(),
@@ -118,7 +118,7 @@ public class SearchService {
                 .toList();
 
         var threads = threadRepo
-                .findByTitleContainingIgnoreCase(cleanQuery, limit)
+                .findByTitleContainingIgnoreCase(cleanQuery, pageable)
                 .stream()
                 .map(t -> new SearchResultDto(
                         t.getId(),
@@ -130,7 +130,7 @@ public class SearchService {
                 .toList();
 
         var posts = postRepo
-                .findByContentContainingIgnoreCase(cleanQuery, limit)
+                .findByContentContainingIgnoreCase(cleanQuery, pageable)
                 .stream()
                 .map(p -> new SearchResultDto(
                         p.getId(),
@@ -141,7 +141,6 @@ public class SearchService {
                 ))
                 .toList();
 
-        // ❗ No tag rows returned in search
         return new SearchResponseDto(
                 events,
                 clubs,
@@ -157,12 +156,12 @@ public class SearchService {
 
     public SearchResponseDto defaultResults() {
 
-        var limit = PageRequest.of(0, 6);
+        var pageable = PageRequest.of(0, 6);
         var now = LocalDateTime.now();
         var dateFmt = DateTimeFormatter.ofPattern("MMM d");
 
         var events = eventRepo
-                .findByStartAtAfterOrderByStartAtAsc(now, limit)
+                .findByStartAtAfterOrderByStartAtAsc(now, pageable)
                 .stream()
                 .map(e -> new SearchResultDto(
                         e.getId(),
@@ -174,7 +173,7 @@ public class SearchService {
                 .toList();
 
         var clubs = clubRepo
-                .findAllByOrderByCreatedAtDesc(limit)
+                .findAllByOrderByCreatedAtDesc(pageable)
                 .stream()
                 .map(c -> new SearchResultDto(
                         c.getId(),
@@ -186,7 +185,7 @@ public class SearchService {
                 .toList();
 
         var threads = threadRepo
-                .findAllByOrderByPublishedDesc(limit)
+                .findAllByOrderByPublishedDesc(pageable)
                 .stream()
                 .map(t -> new SearchResultDto(
                         t.getId(),
@@ -198,7 +197,7 @@ public class SearchService {
                 .toList();
 
         var posts = postRepo
-                .findAllByOrderByCreatedAtDesc(limit)
+                .findAllByOrderByCreatedAtDesc(pageable)
                 .stream()
                 .map(p -> new SearchResultDto(
                         p.getId(),
@@ -210,7 +209,7 @@ public class SearchService {
                 .toList();
 
         var tags = tagRepo
-                .findAllByOrderByNameAsc(limit)
+                .findAllByOrderByNameAsc(pageable)
                 .stream()
                 .map(t -> new SearchResultDto(
                         t.getId(),
