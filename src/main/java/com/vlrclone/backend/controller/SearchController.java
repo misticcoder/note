@@ -24,7 +24,6 @@ public class SearchController {
             @RequestParam(defaultValue = "999") int size
     ) {
 
-
         return searchService.search(q.trim(), page, size);
     }
 }

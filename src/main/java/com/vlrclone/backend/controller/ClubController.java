@@ -2,6 +2,7 @@
 package com.vlrclone.backend.controller;
 
 import com.vlrclone.backend.Enums.ClubCategory;
+import com.vlrclone.backend.Enums.ClubSort;
 import com.vlrclone.backend.model.*;
 import com.vlrclone.backend.model.ClubMember.Role;
 import com.vlrclone.backend.model.JoinRequest.Status;
@@ -58,13 +59,20 @@ public class ClubController {
 
     @GetMapping
     public List<Club> listClubs(
-            @RequestParam(required = false) ClubCategory category
+            @RequestParam(required = false) ClubCategory category,
+            @RequestParam(required = false) ClubSort sort
     ) {
-        if (category == null) {
-            return clubService.findAll();
+        // If no sorting requested, preserve existing behaviour
+        if (sort == null) {
+            return (category == null)
+                    ? clubService.findAll()
+                    : clubService.findByCategory(category);
         }
-        return clubService.findByCategory(category);
+
+        // Sorted path
+        return clubService.findSorted(category, sort);
     }
+
 
     @GetMapping("/{clubId}")
     public ResponseEntity<?> getClub(@PathVariable Long clubId) {

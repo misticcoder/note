@@ -43,4 +43,7 @@ public interface EventRepository
             Pageable pageable
     );
 
+    List<Event> findByClubIdIn(List<Long> clubIds);
+
+
 }

@@ -1,6 +1,7 @@
 package com.vlrclone.backend.repository;
 
 import com.vlrclone.backend.Enums.ClubCategory;
+import com.vlrclone.backend.dto.ClubDto;
 import com.vlrclone.backend.model.*;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,6 +21,9 @@ public interface ClubRepository extends JpaRepository<Club, Long> {
     );
 
     List<Club> findAllByOrderByCreatedAtDesc(Pageable pageable);
-
+    List<Club> findAllByOrderByCreatedAtDesc();
+    List<Club> findAllByOrderByNameAsc();
+    List<Club> findAllByOrderByNameDesc();
+    List<Club> findAllByOrderByNameAsc(Pageable pageable);
 }
 

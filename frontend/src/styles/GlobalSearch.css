@@ -164,3 +164,45 @@
     cursor: default;
 }
 
+
+.search-filters {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.search-filter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #cbd5f5;
+}
+
+.search-filter input {
+    accent-color: #6366f1;
+    cursor: pointer;
+}
+
+.search-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 14px;
+}
+
+.search-sort {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.search-sort select {
+    background: #0f172a;
+    color: #e5e7eb;
+    border: 1px solid #1e293b;
+    padding: 4px 6px;
+    border-radius: 4px;
+}

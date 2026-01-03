@@ -11,28 +11,58 @@ export default function Clubs() {
     const [err, setErr] = useState("");
     const [q, setQ] = useState("");
 
-    // Edit modal state (admins only)
-    const [showEdit, setShowEdit] = useState(false);
-    const [editClub, setEditClub] = useState(null); // {id, name, description}
-
+    // Filters
     const [category, setCategory] = useState("ALL");
+    const [sortBy, setSortBy] = useState("NAME_ASC");
 
+    // Edit modal
+    const [showEdit, setShowEdit] = useState(false);
+    const [editClub, setEditClub] = useState(null);
 
+    /* =========================
+       FETCH CLUBS + EVENT COUNTS
+    ========================= */
     useEffect(() => {
         document.title = "Clubs Directory | InfCom";
+
         (async () => {
             try {
                 setLoading(true);
-                const res = await fetch("/api/clubs");
+
+                const params = new URLSearchParams();
+                if (category !== "ALL") params.set("category", category);
+                if (sortBy && sortBy !== "EVENTS_DESC") params.set("sort", sortBy);
+
+                const res = await fetch(`/api/clubs?${params.toString()}`);
                 if (!res.ok) throw new Error(`Failed to load clubs (${res.status})`);
-                const data = await res.json();
-                const rows = (Array.isArray(data) ? data : (data.content || []))
-                    .map(c => ({
-                        id: c.id,
-                        name: c.name ?? "",
-                        description: c.description ?? "",
-                        category: c.category ?? "OTHER"
-                    }));
+
+                const baseClubs = await res.json();
+
+                // Fetch event counts in parallel
+                const rows = await Promise.all(
+                    (Array.isArray(baseClubs) ? baseClubs : []).map(async (c) => {
+                        let eventCount = 0;
+                        try {
+                            const er = await fetch(`/api/clubs/${c.id}/events`);
+                            if (er.ok) {
+                                const events = await er.json();
+                                eventCount = Array.isArray(events) ? events.length : 0;
+                            }
+                        } catch {
+                            eventCount = 0;
+                        }
+
+                        return {
+                            id: c.id,
+                            name: c.name ?? "",
+                            description: c.description ?? "",
+                            category: c.category ?? "OTHER",
+                            createdAt: c.createdAt ? new Date(c.createdAt) : null,
+                            memberCount: Array.isArray(c.members) ? c.members.length : 0,
+                            eventCount
+                        };
+                    })
+                );
 
                 setClubs(rows);
                 setErr("");
@@ -43,26 +73,30 @@ export default function Clubs() {
                 setLoading(false);
             }
         })();
-    }, []);
+    }, [category, sortBy]);
 
+    /* =========================
+       CLIENT FILTER + EVENT SORT
+    ========================= */
     const filtered = useMemo(() => {
         const t = (q || "").toLowerCase();
 
-        return clubs.filter(cl => {
-            const matchesText =
-                (cl.name || "").toLowerCase().includes(t) ||
-                (cl.description || "").toLowerCase().includes(t) ||
-                String(cl.id).includes(t);
+        let out = clubs.filter(cl =>
+            cl.name.toLowerCase().includes(t) ||
+            cl.description.toLowerCase().includes(t) ||
+            String(cl.id).includes(t)
+        );
 
-            const matchesCategory =
-                category === "ALL" || cl.category === category;
+        if (sortBy === "EVENTS_DESC") {
+            out = [...out].sort((a, b) => b.eventCount - a.eventCount);
+        }
 
-            return matchesText && matchesCategory;
-        });
-    }, [clubs, q, category]);
+        return out;
+    }, [clubs, q, sortBy]);
 
-
-    // Admin actions
+    /* =========================
+       ADMIN ACTIONS
+    ========================= */
     const openEdit = (cl) => {
         if (!isAdmin) return;
         setEditClub({ ...cl });
@@ -72,6 +106,7 @@ export default function Clubs() {
     const saveEdit = async (e) => {
         e.preventDefault();
         if (!isAdmin || !editClub) return;
+
         try {
             const res = await fetch(`/api/clubs/${editClub.id}`, {
                 method: "PATCH",
@@ -81,11 +116,16 @@ export default function Clubs() {
                     description: editClub.description
                 })
             });
+
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}));
                 throw new Error(body.message || `Update failed (${res.status})`);
             }
-            setClubs(prev => prev.map(c => c.id === editClub.id ? { ...editClub } : c));
+
+            setClubs(prev =>
+                prev.map(c => c.id === editClub.id ? { ...c, ...editClub } : c)
+            );
+
             setShowEdit(false);
             setEditClub(null);
             alert("Club updated");
@@ -97,6 +137,7 @@ export default function Clubs() {
     const deleteClub = async (cl) => {
         if (!isAdmin) return;
         if (!window.confirm(`Delete club "${cl.name}"? This cannot be undone.`)) return;
+
         try {
             const res = await fetch(`/api/clubs/${cl.id}`, { method: "DELETE" });
             if (!res.ok) {
@@ -109,6 +150,9 @@ export default function Clubs() {
         }
     };
 
+    /* =========================
+       RENDER
+    ========================= */
     return (
         <div style={styles.wrap}>
             <div style={styles.headerRow}>
@@ -117,7 +161,7 @@ export default function Clubs() {
                     <select
                         value={category}
                         onChange={e => setCategory(e.target.value)}
-                        style={{...styles.search, marginRight: 8}}
+                        style={{ ...styles.search, marginRight: 8 }}
                     >
                         <option value="ALL">All categories</option>
                         <option value="SPORTS">Sports</option>
@@ -128,47 +172,65 @@ export default function Clubs() {
                         <option value="OTHER">Other</option>
                     </select>
 
+                    <select
+                        value={sortBy}
+                        onChange={e => setSortBy(e.target.value)}
+                        style={styles.search}
+                    >
+                        <option value="NAME_ASC">Name (A–Z)</option>
+                        <option value="NAME_DESC">Name (Z–A)</option>
+                        <option value="CREATED_NEW">Newest first</option>
+                        <option value="CREATED_OLD">Oldest first</option>
+                        <option value="MEMBERS_DESC">Most members</option>
+                        <option value="EVENTS_DESC">Most events</option>
+                    </select>
+
                     <input
-                        placeholder="Search by name/description/ID…"
+                        placeholder="Search by name / description / ID…"
                         value={q}
-                        onChange={(e) => setQ(e.target.value)}
+                        onChange={e => setQ(e.target.value)}
                         style={styles.search}
                     />
 
                     <a href="#/" style={styles.backLink}>← Back</a>
                 </div>
-
             </div>
 
             {loading && <p>Loading…</p>}
-            {err && <p style={{color: "red"}}>{err}</p>}
+            {err && <p style={{ color: "red" }}>{err}</p>}
 
             {!loading && !err && (
                 <div style={styles.tableWrap}>
-                    <div style={{...styles.row, ...styles.head}}>
-                        <div style={{width: 80}}>ID</div>
-                        <div style={{width: 120}}>Category</div>
-
-                        <div style={{flex: 2}}>Name</div>
-                        <div style={{flex: 4}}>Description</div>
-                        {isAdmin && <div style={{width: 180, textAlign: "right"}}>Actions</div>}
+                    <div style={{ ...styles.row, ...styles.head }}>
+                        <div style={{ width: 60 }}>#</div>
+                        <div style={{ width: 120 }}>Category</div>
+                        <div style={{ flex: 2 }}>Name</div>
+                        <div style={{ flex: 4 }}>Description</div>
+                        <div style={{ width: 100 }}>Members</div>
+                        <div style={{ width: 100 }}>Events</div>
+                        {isAdmin && <div style={{ width: 180, textAlign: "right" }}>Actions</div>}
                     </div>
 
                     {filtered.map((cl, idx) => (
                         <div key={cl.id} style={styles.row}>
-                            <div style={{width: 80}}>{idx + 1}</div>
-                            <div style={{width: 120}}>{cl.category}</div>
+                            <div style={{ width: 60 }}>{idx + 1}</div>
+                            <div style={{ width: 120 }}>{cl.category}</div>
 
-
-                            <div style={{flex: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
-                                <a href={`#/clubs/${cl.id}`} style={{textDecoration: "none"}}>{cl.name}</a>
+                            <div style={{ flex: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                <a href={`#/clubs/${cl.id}`} style={{ textDecoration: "none" }}>
+                                    {cl.name}
+                                </a>
                             </div>
-                            <div style={{flex: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
+
+                            <div style={{ flex: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 {cl.description}
                             </div>
 
+                            <div style={{ width: 100 }}>{cl.memberCount}</div>
+                            <div style={{ width: 100 }}>{cl.eventCount}</div>
+
                             {isAdmin && (
-                                <div style={{width: 180, textAlign: "right"}}>
+                                <div style={{ width: 180, textAlign: "right" }}>
                                     <button style={styles.editBtn} onClick={() => openEdit(cl)}>Edit</button>
                                     <button style={styles.delBtn} onClick={() => deleteClub(cl)}>Delete</button>
                                 </div>
@@ -182,35 +244,28 @@ export default function Clubs() {
                 </div>
             )}
 
-            {/* EDIT MODAL (admins only) */}
             {isAdmin && showEdit && editClub && (
                 <div style={styles.backdrop}>
                     <div style={styles.modal}>
-                        <h3 style={{ marginTop: 0 }}>Edit Club</h3>
+                        <h3>Edit Club</h3>
                         <form onSubmit={saveEdit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                             <input
-                                name="name"
-                                placeholder="Name"
                                 value={editClub.name}
                                 onChange={e => setEditClub(c => ({ ...c, name: e.target.value }))}
                                 required
                                 style={styles.input}
                             />
                             <textarea
-                                name="description"
-                                placeholder="Description"
                                 value={editClub.description}
                                 onChange={e => setEditClub(c => ({ ...c, description: e.target.value }))}
                                 rows={6}
                                 style={styles.textarea}
                             />
-                            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
+                            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
                                 <button type="button" onClick={() => { setShowEdit(false); setEditClub(null); }} style={styles.cancelBtn}>
                                     Cancel
                                 </button>
-                                <button type="submit" style={styles.saveBtn}>
-                                    Save
-                                </button>
+                                <button type="submit" style={styles.saveBtn}>Save</button>
                             </div>
                         </form>
                     </div>
@@ -220,9 +275,12 @@ export default function Clubs() {
     );
 }
 
+/* =========================
+   STYLES
+========================= */
 const styles = {
     wrap: { padding: 20, maxWidth: 1100, margin: "0 auto" },
-    headerRow: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 0, marginTop: 30 },
+    headerRow: { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 30 },
     search: { padding: "6px 8px", border: "1px solid #ccc", borderRadius: 6, marginRight: 12 },
     backLink: { textDecoration: "none", border: "1px solid #ccc", padding: "6px 10px", borderRadius: 6, background: "#f8f8f8", color: "#333" },
 
@@ -233,11 +291,10 @@ const styles = {
     delBtn: { padding: "6px 10px", background: "#b00020", color: "#fff", border: "none", borderRadius: 6, marginLeft: 8 },
     editBtn: { padding: "6px 10px", background: "#0b57d0", color: "#fff", border: "none", borderRadius: 6 },
 
-    // modal
     backdrop: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 },
-    modal: { background: "#fff", padding: 20, borderRadius: 8, width: 480, boxShadow: "0 10px 30px rgba(0,0,0,0.2)" },
+    modal: { background: "#fff", padding: 20, borderRadius: 8, width: 480 },
     input: { padding: "8px 10px", border: "1px solid #ccc", borderRadius: 6 },
     textarea: { padding: "8px 10px", border: "1px solid #ccc", borderRadius: 6 },
-    cancelBtn: { padding: "6px 10px", background: "#ccc", color: "#000", border: "none", borderRadius: 6 },
+    cancelBtn: { padding: "6px 10px", background: "#ccc", border: "none", borderRadius: 6 },
     saveBtn: { padding: "6px 10px", background: "#0b57d0", color: "#fff", border: "none", borderRadius: 6 }
 };
