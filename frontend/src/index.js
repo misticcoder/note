@@ -15,6 +15,9 @@ import NewsPage from "./NewsPage";
 import NewsList from "./NewsList";
 import ClubMembers from "./Clubs/ClubMembers";
 import PostDetailPage from "./Post/PostDetail";
+import TagPage from "./TagPage";
+import SearchResultsPage from "./SearchResultPage";
+
 
 function App() {
     const [route, setRoute] = useState(window.location.hash || "#/");
@@ -34,22 +37,27 @@ function App() {
 
     if (route.startsWith("#/post/")) Page = () => <PostDetailPage />;
 
-    if (route === "#/admin/users") Page = AdminUsers;
-    if (route === "#/threads") Page = ThreadList;
-    if (route === "#/admin/threads") Page = ThreadList;
-    if (route.startsWith("#/threads/")) Page = () => <ThreadPage/>
-    if (route === "#/admin/clubs") Page = Clubs;
-    if (route === "#/clubs") Page = Clubs;
-    if (route.startsWith("#/clubs/")) Page = () => <ClubDetail />
+    else if (route === "#/admin/users") Page = AdminUsers;
+    else if (route === "#/threads") Page = ThreadList;
+    else if (route === "#/admin/threads") Page = ThreadList;
+    else if (route.startsWith("#/threads/")) Page = () => <ThreadPage/>
+    else if (route === "#/admin/clubs") Page = Clubs;
+    else if (route === "#/clubs") Page = Clubs;
+    else if (route.startsWith("#/clubs/")) Page = () => <ClubDetail />
 
 
-    if (route === "#/news") Page = NewsList;
-    if (route === "#/admin/news") Page = NewsList;
-    if (route.startsWith("#/news/")) Page = () => <NewsPage/>
+    else if (route === "#/news") Page = NewsList;
+    else if (route === "#/admin/news") Page = NewsList;
+    else if (route.startsWith("#/news/")) Page = () => <NewsPage/>
 
-    if (route === "#/admin/events") Page = Events;
-    if (route === "#/events") Page = Events;
-    if (route.startsWith("#/events/")) Page = () => <EventPage />
+    else if (route === "#/admin/events") Page = Events;
+    else if (route === "#/events") Page = Events;
+    else if (route.startsWith("#/events/")) Page = () => <EventPage />
+    else if (route.startsWith("#/tags/")) Page = () => <TagPage />
+    else if (route.startsWith("#/search")) Page = () => <SearchResultsPage />;
+
+
+
 
 
     return (

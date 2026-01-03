@@ -30,4 +30,17 @@ public interface EventRepository
             String title,
             Pageable pageable
     );
+
+    List<Event> findByTags_NameIgnoreCase(String name);
+
+    List<Event> findByTags_NameIgnoreCaseOrderByStartAtAsc(
+            String name
+    );
+
+    List<Event> findDistinctByTitleContainingIgnoreCaseOrTags_NameIgnoreCaseOrderByStartAtDesc(
+            String title,
+            String tagName,
+            Pageable pageable
+    );
+
 }

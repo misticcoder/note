@@ -51,6 +51,10 @@ export default function GlobalSearch() {
                     fetchDefault();
                 }}
                 onChange={e => setQuery(e.target.value)}
+                onKeyDown={e => {
+                    if (e.key === "Enter") {
+                        window.location.href = `#/search?q=${encodeURIComponent(query)}`;
+                    }}}
                 className={"input"}
             />
 
@@ -69,6 +73,7 @@ function SearchDropdown({ results }) {
             <SearchSection title="Clubs" items={results.clubs} />
             <SearchSection title="Threads" items={results.threads} />
             <SearchSection title="Posts" items={results.posts} />
+            <SearchSection title="Tags" items={results.tags} />
         </div>
     );
 }
@@ -78,7 +83,7 @@ function SearchSection({ title, items }) {
 
     return (
         <>
-            <div className={"search-title"}>
+            <div className={"search-section-title"}>
                 {title}
             </div>
 
@@ -88,10 +93,15 @@ function SearchSection({ title, items }) {
                     href={item.url}
                     className={"search-row"}
                 >
-                    <div>{item.title}</div>
+                    <div className={"search-title"}>{item.title}</div>
                     {item.subtitle && (
                         <div className={"search-subtitle"}>
                             {item.subtitle}
+                        </div>
+                    )}
+                    {item.status && (
+                        <div className={`search-status ${item.status}`}>
+                            {item.status}
                         </div>
                     )}
                 </a>
