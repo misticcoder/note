@@ -33,7 +33,7 @@ export default function Events() {
     });
 
 
-    const [status, setStatus] = useState("upcoming");      // upcoming | ongoing | past | all
+    const [status, setStatus] = useState("all");      // upcoming | ongoing | past | all
     const [allTags, setAllTags] = useState([]);            // list of tag names from backend
     const [selectedTags, setSelectedTags] = useState([]);  // selected tag names
 
@@ -381,7 +381,7 @@ export default function Events() {
 
             setEvents(prev => [body, ...prev]);
             setShowAdd(false);
-            setForm({ title: "", content: "", location: "", startAt: "", endAt: "" });
+            setForm({ title: "", content: "", location: "", startAt: "", endAt: "", tags: "", clubId: "" });
         } catch (e2) {
             alert(e2.message);
         }

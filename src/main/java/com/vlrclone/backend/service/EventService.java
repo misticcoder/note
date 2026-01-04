@@ -1,138 +1,225 @@
+// src/main/java/com/vlrclone/backend/service/EventService.java
 package com.vlrclone.backend.service;
 
 import com.vlrclone.backend.dto.EventUpdateDto;
 import com.vlrclone.backend.model.Event;
+import com.vlrclone.backend.model.EventRating;
 import com.vlrclone.backend.model.Tag;
+import com.vlrclone.backend.model.User;
+import com.vlrclone.backend.repository.EventRatingRepository;
 import com.vlrclone.backend.repository.EventRepository;
 import com.vlrclone.backend.repository.TagRepository;
 import com.vlrclone.backend.repository.spec.EventSpecifications;
+import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class EventService {
 
     private final EventRepository eventRepo;
     private final TagRepository tagRepo;
+    private final EventRatingRepository ratingRepo;
 
-
-    public EventService(EventRepository eventRepo, TagRepository tagRepo) {
+    public EventService(
+            EventRepository eventRepo,
+            TagRepository tagRepo,
+            EventRatingRepository ratingRepo
+    ) {
         this.eventRepo = eventRepo;
         this.tagRepo = tagRepo;
-
+        this.ratingRepo = ratingRepo;
     }
 
     /* =========================
-       SEARCH EVENTS (NEW)
+       SEARCH / LIST EVENTS
     ========================= */
-    public List<Event> searchEvents(String q, List<String> tags, String status) {
 
+    @Transactional(Transactional.TxType.SUPPORTS)
+    public List<EventUpdateDto> searchEvents(
+            String q,
+            List<String> tags,
+            String status
+    ) {
         Specification<Event> spec = Specification
                 .where(EventSpecifications.searchText(q))
                 .and(EventSpecifications.hasTags(tags));
 
-        // 🔥 IMPORTANT FIX
         if (status != null && !"ALL".equalsIgnoreCase(status)) {
             spec = spec.and(
                     EventSpecifications.hasStatus(status, LocalDateTime.now())
             );
         }
 
-        return eventRepo.findAll(spec);
+        // IMPORTANT:
+        // findAll(spec, sort) must be the @EntityGraph version in repository
+        return eventRepo.findAll(
+                        spec,
+                        Sort.by(Sort.Direction.DESC, "startAt")
+                )
+                .stream()
+                .map(EventUpdateDto::new)
+                .toList();
     }
 
-
-
     /* =========================
-       UPDATE EVENT
+       TAG RESOLUTION
     ========================= */
-    public Event updateEvent(Long id, EventUpdateDto dto) {
-        Event event = eventRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
 
-        event.setTitle(dto.title);
-        event.setContent(dto.content);
-        event.setLocation(dto.location);
-        event.setStartAt(dto.startAt);
-        event.setEndAt(dto.endAt);
-
-        // OPTIONAL (only if EventUpdateDto includes tags)
-        if (dto.tags != null) {
-            event.setTags(resolveTags(dto.tags));
+    public Set<Tag> resolveTags(Collection<String> names) {
+        if (names == null || names.isEmpty()) {
+            return new HashSet<>();
         }
 
-        return eventRepo.save(event);
-    }
-
-    /* =========================
-       DELETE EVENT
-    ========================= */
-    public void deleteEvent(Long id) {
-        Event event = eventRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
-
-        eventRepo.delete(event);
-    }
-
-    /* =========================
-       TAG RESOLUTION (NEW)
-    ========================= */
-    public Set<Tag> resolveTags(List<String> names) {
         return names.stream()
-                .map(s -> s.trim().toLowerCase())
+                .filter(Objects::nonNull)
+                .map(String::trim)
                 .filter(s -> !s.isBlank())
+                .map(String::toLowerCase)
                 .distinct()
                 .limit(10)
                 .map(name ->
-                        tagRepo.findByName(name)
+                        tagRepo.findByNameIgnoreCase(name)
                                 .orElseGet(() -> tagRepo.save(new Tag(name)))
                 )
                 .collect(Collectors.toSet());
     }
 
-    public List<Event> findByTag(String tagName, String status) {
-        Tag tag = tagRepo.findByName(tagName)
+    /* =========================
+       FILTER BY TAG
+    ========================= */
+
+    @Transactional(Transactional.TxType.SUPPORTS)
+    public List<EventUpdateDto> findByTag(String tagName, String status) {
+        Tag tag = tagRepo.findByNameIgnoreCase(tagName)
                 .orElseThrow(() -> new RuntimeException("Tag not found"));
 
         List<Event> events = eventRepo.findByTagsContaining(tag);
 
-        return filterByStatus(events, status);
+        return filterAndMap(events, status);
     }
-    private List<Event> filterByStatus(List<Event> events, String status) {
-        if (status == null || status.equalsIgnoreCase("all")) {
-            return events;
+
+    /* =========================
+       FILTER BY CLUB
+    ========================= */
+
+    @Transactional(Transactional.TxType.SUPPORTS)
+    public List<EventUpdateDto> findByClub(Long clubId, String status) {
+        List<Event> events = eventRepo.findByClubId(clubId);
+        return filterAndMap(events, status);
+    }
+
+    /* =========================
+       STATUS FILTER (IN-MEMORY)
+    ========================= */
+
+    private List<EventUpdateDto> filterAndMap(
+            List<Event> events,
+            String status
+    ) {
+        if (status == null || "ALL".equalsIgnoreCase(status)) {
+            return events.stream().map(EventUpdateDto::new).toList();
         }
 
         LocalDateTime now = LocalDateTime.now();
 
-        return events.stream().filter(ev -> {
-            LocalDateTime start = ev.getStartAt();
-            LocalDateTime end = ev.getEndAt();
+        return events.stream()
+                .filter(ev -> {
+                    LocalDateTime start = ev.getStartAt();
+                    LocalDateTime end =
+                            ev.getEndAt() != null
+                                    ? ev.getEndAt()
+                                    : (start != null ? start.plusHours(2) : null);
 
-            if (start != null && end == null) {
-                end = start.plusHours(2);
-            }
-
-            return switch (status.toLowerCase()) {
-                case "upcoming" -> start != null && now.isBefore(start);
-                case "ongoing", "live" ->
-                        start != null && end != null &&
-                                now.isAfter(start) && now.isBefore(end);
-                case "past", "ended" -> end != null && now.isAfter(end);
-                default -> true;
-            };
-        }).toList();
+                    return switch (status.toUpperCase()) {
+                        case "UPCOMING" ->
+                                start != null && now.isBefore(start);
+                        case "LIVE" ->
+                                start != null && end != null &&
+                                        !now.isBefore(start) &&
+                                        now.isBefore(end);
+                        case "ENDED" ->
+                                end != null && now.isAfter(end);
+                        default -> true;
+                    };
+                })
+                .map(EventUpdateDto::new)
+                .toList();
     }
 
-    public List<Event> findByClub(Long clubId, String status) {
-        List<Event> events = eventRepo.findByClub_Id(clubId);
-        return filterByStatus(events, status);
+    /* =========================
+       RATINGS
+    ========================= */
+
+    public void saveOrUpdateRating(Event event, User user, int value) {
+        EventRating rating = ratingRepo
+                .findByEventAndUser(event, user)
+                .orElseGet(() -> {
+                    EventRating r = new EventRating();
+                    r.setEvent(event);
+                    r.setUser(user);
+                    return r;
+                });
+
+        rating.setRating(value);
+        ratingRepo.save(rating);
+
+        recalculateEventRating(event);
     }
 
+    public void deleteRating(Event event, User user) {
+        if (ratingRepo.findByEventAndUser(event, user).isPresent()) {
+            ratingRepo.deleteByEventAndUser(event, user);
+            recalculateEventRating(event);
+        }
+    }
 
+    /* =========================
+       RATING AGGREGATION
+    ========================= */
+
+    private void recalculateEventRating(Event event) {
+        List<EventRating> ratings = ratingRepo.findAllByEvent(event);
+
+        int count = ratings.size();
+        double avg = ratings.isEmpty()
+                ? 0.0
+                : ratings.stream()
+                .mapToInt(EventRating::getRating)
+                .average()
+                .orElse(0.0);
+
+        event.setRatingCount(count);
+        event.setAverageRating(avg);
+
+        eventRepo.save(event);
+    }
+
+    /* =========================
+       BATCH "MY RATINGS"
+    ========================= */
+
+    @Transactional(Transactional.TxType.SUPPORTS)
+    public Map<Long, Integer> getMyRatings(
+            User user,
+            List<Long> eventIds
+    ) {
+        if (user == null || eventIds == null || eventIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return ratingRepo
+                .findByUserAndEvent_IdIn(user, eventIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        r -> r.getEvent().getId(),
+                        EventRating::getRating
+                ));
+    }
 }

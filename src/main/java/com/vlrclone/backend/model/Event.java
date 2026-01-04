@@ -7,8 +7,6 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-import static jakarta.persistence.CascadeType.ALL;
-
 @Entity
 @Table(name = "event")
 public class Event {
@@ -38,17 +36,22 @@ public class Event {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "club_id")
-    @JsonIgnore
+
     private Club club;
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "event", cascade = ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<EventAttendance> attendance = new HashSet<>();
 
 
-    @OneToMany(mappedBy = "event", cascade = ALL, orphanRemoval = true)
-    private Set<EventRating> ratings;
-
+    // Ratings (child → auto deleted)
+    @OneToMany(
+            mappedBy = "event",
+            fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private Set<EventRating> ratings = new HashSet<>();
 
     // Tags (shared → DO NOT cascade REMOVE)
     @ManyToMany(fetch = FetchType.LAZY)
@@ -58,6 +61,13 @@ public class Event {
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     private Set<Tag> tags = new HashSet<>();
+
+    @Column(nullable = false)
+    private double averageRating = 0.0;
+
+    @Column(nullable = false)
+    private int ratingCount = 0;
+
 
     /* =====================
        STATUS
@@ -187,4 +197,21 @@ public class Event {
     public int hashCode() {
         return getClass().hashCode();
     }
+
+    public double getAverageRating() {
+        return averageRating;
+    }
+
+    public void setAverageRating(double averageRating) {
+        this.averageRating = averageRating;
+    }
+
+    public int getRatingCount() {
+        return ratingCount;
+    }
+
+    public void setRatingCount(int ratingCount) {
+        this.ratingCount = ratingCount;
+    }
+
 }

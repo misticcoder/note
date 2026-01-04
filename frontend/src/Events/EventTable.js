@@ -116,21 +116,22 @@ export default function EventTable({
 
                         {showClub && (
                             <div>
-                                {ev.club ? (
+                                {ev.clubId ? (
                                     <span
                                         className="event-club-badge"
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            window.location.hash = `#/clubs/${ev.club.id}`;
+                                            window.location.hash = `#/clubs/${ev.clubId}`;
                                         }}
                                     >
-                                        {ev.club.name}
+                                        {ev.clubName}
                                     </span>
                                 ) : (
                                     <span className="muted">Independent</span>
                                 )}
                             </div>
                         )}
+
 
                         <div
                             className={`event-status ${status.toLowerCase()}`}
