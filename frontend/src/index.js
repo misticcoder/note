@@ -17,6 +17,7 @@ import PostDetailPage from "./Post/PostDetail";
 import TagPage from "./TagPage";
 import SearchResultsPage from "./SearchResultPage";
 import FrontPage from "./FrontPage";
+import ProfilePage from "./Profile/ProfilePage";
 
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
     if (route === "#/home") Page = Home;
     else if (route.startsWith("#/post/")) Page = () => <PostDetailPage />;
 
+    else if (route === "#/profile") Page = ProfilePage;
     else if (route === "#/admin/users") Page = AdminUsers;
     else if (route === "#/threads") Page = ThreadList;
     else if (route === "#/admin/threads") Page = ThreadList;

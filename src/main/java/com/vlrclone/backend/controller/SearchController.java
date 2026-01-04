@@ -19,11 +19,17 @@ public class SearchController {
 
     @GetMapping
     public SearchResponseDto search(
-            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "") String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "999") int size
     ) {
+        q = q.trim();
 
-        return searchService.search(q.trim(), page, size);
+        if (q.isEmpty()) {
+            return SearchResponseDto.empty(); // or however you represent empty results
+        }
+
+        return searchService.search(q, page, size);
     }
+
 }

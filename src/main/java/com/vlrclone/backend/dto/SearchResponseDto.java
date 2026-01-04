@@ -26,5 +26,15 @@ public class SearchResponseDto {
         this.tags = tags;
 
     }
+    public static SearchResponseDto empty() {
+        return new SearchResponseDto(
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of()
+        );
+    }
+
 }
 

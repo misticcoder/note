@@ -1,6 +1,7 @@
 package com.vlrclone.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.vlrclone.backend.Enums.Status;
 import jakarta.persistence.*;
 
 @Entity
@@ -23,8 +24,12 @@ public class EventAttendance {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status; // GOING | MAYBE | NOT_GOING
+    private Status status;
+
+
+
 
     public Long getId() {
         return id;
@@ -50,11 +55,10 @@ public class EventAttendance {
         this.user = user;
     }
 
-    public String getStatus() {
+    public Status getStatus() {
         return status;
     }
-
-    public void setStatus(String status) {
+    public void setStatus(Status status) {
         this.status = status;
     }
 }

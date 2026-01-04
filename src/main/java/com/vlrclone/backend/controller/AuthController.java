@@ -1,6 +1,7 @@
 package com.vlrclone.backend.controller;
 
 
+import com.vlrclone.backend.dto.UserSummaryDto;
 import com.vlrclone.backend.model.User;
 import com.vlrclone.backend.model.User.Role;
 import com.vlrclone.backend.repository.UserRepository;
@@ -21,8 +22,18 @@ public class AuthController {
     }
 
     @GetMapping("/users")
-    public List<User> getAllUsers() {
-        return users.findAll();
+    public List<UserSummaryDto> getAllUsers() {
+
+        return users.findAll()
+                .stream()
+                .map(u -> new UserSummaryDto(
+                        u.getId(),
+                        u.getUsername(),
+                        u.getEmail(),
+                        u.getRole().name()
+                ))
+                .toList();
+
     }
 
     @PostMapping("/signup")

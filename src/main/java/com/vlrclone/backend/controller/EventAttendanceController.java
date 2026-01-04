@@ -1,5 +1,6 @@
 package com.vlrclone.backend.controller;
 
+import com.vlrclone.backend.Enums.Status;
 import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.model.EventAttendance;
 import com.vlrclone.backend.model.User;
@@ -36,7 +37,7 @@ public class EventAttendanceController {
     public EventAttendance rsvp(
             @PathVariable Long eventId,
             @RequestParam String requesterEmail,
-            @RequestParam String status
+            @RequestParam Status status
     ) {
         User user = userRepo.findByEmail(requesterEmail)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
@@ -60,8 +61,8 @@ public class EventAttendanceController {
     @GetMapping("/{eventId}/attendance")
     public Map<String, Object> attendance(@PathVariable Long eventId) {
         Map<String, Object> res = new HashMap<>();
-        res.put("going", attendanceRepo.countByEventIdAndStatus(eventId, "GOING"));
-        res.put("maybe", attendanceRepo.countByEventIdAndStatus(eventId, "MAYBE"));
+        res.put("going", attendanceRepo.countByEventIdAndStatus(eventId, Status.GOING));
+        res.put("maybe", attendanceRepo.countByEventIdAndStatus(eventId, Status.MAYBE));
         return res;
     }
 
@@ -89,16 +90,16 @@ public class EventAttendanceController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
 
         return attendanceRepo.findByEventIdAndUserId(eventId, user.getId())
-                .map(a -> Map.of("status", a.getStatus()))
+                .map(a -> Map.of("status", a.getStatus().name()))
                 .orElse(Map.of());
     }
 
     @GetMapping("/{eventId}/attendees")
     public List<Map<String, Object>> attendees(
             @PathVariable Long eventId,
-            @RequestParam String status
+            @RequestParam Status status
     ) {
-        if (!List.of("GOING", "MAYBE").contains(status)) {
+        if (!List.of(Status.GOING, Status.MAYBE).contains(status)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status");
         }
 

@@ -122,12 +122,31 @@ const Header = () => {
                     )}
                 </nav>
 
-                {/* User Buttons */}
                 {user ? (
-                    <button style={styles.logoutBtn} onClick={logout}>Logout</button>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <a
+                            href="#/profile"
+                            style={{
+                                color: "#FFFFE3",
+                                textDecoration: "none",
+                                fontWeight: 500,
+                                padding: "6px 10px",
+                                borderRadius: 4,
+                                background: "rgba(255,255,255,0.15)"
+                            }}
+                            title="My Profile"
+                        >
+                            {user.username}
+                        </a>
+
+                        <button style={styles.logoutBtn} onClick={logout}>
+                            Logout
+                        </button>
+                    </div>
                 ) : (
                     showLogin && <button style={styles.loginBtn} onClick={openModal}>Login</button>
                 )}
+
 
                 {/* Modal */}
                 {showModal && (

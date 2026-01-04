@@ -26,6 +26,19 @@ public class User {
     @Column(nullable = false)
     private boolean protectedAccount = false;
 
+    @Column(length = 60)
+    private String displayName;
+
+    @Column(length = 200)
+    private String bio;
+
+    @Column
+    private String avatarUrl;
+
+    @Column(nullable = false)
+    private int participationScore = 0;
+
+
     public enum Role {
         ADMIN,
         STUDENT,
@@ -35,13 +48,6 @@ public class User {
     // Constructors
     public User() {}
 
-    public User(String username, String email, String password, Role role, boolean protectedAccount) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.role = role;
-        this.protectedAccount = protectedAccount;
-    }
 
     // Getters and Setters
     public Long getId() { return id; }
@@ -60,5 +66,37 @@ public class User {
 
     public boolean isProtectedAccount() { return protectedAccount; }
     public void setProtectedAccount(boolean protectedAccount) { this.protectedAccount = protectedAccount; }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+    public int getParticipationScore() {
+        return participationScore;
+    }
+
+    public void setParticipationScore(int participationScore) {
+        this.participationScore = participationScore;
+    }
 
 }

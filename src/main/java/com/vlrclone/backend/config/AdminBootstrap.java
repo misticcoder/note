@@ -16,13 +16,19 @@ public class AdminBootstrap {
         return args -> {
             final String email = "admin@example.com";
             if (users.findByEmail(email).isEmpty()) {
-                User admin = new User(
-                        "Admin",
-                        email,
-                        "admin123",      // plain for prototype only
-                        Role.ADMIN,
-                        true              // PROTECTED
-                );
+                User admin = new User();
+                admin.setUsername("admin");
+                admin.setEmail(email);
+                admin.setPassword("admin123"); // plain text for prototype only
+                admin.setRole(User.Role.ADMIN);
+                admin.setProtectedAccount(true);
+
+// Optional profile defaults
+                admin.setDisplayName("Admin");
+                admin.setParticipationScore(0);
+
+                users.save(admin);
+
                 users.save(admin);
                 System.out.println("Seeded protected admin: " + email);
             }
