@@ -5,7 +5,10 @@ import com.vlrclone.backend.dto.EventUpdateDto;
 import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.model.EventRating;
 import com.vlrclone.backend.model.User;
-import com.vlrclone.backend.repository.*;
+import com.vlrclone.backend.repository.ClubRepository;
+import com.vlrclone.backend.repository.EventRatingRepository;
+import com.vlrclone.backend.repository.EventRepository;
+import com.vlrclone.backend.repository.UserRepository;
 import com.vlrclone.backend.service.EventService;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
@@ -89,14 +92,21 @@ public class EventController {
     ===================== */
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> get(@PathVariable Long id) {
+    public ResponseEntity<?> get(
+            @PathVariable Long id,
+            @RequestParam(required = false) String requesterEmail
+    ) {
+        User user = byEmail(requesterEmail);
+
         return events.findWithClubAndTagsById(id)
-                .<ResponseEntity<?>>map(e ->
-                        ResponseEntity.ok(new EventUpdateDto(e))
-                )
+                .map(e -> {
+                    EventUpdateDto dto = new EventUpdateDto(e);
+                    dto.myRating = service.getMyRating(e, user);
+                    return ResponseEntity.ok(dto);
+                })
                 .orElseGet(() ->
                         ResponseEntity.status(404)
-                                .body(Map.of("message", "Event not found"))
+                                .body((EventUpdateDto) Map.of("message", "Event not found"))
                 );
     }
 
@@ -128,8 +138,10 @@ public class EventController {
         ev.setEndAt(dto.endAt);
 
         if (dto.clubId != null) {
-            ev.setClub(clubs.findById(dto.clubId)
-                    .orElseThrow(() -> new IllegalArgumentException("Club not found")));
+            ev.setClub(
+                    clubs.findById(dto.clubId)
+                            .orElseThrow(() -> new IllegalArgumentException("Club not found"))
+            );
         }
 
         if (dto.tags != null) {
@@ -176,8 +188,10 @@ public class EventController {
         if (dto.endAt != null) ev.setEndAt(dto.endAt);
 
         if (dto.clubId != null) {
-            ev.setClub(clubs.findById(dto.clubId)
-                    .orElseThrow(() -> new IllegalArgumentException("Club not found")));
+            ev.setClub(
+                    clubs.findById(dto.clubId)
+                            .orElseThrow(() -> new IllegalArgumentException("Club not found"))
+            );
         }
 
         if (dto.tags != null) {
@@ -225,7 +239,7 @@ public class EventController {
     }
 
     /* =====================
-       RATINGS (FAST)
+       RATINGS
     ===================== */
 
     @GetMapping("/{id}/rating")
@@ -249,11 +263,10 @@ public class EventController {
         Map<String, Object> response = new HashMap<>();
         response.put("average", event.getAverageRating());
         response.put("count", event.getRatingCount());
-        response.put("myRating", myRating); // null is allowed here
+        response.put("myRating", myRating);
 
         return ResponseEntity.ok(response);
     }
-
 
     @PostMapping("/{id}/rating")
     public ResponseEntity<?> rate(
@@ -282,7 +295,6 @@ public class EventController {
         }
 
         service.saveOrUpdateRating(event, user, rating);
-
         return getRating(id, requesterEmail);
     }
 
@@ -301,7 +313,6 @@ public class EventController {
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
         service.deleteRating(event, user);
-
         return getRating(id, requesterEmail);
     }
 

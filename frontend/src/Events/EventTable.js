@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import "../styles/events.css";
 import Dropdown from "../components/Dropdown";
 
@@ -11,7 +10,6 @@ export default function EventTable({
                                        onEdit,
                                        onDelete
                                    }) {
-    const [ratings, setRatings] = useState({});
 
     /* =====================
        EVENT STATUS
@@ -30,35 +28,6 @@ export default function EventTable({
         return "UPCOMING";
     };
 
-    /* =====================
-       LOAD RATINGS
-    ===================== */
-    useEffect(() => {
-        if (!events.length) return;
-
-        let cancelled = false;
-
-        (async () => {
-            const entries = await Promise.all(
-                events.map(async (e) => {
-                    try {
-                        const res = await fetch(`/api/events/${e.id}/rating`);
-                        if (!res.ok) return [e.id, null];
-                        return [e.id, await res.json()];
-                    } catch {
-                        return [e.id, null];
-                    }
-                })
-            );
-
-            if (!cancelled) {
-                setRatings(Object.fromEntries(entries.filter(([, v]) => v)));
-            }
-        })();
-
-        return () => (cancelled = true);
-    }, [events]);
-
     if (loading) return <p className="muted">Loading…</p>;
     if (error) return <p className="error">{error}</p>;
 
@@ -75,7 +44,7 @@ export default function EventTable({
             <div className="events-header">
                 <div>#</div>
                 <div>Event</div>
-                {showClub && <div className={"club-col"}>Club</div>}
+                {showClub && <div className="club-col">Club</div>}
                 <div>Status</div>
                 <div>Avg. Rating</div>
                 {isAdmin && <div className="actions-col">Actions</div>}
@@ -96,6 +65,7 @@ export default function EventTable({
 
                         <div className="event-main">
                             <div className="event-title">{ev.title}</div>
+
                             <div className="event-meta">
                                 {ev.startAt
                                     ? new Date(ev.startAt).toLocaleString()
@@ -103,15 +73,14 @@ export default function EventTable({
                                 {ev.location && ` · ${ev.location}`}
                             </div>
 
-                            {ev.tags?.map((t) => {
-                                const label =
-                                    typeof t === "string" ? t : t.name;
-                                return (
-                                    <span key={label} className="event-tag">
-                                        {label}
-                                    </span>
-                                );
-                            })}
+                            {ev.tags?.map((t) => (
+                                <span
+                                    key={typeof t === "string" ? t : t.name}
+                                    className="event-tag"
+                                >
+                                    {typeof t === "string" ? t : t.name}
+                                </span>
+                            ))}
                         </div>
 
                         {showClub && (
@@ -132,20 +101,17 @@ export default function EventTable({
                             </div>
                         )}
 
-
-                        <div
-                            className={`event-status ${status.toLowerCase()}`}
-                        >
+                        <div className={`event-status ${status.toLowerCase()}`}>
                             {status}
                         </div>
 
                         <div className="event-rating-inline">
-                            {ratings[ev.id]?.count > 0 ? (
+                            {ev.ratingCount > 0 ? (
                                 <>
                                     <span className="star">★</span>
-                                    {ratings[ev.id].average.toFixed(1)}
+                                    {ev.averageRating.toFixed(1)}
                                     <span className="rating-count">
-                                        ({ratings[ev.id].count})
+                                        ({ev.ratingCount})
                                     </span>
                                 </>
                             ) : (
@@ -161,7 +127,6 @@ export default function EventTable({
                                 />
                             </div>
                         )}
-
                     </div>
                 );
             })}

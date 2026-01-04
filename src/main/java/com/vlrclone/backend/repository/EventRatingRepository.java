@@ -22,5 +22,5 @@ public interface EventRatingRepository extends JpaRepository<EventRating, Long> 
 
     List<EventRating> findByUserAndEvent_IdIn(User user, Collection<Long> eventIds);
 
-    
+    List<EventRating> findByUser(User user);
 }

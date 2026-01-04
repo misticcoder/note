@@ -39,6 +39,7 @@ public class EventService {
 
     /* =========================
        SEARCH / LIST EVENTS
+       (used by GET /api/events)
     ========================= */
 
     @Transactional(Transactional.TxType.SUPPORTS)
@@ -57,11 +58,9 @@ public class EventService {
             );
         }
 
-        // IMPORTANT:
-        // findAll(spec, sort) must be the @EntityGraph version in repository
         return eventRepo.findAll(
                         spec,
-                        Sort.by(Sort.Direction.DESC, "startAt")
+                        Sort.by(Sort.Direction.ASC, "startAt")
                 )
                 .stream()
                 .map(EventUpdateDto::new)
@@ -70,6 +69,7 @@ public class EventService {
 
     /* =========================
        TAG RESOLUTION
+       (used by CREATE / UPDATE)
     ========================= */
 
     public Set<Tag> resolveTags(Collection<String> names) {
@@ -93,6 +93,7 @@ public class EventService {
 
     /* =========================
        FILTER BY TAG
+       (GET /api/events/tag/{tag})
     ========================= */
 
     @Transactional(Transactional.TxType.SUPPORTS)
@@ -101,25 +102,25 @@ public class EventService {
                 .orElseThrow(() -> new RuntimeException("Tag not found"));
 
         List<Event> events = eventRepo.findByTagsContaining(tag);
-
-        return filterAndMap(events, status);
+        return filterByStatus(events, status);
     }
 
     /* =========================
        FILTER BY CLUB
+       (GET /api/events/club/{id})
     ========================= */
 
     @Transactional(Transactional.TxType.SUPPORTS)
     public List<EventUpdateDto> findByClub(Long clubId, String status) {
         List<Event> events = eventRepo.findByClubId(clubId);
-        return filterAndMap(events, status);
+        return filterByStatus(events, status);
     }
 
     /* =========================
        STATUS FILTER (IN-MEMORY)
     ========================= */
 
-    private List<EventUpdateDto> filterAndMap(
+    private List<EventUpdateDto> filterByStatus(
             List<Event> events,
             String status
     ) {
@@ -132,10 +133,9 @@ public class EventService {
         return events.stream()
                 .filter(ev -> {
                     LocalDateTime start = ev.getStartAt();
-                    LocalDateTime end =
-                            ev.getEndAt() != null
-                                    ? ev.getEndAt()
-                                    : (start != null ? start.plusHours(2) : null);
+                    LocalDateTime end = ev.getEndAt() != null
+                            ? ev.getEndAt()
+                            : (start != null ? start.plusHours(2) : null);
 
                     return switch (status.toUpperCase()) {
                         case "UPCOMING" ->
@@ -154,7 +154,7 @@ public class EventService {
     }
 
     /* =========================
-       RATINGS
+       RATINGS (WRITE)
     ========================= */
 
     public void saveOrUpdateRating(Event event, User user, int value) {
@@ -182,6 +182,7 @@ public class EventService {
 
     /* =========================
        RATING AGGREGATION
+       (average + count)
     ========================= */
 
     private void recalculateEventRating(Event event) {
@@ -202,24 +203,17 @@ public class EventService {
     }
 
     /* =========================
-       BATCH "MY RATINGS"
+       SINGLE "MY RATING"
+       (used by controller GET /{id})
     ========================= */
 
     @Transactional(Transactional.TxType.SUPPORTS)
-    public Map<Long, Integer> getMyRatings(
-            User user,
-            List<Long> eventIds
-    ) {
-        if (user == null || eventIds == null || eventIds.isEmpty()) {
-            return Map.of();
-        }
+    public Integer getMyRating(Event event, User user) {
+        if (user == null) return null;
 
         return ratingRepo
-                .findByUserAndEvent_IdIn(user, eventIds)
-                .stream()
-                .collect(Collectors.toMap(
-                        r -> r.getEvent().getId(),
-                        EventRating::getRating
-                ));
+                .findByEventAndUser(event, user)
+                .map(EventRating::getRating)
+                .orElse(null);
     }
 }

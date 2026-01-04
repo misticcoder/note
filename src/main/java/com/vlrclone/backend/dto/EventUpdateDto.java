@@ -22,6 +22,8 @@ public class EventUpdateDto {
     public double averageRating;
     public int ratingCount;
 
+    public Integer myRating;
+
     public Long clubId;
     public String clubName;
 
