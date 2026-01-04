@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "../styles/events.css";
+import Dropdown from "../components/Dropdown";
 
 export default function EventTable({
                                        events = [],
@@ -152,21 +153,14 @@ export default function EventTable({
                         </div>
 
                         {isAdmin && (
-                            <div
-                                className="actions-col"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                <button onClick={() => onEdit?.(ev)}>
-                                    ✎ Edit
-                                </button>
-                                <button
-                                    className="danger"
-                                    onClick={() => onDelete?.(ev)}
-                                >
-                                    🗑 Delete
-                                </button>
+                            <div className="actions">
+                                <Dropdown
+                                    onEdit={() => onEdit(ev)}
+                                    onDelete={() => onDelete(ev)}
+                                />
                             </div>
                         )}
+
                     </div>
                 );
             })}

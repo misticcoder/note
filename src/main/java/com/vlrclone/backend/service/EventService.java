@@ -34,14 +34,18 @@ public class EventService {
 
         Specification<Event> spec = Specification
                 .where(EventSpecifications.searchText(q))
-                .and(EventSpecifications.hasTags(tags))
-                .and(EventSpecifications.hasStatus(
-                        status == null ? "upcoming" : status,
-                        LocalDateTime.now()
-                ));
+                .and(EventSpecifications.hasTags(tags));
+
+        // 🔥 IMPORTANT FIX
+        if (status != null && !"ALL".equalsIgnoreCase(status)) {
+            spec = spec.and(
+                    EventSpecifications.hasStatus(status, LocalDateTime.now())
+            );
+        }
 
         return eventRepo.findAll(spec);
     }
+
 
 
     /* =========================

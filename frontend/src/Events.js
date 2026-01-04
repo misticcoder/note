@@ -312,27 +312,28 @@ export default function Events() {
     const deleteEvent = async (ev) => {
         if (!window.confirm("Delete this event?")) return;
 
+        console.log("Deleting event:", ev.id, "as", user?.email, user?.role);
+
         const res = await fetch(
-            `/api/events/${ev.id}?requesterEmail=${encodeURIComponent(
-                user.email
-            )}`,
+            `/api/events/${ev.id}?requesterEmail=${encodeURIComponent(user.email)}`,
             { method: "DELETE" }
         );
 
         if (!res.ok) {
-            alert("Delete failed");
+            const body = await res.json().catch(() => ({}));
+            alert(body.message || `Delete failed (${res.status})`);
             return;
         }
 
         setEvents((prev) => prev.filter((e) => e.id !== ev.id));
 
-        // remove stale rating entry for deleted event
         setRatings((prev) => {
             const next = { ...prev };
             delete next[ev.id];
             return next;
         });
     };
+
 
     // FORM HANDLER
     const handleChange = e => {
@@ -580,6 +581,7 @@ export default function Events() {
             {editingEvent && (
                 <EditEventModal
                     event={editingEvent}
+                    clubs={clubs}
                     onSave={saveEvent}
                     onClose={() => setEditingEvent(null)}
                 />

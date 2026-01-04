@@ -16,6 +16,7 @@ import NewsList from "./NewsList";
 import PostDetailPage from "./Post/PostDetail";
 import TagPage from "./TagPage";
 import SearchResultsPage from "./SearchResultPage";
+import FrontPage from "./FrontPage";
 
 
 function App() {
@@ -32,9 +33,11 @@ function App() {
         return () => window.removeEventListener("hashchange", onHashChange);
     }, []);
 
-    let Page = Home;
+    let Page = FrontPage;
 
-    if (route.startsWith("#/post/")) Page = () => <PostDetailPage />;
+
+    if (route === "#/home") Page = Home;
+    else if (route.startsWith("#/post/")) Page = () => <PostDetailPage />;
 
     else if (route === "#/admin/users") Page = AdminUsers;
     else if (route === "#/threads") Page = ThreadList;
@@ -58,7 +61,7 @@ function App() {
 
     return (
         <>
-            <Header />
+            {route !== "#/" && <Header />}
             <Page />
         </>
     );

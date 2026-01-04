@@ -1,5 +1,6 @@
 package com.vlrclone.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -13,8 +14,9 @@ public class EventAttendance {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id")
+    @JsonIgnore
     private Event event;
 
     @ManyToOne(optional = false)

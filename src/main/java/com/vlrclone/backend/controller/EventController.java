@@ -6,10 +6,10 @@ import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.model.EventRating;
 import com.vlrclone.backend.model.User;
 import com.vlrclone.backend.repository.*;
+import com.vlrclone.backend.service.EventService;
+import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.vlrclone.backend.service.EventService;
-
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -24,18 +24,25 @@ public class EventController {
     private final UserRepository users;
     private final EventRatingRepository eventRatings;
     private final EventService eventService;
-    private final TagRepository tags;
     private final ClubRepository clubs;
 
-
-    public EventController(EventRepository events, UserRepository users, EventRatingRepository eventRatings, EventService eventService, TagRepository tags, ClubRepository clubs) {
+    public EventController(
+            EventRepository events,
+            UserRepository users,
+            EventRatingRepository eventRatings,
+            EventService eventService,
+            ClubRepository clubs
+    ) {
         this.events = events;
         this.users = users;
         this.eventRatings = eventRatings;
         this.eventService = eventService;
-        this.tags = tags;
         this.clubs = clubs;
     }
+
+    /* =====================
+       HELPERS
+    ===================== */
 
     private boolean isAdmin(User u) {
         return u != null && u.getRole() == User.Role.ADMIN;
@@ -44,6 +51,10 @@ public class EventController {
     private User byEmail(String email) {
         return email == null ? null : users.findByEmail(email).orElse(null);
     }
+
+    /* =====================
+       LIST / GET
+    ===================== */
 
     @GetMapping
     public ResponseEntity<?> list(
@@ -56,22 +67,17 @@ public class EventController {
             tagList = List.of(tags.split(","));
         }
 
-        // 🔧 NORMALIZE STATUS FROM FRONTEND
-        String normalizedStatus;
-        switch (status.toLowerCase()) {
-            case "ongoing" -> normalizedStatus = "LIVE";
-            case "past" -> normalizedStatus = "ENDED";
-            case "all" -> normalizedStatus = "ALL";
-            default -> normalizedStatus = "UPCOMING";
-        }
+        String normalizedStatus = switch (status.toLowerCase()) {
+            case "ongoing" -> "LIVE";
+            case "past" -> "ENDED";
+            case "all" -> "ALL";
+            default -> "UPCOMING";
+        };
 
         return ResponseEntity.ok(
                 eventService.searchEvents(q, tagList, normalizedStatus)
         );
     }
-
-
-
 
     @GetMapping("/{id}")
     public ResponseEntity<?> get(@PathVariable Long id) {
@@ -81,13 +87,16 @@ public class EventController {
                         .body(Map.of("message", "Event not found")));
     }
 
-    // ---------------- CREATE ----------------
+    /* =====================
+       CREATE
+    ===================== */
+
     @PostMapping
     public ResponseEntity<?> create(
             @RequestParam String requesterEmail,
             @RequestBody EventUpdateDto dto
     ) {
-        var me = byEmail(requesterEmail);
+        User me = byEmail(requesterEmail);
         if (!isAdmin(me)) {
             return ResponseEntity.status(403)
                     .body(Map.of("message", "Admin only"));
@@ -101,24 +110,21 @@ public class EventController {
         Event ev = new Event();
         ev.setTitle(dto.title.trim());
         ev.setContent(dto.content != null ? dto.content.trim() : null);
-        ev.setLocation(dto.location != null && !dto.location.isBlank()
-                ? dto.location.trim()
-                : null);
+        ev.setLocation(
+                dto.location != null && !dto.location.isBlank()
+                        ? dto.location.trim()
+                        : null
+        );
         ev.setStartAt(dto.startAt);
         ev.setEndAt(dto.endAt);
 
-        // Set club
         if (dto.clubId != null) {
-            var club = clubs.findById(dto.clubId)
-                    .orElseThrow(() ->
-                            new IllegalArgumentException("Club not found"));
-            ev.setClub(club);
-        } else {
-            // independent event
-            ev.setClub(null);
+            ev.setClub(
+                    clubs.findById(dto.clubId)
+                            .orElseThrow(() -> new IllegalArgumentException("Club not found"))
+            );
         }
 
-        // Tag
         if (dto.tags != null && !dto.tags.isEmpty()) {
             ev.setTags(eventService.resolveTags(dto.tags));
         }
@@ -126,27 +132,29 @@ public class EventController {
         return ResponseEntity.ok(events.save(ev));
     }
 
+    /* =====================
+       UPDATE
+    ===================== */
 
-    // ---------------- UPDATE ----------------
     @PatchMapping("/{id}")
     public ResponseEntity<?> update(
             @PathVariable Long id,
             @RequestParam String requesterEmail,
             @RequestBody EventUpdateDto dto
     ) {
-        var me = byEmail(requesterEmail);
+        User me = byEmail(requesterEmail);
         if (!isAdmin(me)) {
             return ResponseEntity.status(403)
                     .body(Map.of("message", "Admin only"));
         }
 
-        var opt = events.findById(id);
-        if (opt.isEmpty()) {
+        Event ev = events.findById(id)
+                .orElse(null);
+
+        if (ev == null) {
             return ResponseEntity.status(404)
                     .body(Map.of("message", "Event not found"));
         }
-
-        var ev = opt.get();
 
         if (ev.getStatus() == Event.EventStatus.ENDED) {
             return ResponseEntity.status(409)
@@ -167,45 +175,62 @@ public class EventController {
             );
         }
 
-
         if (dto.startAt != null) ev.setStartAt(dto.startAt);
         if (dto.endAt != null) ev.setEndAt(dto.endAt);
 
         if (dto.tags != null) {
             if (dto.tags.isEmpty()) {
-                ev.getTags().clear();   // <-- THIS enables clearing all tags
+                ev.getTags().clear();
             } else {
                 ev.setTags(eventService.resolveTags(dto.tags));
             }
         }
 
-
-
         return ResponseEntity.ok(events.save(ev));
     }
 
+    /* =====================
+       DELETE (FINAL, SAFE)
+    ===================== */
 
-    // ---------------- DELETE ----------------
     @DeleteMapping("/{id}")
+    @Transactional
     public ResponseEntity<?> delete(
             @PathVariable Long id,
             @RequestParam String requesterEmail
     ) {
-        var me = byEmail(requesterEmail);
+        User me = byEmail(requesterEmail);
         if (!isAdmin(me)) {
             return ResponseEntity.status(403)
                     .body(Map.of("message", "Admin only"));
         }
 
-        var opt = events.findById(id);
-        if (opt.isEmpty()) {
-            return ResponseEntity.status(404)
-                    .body(Map.of("message", "Event not found"));
-        }
+        Event event = events.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Event not found"));
 
-        events.delete(opt.get());
-        return ResponseEntity.ok(Map.of("status", "deleted", "id", id));
+        /*
+         * Attendance + ratings are deleted automatically
+         * via cascade = ALL + orphanRemoval = true
+         */
+
+        // Clear shared ManyToMany
+        event.getTags().clear();
+
+        // Detach club FK
+        event.setClub(null);
+
+        // Delete event
+        events.delete(event);
+
+        return ResponseEntity.ok(
+                Map.of("status", "deleted", "id", id)
+        );
     }
+
+    /* =====================
+       RATINGS
+    ===================== */
 
     @GetMapping("/{id}/rating")
     public ResponseEntity<?> getRating(
@@ -236,10 +261,9 @@ public class EventController {
         Map<String, Object> response = new HashMap<>();
         response.put("average", average);
         response.put("count", count);
-        response.put("myRating", myRating); // null is allowed here
+        response.put("myRating", myRating);
 
         return ResponseEntity.ok(response);
-
     }
 
     @PostMapping("/{id}/rating")
@@ -250,17 +274,12 @@ public class EventController {
     ) {
         User user = byEmail(requesterEmail);
         if (user == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "User not found"));
+            return ResponseEntity.status(401)
+                    .body(Map.of("message", "User not found"));
         }
 
         Event event = events.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
-
-        if (event == null) {
-            return ResponseEntity.status(404)
-                    .body(Map.of("message", "Event not found"));
-        }
-
 
         if (event.getStatus() != Event.EventStatus.ENDED) {
             return ResponseEntity.status(409)
@@ -280,17 +299,20 @@ public class EventController {
         er.setEvent(event);
         er.setUser(user);
         er.setRating(rating);
+
         if (er.getId() == null) {
             er.setCreatedAt(LocalDateTime.now());
         }
         er.setUpdatedAt(LocalDateTime.now());
 
-
         eventRatings.save(er);
 
         return getRating(id, requesterEmail);
-
     }
+
+    /* =====================
+       FILTERS
+    ===================== */
 
     @GetMapping("/tag/{tagName}")
     public ResponseEntity<?> getByTag(
@@ -311,7 +333,4 @@ public class EventController {
                 eventService.findByClub(clubId, status)
         );
     }
-
-
-
 }

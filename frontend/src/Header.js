@@ -78,7 +78,7 @@ const Header = () => {
                 <SideNav open={navOpen} onClose={() => setNavOpen(false)}/>
 
                 {/* Logo */}
-                <a href="#/" style={styles.logo}
+                <a href="#/home" style={styles.logo}
                 title={"Home"}>InfCom</a>
 
                 {/* Search Bar */}
