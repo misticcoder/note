@@ -76,4 +76,7 @@ public interface EventRepository
 
     @EntityGraph(attributePaths = {"club", "tags"})
     Optional<Event> findWithClubAndTagsById(Long id);
+
+    List<Event> findByClubIdInAndStartAtAfter(List<Long> clubIds, LocalDateTime time);
+
 }

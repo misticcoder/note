@@ -178,23 +178,42 @@ public class ClubService {
                 .filter(Objects::nonNull)
                 .toList();
 
+        LocalDateTime now = LocalDateTime.now();
 
-        List<Event> allEventsForTheseClubs = eventRepo.findByClubIdIn(clubIds);
+        // All events
+        List<Event> allEvents = eventRepo.findByClubIdIn(clubIds);
 
-// Count events per clubId (via relationship)
-        Map<Long, Long> eventCounts = allEventsForTheseClubs.stream()
-                .filter(e -> e.getClub() != null)
-                .collect(Collectors.groupingBy(
-                        e -> e.getClub().getId(),
-                        Collectors.counting()
-                ));
+        // Upcoming events
+        List<Event> upcomingEvents =
+                eventRepo.findByClubIdInAndStartAtAfter(clubIds, now);
 
+        Map<Long, Long> eventCounts =
+                allEvents.stream()
+                        .filter(e -> e.getClub() != null)
+                        .collect(Collectors.groupingBy(
+                                e -> e.getClub().getId(),
+                                Collectors.counting()
+                        ));
 
-        // Build rows
+        Map<Long, Long> upcomingEventCounts =
+                upcomingEvents.stream()
+                        .filter(e -> e.getClub() != null)
+                        .collect(Collectors.groupingBy(
+                                e -> e.getClub().getId(),
+                                Collectors.counting()
+                        ));
+
         List<ClubWithCounts> rows = clubs.stream()
                 .map(c -> {
-                    long memberCount = (c.getMembers() == null) ? 0 : c.getMembers().size();
-                    long eventCount = eventCounts.getOrDefault(c.getId(), 0L);
+                    long memberCount =
+                            c.getMembers() == null ? 0 : c.getMembers().size();
+
+                    long eventCount =
+                            eventCounts.getOrDefault(c.getId(), 0L);
+
+                    long upcomingEventCount =
+                            upcomingEventCounts.getOrDefault(c.getId(), 0L);
+
                     return new ClubWithCounts(
                             c.getId(),
                             c.getName(),
@@ -203,16 +222,17 @@ public class ClubService {
                             c.getCreatedAt(),
                             c.getLogoUrl(),
                             memberCount,
-                            eventCount
+                            eventCount,
+                            upcomingEventCount
                     );
                 })
                 .toList();
 
-        // Sort rows (including derived fields)
         List<ClubWithCounts> out = new ArrayList<>(rows);
         out.sort(resolveCountsComparator(sort));
         return out;
     }
+
 
     private Comparator<ClubWithCounts> resolveCountsComparator(ClubSort sort) {
         if (sort == null) {
@@ -257,7 +277,8 @@ public class ClubService {
             LocalDateTime createdAt,
             String logoUrl,
             long memberCount,
-            long eventCount
+            long eventCount,
+            long upcomingEventCount
     ) {}
 
     public Map<Long, Long> getEventCountsByClubIds(List<Long> clubIds) {

@@ -389,34 +389,234 @@ export default function ClubDetail() {
         .map((m) => userLabel(m.userId));
 
     return (
-        <div className="page">
-            {/* Club header */}
-            <ClubHeader
-                club={{
-                    id: club.id,
-                    name: club.name,
-                    shortName: club.tag,
-                    website: club.website,
-                    twitter: club.twitter,
-                    country: club.country,
-                    logoUrl: club.logoUrl,
-                    description: club.description
-                }}
-                leaders={leaderNames}
-                membership={{
-                    isMember: effectiveIsMember,
-                    hasPending: myStatus.hasPending,
-                    isLeader
-                }}
-                activeTab={activeTab}
-                onJoin={requestJoinClub}
-                onLeave={leaveClub}
-                onCancelRequest={cancelJoinRequest}
-            />
+        <div className={"page"}>
+            <div className={"container"}>
+                {/* Club header */}
+                <ClubHeader
+                    club={{
+                        id: club.id,
+                        name: club.name,
+                        shortName: club.tag,
+                        website: club.website,
+                        twitter: club.twitter,
+                        country: club.country,
+                        logoUrl: club.logoUrl,
+                        description: club.description
+                    }}
+                    leaders={leaderNames}
+                    membership={{
+                        isMember: effectiveIsMember,
+                        hasPending: myStatus.hasPending,
+                        isLeader
+                    }}
+                    activeTab={activeTab}
+                    onJoin={requestJoinClub}
+                    onLeave={leaveClub}
+                    onCancelRequest={cancelJoinRequest}
+                />
 
-            {activeTab === "overview" && (
-                <div style={s.grid}>
-                    {/* News */}
+                {activeTab === "overview" && (
+                    <div style={s.grid}>
+                        {/* News */}
+                        <div>
+                            <div style={s.sectionHeader}>
+                                <h3 style={s.h3}>Club News</h3>
+                            </div>
+
+                            {canPostNews && (
+                                <form onSubmit={postNews} style={s.newsForm}>
+                                    <input
+                                        placeholder="Title"
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        required
+                                        style={s.input}
+                                    />
+                                    <textarea
+                                        placeholder="Content"
+                                        value={content}
+                                        onChange={(e) => setContent(e.target.value)}
+                                        required
+                                        style={s.textarea}
+                                    />
+                                    <div style={{textAlign: "right"}}>
+                                        <button type="submit" style={s.primaryBtn}>
+                                            Post
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
+
+                            {news.length === 0 && <div style={s.card}>No news yet.</div>}
+
+                            {news.map((n) => (
+                                <div key={n.id} style={s.card}>
+                                    <div style={s.cardHead}>
+                                        <strong style={{fontSize: 16}}>{n.title}</strong>
+                                        {canPostNews && (
+                                            <button onClick={() => deleteNews(n.id)} style={s.dangerBtn}>
+                                                Delete
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div style={{whiteSpace: "pre-wrap", lineHeight: 1.5}}>{n.content}</div>
+                                    <div
+                                        style={s.meta}>{n.createdAt ? new Date(n.createdAt).toLocaleString() : ""}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Members & Pending */}
+                        <div>
+                            <div style={s.sectionHeader}>
+                                <h3 style={s.h3}>Members</h3>
+                            </div>
+
+                            <div style={s.card}>
+                                <ul style={s.list}>
+                                    {sortedMembers.map((m) => {
+                                        const isThisLeader = m.role === "LEADER";
+                                        const isThisCoLeader = m.role === "CO_LEADER";
+                                        const isThisMember = !isThisLeader && !isThisCoLeader;
+                                        const isSelf = user && m.userId === user.id;
+                                        const menuOpen = openMember === m.userId;
+
+                                        const badge = isThisLeader ? (
+                                            <span style={s.badgeLeader}>LEADER</span>
+                                        ) : isThisCoLeader ? (
+                                            <span style={s.badgeCoLeader}>CO-LEADER</span>
+                                        ) : (
+                                            <span style={s.badge}>MEMBER</span>
+                                        );
+
+                                        // Permissions vs this target
+                                        const canKickThisUser =
+                                            isAdmin || (isLeader && !isThisLeader) || (isCoLeader && isThisMember);
+
+                                        const canPromoteToCoLeader = (isLeader || isAdmin) && isThisMember;
+
+                                        // Admin can demote CO_LEADER; Leader can demote CO_LEADER
+                                        const canDemoteToMember =
+                                            (isLeader && isThisCoLeader) || (isAdmin && !isSelf && isThisCoLeader);
+
+
+                                        return (
+                                            <li key={m.id} style={{...s.listItem, position: "relative"}}>
+                    <span
+                        onClick={() => setOpenMember(menuOpen ? null : m.userId)}
+                        style={{cursor: canSeeActionMenu ? "pointer" : "default"}}
+                    >
+                      {userLabel(m.userId)}
+                    </span>
+
+                                                <div style={{display: "flex", alignItems: "center", gap: 8}}>
+                                                    {badge}
+                                                    {canSeeActionMenu && !isSelf && (
+                                                        <button
+                                                            onClick={() => setOpenMember(menuOpen ? null : m.userId)}
+                                                            style={s.primaryBtnSm}
+                                                            title="Manage member"
+                                                        >
+                                                            ⋮
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                {canSeeActionMenu && !isSelf && menuOpen && (
+                                                    <div style={s.menu}>
+                                                        {/* Admin: set sole LEADER */}
+                                                        {isAdmin && !isThisLeader && (
+                                                            <button
+                                                                style={s.menuItem}
+                                                                onClick={() => makeLeader(m.userId)}
+                                                            >
+                                                                Make Leader (Admin)
+                                                            </button>
+                                                        )}
+                                                        {isAdmin && !isThisCoLeader && !isThisMember && (
+                                                            <button
+                                                                style={s.menuItem}
+                                                                onClick={() => makeCoLeader(m.userId)}
+                                                            >
+                                                                Demote to Co-leader
+                                                            </button>
+                                                        )}
+
+                                                        {/* Leader/Admin: promote MEMBER -> CO_LEADER */}
+                                                        {canPromoteToCoLeader && (
+                                                            <button
+                                                                style={s.menuItem}
+                                                                onClick={() => makeCoLeader(m.userId)}
+                                                            >
+                                                                Promote to Co-leader
+                                                            </button>
+                                                        )}
+
+                                                        {/* Leader or Admin: CO_LEADER -> MEMBER */}
+                                                        {canDemoteToMember && (
+                                                            <button
+                                                                style={s.menuItem}
+                                                                onClick={() => makeMember(m.userId)}
+                                                            >
+                                                                Demote to Member
+                                                            </button>
+                                                        )}
+
+                                                        {/* Kick */}
+                                                        {canKickThisUser && (
+                                                            <button
+                                                                style={{...s.menuItem, color: "#b00020"}}
+                                                                onClick={() => kickMember(m.userId)}
+                                                            >
+                                                                Kick
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </li>
+                                        );
+                                    })}
+                                    {sortedMembers.length === 0 && <li style={s.muted}>No members yet.</li>}
+                                </ul>
+                            </div>
+
+                            {canApproveRequests && (
+                                <>
+                                    <div style={s.sectionHeader}>
+                                        <h3 style={s.h3}>Pending Requests</h3>
+                                    </div>
+                                    <div style={s.card}>
+                                        {pending.length === 0 && <div style={s.muted}>No pending requests.</div>}
+                                        {pending.map((r) => (
+                                            <div key={r.id} style={s.pendingRow}>
+                                                <div>
+                                                    <div style={{fontWeight: 600}}>{userLabel(r.userId)}</div>
+                                                    <div style={s.meta}>Request ID: {r.id}</div>
+                                                </div>
+                                                <div style={s.actions}>
+                                                    <button
+                                                        onClick={() => decide(r.id, "approve")}
+                                                        style={s.primaryBtnSm}
+                                                    >
+                                                        Approve
+                                                    </button>
+                                                    <button
+                                                        onClick={() => decide(r.id, "reject")}
+                                                        style={s.dangerBtnSm}
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === "news" && (
                     <div>
                         <div style={s.sectionHeader}>
                             <h3 style={s.h3}>Club News</h3>
@@ -463,43 +663,54 @@ export default function ClubDetail() {
                             </div>
                         ))}
                     </div>
+                )}
 
-                    {/* Members & Pending */}
-                    <div>
-                        <div style={s.sectionHeader}>
-                            <h3 style={s.h3}>Members</h3>
-                        </div>
-
-                        <div style={s.card}>
-                            <ul style={s.list}>
-                                {sortedMembers.map((m) => {
-                                    const isThisLeader = m.role === "LEADER";
-                                    const isThisCoLeader = m.role === "CO_LEADER";
-                                    const isThisMember = !isThisLeader && !isThisCoLeader;
-                                    const isSelf = user && m.userId === user.id;
-                                    const menuOpen = openMember === m.userId;
-
-                                    const badge = isThisLeader ? (
-                                        <span style={s.badgeLeader}>LEADER</span>
-                                    ) : isThisCoLeader ? (
-                                        <span style={s.badgeCoLeader}>CO-LEADER</span>
-                                    ) : (
-                                        <span style={s.badge}>MEMBER</span>
-                                    );
-
-                                    // Permissions vs this target
-                                    const canKickThisUser =
-                                        isAdmin || (isLeader && !isThisLeader) || (isCoLeader && isThisMember);
-
-                                    const canPromoteToCoLeader = (isLeader || isAdmin) && isThisMember;
-
-                                    // Admin can demote CO_LEADER; Leader can demote CO_LEADER
-                                    const canDemoteToMember =
-                                        (isLeader && isThisCoLeader) || (isAdmin && !isSelf && isThisCoLeader);
+                {activeTab === "events" && (
+                    <EventTable
+                        events={events}
+                        showClub={false}
+                    />
+                )}
 
 
-                                    return (
-                                        <li key={m.id} style={{...s.listItem, position: "relative"}}>
+                {activeTab === "members" && (
+                    <div style={{margin: "15px"}}>
+                        {/* Members & Pending */}
+                        <div>
+                            <div style={s.sectionHeader}>
+                                <h3 style={s.h3}>Members</h3>
+                            </div>
+
+                            <div style={s.card}>
+                                <ul style={s.list}>
+                                    {sortedMembers.map((m) => {
+                                        const isThisLeader = m.role === "LEADER";
+                                        const isThisCoLeader = m.role === "CO_LEADER";
+                                        const isThisMember = !isThisLeader && !isThisCoLeader;
+                                        const isSelf = user && m.userId === user.id;
+                                        const menuOpen = openMember === m.userId;
+
+                                        const badge = isThisLeader ? (
+                                            <span style={s.badgeLeader}>LEADER</span>
+                                        ) : isThisCoLeader ? (
+                                            <span style={s.badgeCoLeader}>CO-LEADER</span>
+                                        ) : (
+                                            <span style={s.badge}>MEMBER</span>
+                                        );
+
+                                        // Permissions vs this target
+                                        const canKickThisUser =
+                                            isAdmin || (isLeader && !isThisLeader) || (isCoLeader && isThisMember);
+
+                                        const canPromoteToCoLeader = (isLeader || isAdmin) && isThisMember;
+
+                                        // Admin can demote CO_LEADER; Leader can demote CO_LEADER
+                                        const canDemoteToMember =
+                                            (isLeader && isThisCoLeader) || (isAdmin && !isSelf && isThisCoLeader);
+
+
+                                        return (
+                                            <li key={m.id} style={{...s.listItem, position: "relative"}}>
                     <span
                         onClick={() => setOpenMember(menuOpen ? null : m.userId)}
                         style={{cursor: canSeeActionMenu ? "pointer" : "default"}}
@@ -507,321 +718,113 @@ export default function ClubDetail() {
                       {userLabel(m.userId)}
                     </span>
 
-                                            <div style={{display: "flex", alignItems: "center", gap: 8}}>
-                                                {badge}
-                                                {canSeeActionMenu && !isSelf && (
-                                                    <button
-                                                        onClick={() => setOpenMember(menuOpen ? null : m.userId)}
-                                                        style={s.primaryBtnSm}
-                                                        title="Manage member"
-                                                    >
-                                                        ⋮
-                                                    </button>
-                                                )}
-                                            </div>
-
-                                            {canSeeActionMenu && !isSelf && menuOpen && (
-                                                <div style={s.menu}>
-                                                    {/* Admin: set sole LEADER */}
-                                                    {isAdmin && !isThisLeader && (
+                                                <div style={{display: "flex", alignItems: "center", gap: 8}}>
+                                                    {badge}
+                                                    {canSeeActionMenu && !isSelf && (
                                                         <button
-                                                            style={s.menuItem}
-                                                            onClick={() => makeLeader(m.userId)}
+                                                            onClick={() => setOpenMember(menuOpen ? null : m.userId)}
+                                                            style={s.primaryBtnSm}
+                                                            title="Manage member"
                                                         >
-                                                            Make Leader (Admin)
-                                                        </button>
-                                                    )}
-                                                    {isAdmin && !isThisCoLeader && !isThisMember && (
-                                                        <button
-                                                            style={s.menuItem}
-                                                            onClick={() => makeCoLeader(m.userId)}
-                                                        >
-                                                            Demote to Co-leader
-                                                        </button>
-                                                    )}
-
-                                                    {/* Leader/Admin: promote MEMBER -> CO_LEADER */}
-                                                    {canPromoteToCoLeader && (
-                                                        <button
-                                                            style={s.menuItem}
-                                                            onClick={() => makeCoLeader(m.userId)}
-                                                        >
-                                                            Promote to Co-leader
-                                                        </button>
-                                                    )}
-
-                                                    {/* Leader or Admin: CO_LEADER -> MEMBER */}
-                                                    {canDemoteToMember && (
-                                                        <button
-                                                            style={s.menuItem}
-                                                            onClick={() => makeMember(m.userId)}
-                                                        >
-                                                            Demote to Member
-                                                        </button>
-                                                    )}
-
-                                                    {/* Kick */}
-                                                    {canKickThisUser && (
-                                                        <button
-                                                            style={{...s.menuItem, color: "#b00020"}}
-                                                            onClick={() => kickMember(m.userId)}
-                                                        >
-                                                            Kick
+                                                            ⋮
                                                         </button>
                                                     )}
                                                 </div>
-                                            )}
-                                        </li>
-                                    );
-                                })}
-                                {sortedMembers.length === 0 && <li style={s.muted}>No members yet.</li>}
-                            </ul>
-                        </div>
 
-                        {canApproveRequests && (
-                            <>
-                                <div style={s.sectionHeader}>
-                                    <h3 style={s.h3}>Pending Requests</h3>
-                                </div>
-                                <div style={s.card}>
-                                    {pending.length === 0 && <div style={s.muted}>No pending requests.</div>}
-                                    {pending.map((r) => (
-                                        <div key={r.id} style={s.pendingRow}>
-                                            <div>
-                                                <div style={{fontWeight: 600}}>{userLabel(r.userId)}</div>
-                                                <div style={s.meta}>Request ID: {r.id}</div>
-                                            </div>
-                                            <div style={s.actions}>
-                                                <button
-                                                    onClick={() => decide(r.id, "approve")}
-                                                    style={s.primaryBtnSm}
-                                                >
-                                                    Approve
-                                                </button>
-                                                <button
-                                                    onClick={() => decide(r.id, "reject")}
-                                                    style={s.dangerBtnSm}
-                                                >
-                                                    Reject
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
-            )}
+                                                {canSeeActionMenu && !isSelf && menuOpen && (
+                                                    <div style={s.menu}>
+                                                        {/* Admin: set sole LEADER */}
+                                                        {isAdmin && !isThisLeader && (
+                                                            <button
+                                                                style={s.menuItem}
+                                                                onClick={() => makeLeader(m.userId)}
+                                                            >
+                                                                Make Leader (Admin)
+                                                            </button>
+                                                        )}
+                                                        {isAdmin && !isThisCoLeader && !isThisMember && (
+                                                            <button
+                                                                style={s.menuItem}
+                                                                onClick={() => makeCoLeader(m.userId)}
+                                                            >
+                                                                Demote to Co-leader
+                                                            </button>
+                                                        )}
 
-            {activeTab === "news" && (
-                <div>
-                    <div style={s.sectionHeader}>
-                        <h3 style={s.h3}>Club News</h3>
-                    </div>
+                                                        {/* Leader/Admin: promote MEMBER -> CO_LEADER */}
+                                                        {canPromoteToCoLeader && (
+                                                            <button
+                                                                style={s.menuItem}
+                                                                onClick={() => makeCoLeader(m.userId)}
+                                                            >
+                                                                Promote to Co-leader
+                                                            </button>
+                                                        )}
 
-                    {canPostNews && (
-                        <form onSubmit={postNews} style={s.newsForm}>
-                            <input
-                                placeholder="Title"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                required
-                                style={s.input}
-                            />
-                            <textarea
-                                placeholder="Content"
-                                value={content}
-                                onChange={(e) => setContent(e.target.value)}
-                                required
-                                style={s.textarea}
-                            />
-                            <div style={{textAlign: "right"}}>
-                                <button type="submit" style={s.primaryBtn}>
-                                    Post
-                                </button>
-                            </div>
-                        </form>
-                    )}
+                                                        {/* Leader or Admin: CO_LEADER -> MEMBER */}
+                                                        {canDemoteToMember && (
+                                                            <button
+                                                                style={s.menuItem}
+                                                                onClick={() => makeMember(m.userId)}
+                                                            >
+                                                                Demote to Member
+                                                            </button>
+                                                        )}
 
-                    {news.length === 0 && <div style={s.card}>No news yet.</div>}
-
-                    {news.map((n) => (
-                        <div key={n.id} style={s.card}>
-                            <div style={s.cardHead}>
-                                <strong style={{fontSize: 16}}>{n.title}</strong>
-                                {canPostNews && (
-                                    <button onClick={() => deleteNews(n.id)} style={s.dangerBtn}>
-                                        Delete
-                                    </button>
-                                )}
-                            </div>
-                            <div style={{whiteSpace: "pre-wrap", lineHeight: 1.5}}>{n.content}</div>
-                            <div style={s.meta}>{n.createdAt ? new Date(n.createdAt).toLocaleString() : ""}</div>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            {activeTab === "events" && (
-                <EventTable
-                    events={events}
-                    showClub={false}
-                />
-            )}
-
-
-            {activeTab === "members" && (
-                <div style={{ margin: "15px" }}>
-                    {/* Members & Pending */}
-                    <div>
-                        <div style={s.sectionHeader}>
-                            <h3 style={s.h3}>Members</h3>
-                        </div>
-
-                        <div style={s.card}>
-                            <ul style={s.list}>
-                                {sortedMembers.map((m) => {
-                                    const isThisLeader = m.role === "LEADER";
-                                    const isThisCoLeader = m.role === "CO_LEADER";
-                                    const isThisMember = !isThisLeader && !isThisCoLeader;
-                                    const isSelf = user && m.userId === user.id;
-                                    const menuOpen = openMember === m.userId;
-
-                                    const badge = isThisLeader ? (
-                                        <span style={s.badgeLeader}>LEADER</span>
-                                    ) : isThisCoLeader ? (
-                                        <span style={s.badgeCoLeader}>CO-LEADER</span>
-                                    ) : (
-                                        <span style={s.badge}>MEMBER</span>
-                                    );
-
-                                    // Permissions vs this target
-                                    const canKickThisUser =
-                                        isAdmin || (isLeader && !isThisLeader) || (isCoLeader && isThisMember);
-
-                                    const canPromoteToCoLeader = (isLeader || isAdmin) && isThisMember;
-
-                                    // Admin can demote CO_LEADER; Leader can demote CO_LEADER
-                                    const canDemoteToMember =
-                                        (isLeader && isThisCoLeader) || (isAdmin && !isSelf && isThisCoLeader);
-
-
-                                    return (
-                                        <li key={m.id} style={{...s.listItem, position: "relative"}}>
-                    <span
-                        onClick={() => setOpenMember(menuOpen ? null : m.userId)}
-                        style={{cursor: canSeeActionMenu ? "pointer" : "default"}}
-                    >
-                      {userLabel(m.userId)}
-                    </span>
-
-                                            <div style={{display: "flex", alignItems: "center", gap: 8}}>
-                                                {badge}
-                                                {canSeeActionMenu && !isSelf && (
-                                                    <button
-                                                        onClick={() => setOpenMember(menuOpen ? null : m.userId)}
-                                                        style={s.primaryBtnSm}
-                                                        title="Manage member"
-                                                    >
-                                                        ⋮
-                                                    </button>
+                                                        {/* Kick */}
+                                                        {canKickThisUser && (
+                                                            <button
+                                                                style={{...s.menuItem, color: "#b00020"}}
+                                                                onClick={() => kickMember(m.userId)}
+                                                            >
+                                                                Kick
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 )}
-                                            </div>
+                                            </li>
+                                        );
+                                    })}
+                                    {sortedMembers.length === 0 && <li style={s.muted}>No members yet.</li>}
+                                </ul>
+                            </div>
 
-                                            {canSeeActionMenu && !isSelf && menuOpen && (
-                                                <div style={s.menu}>
-                                                    {/* Admin: set sole LEADER */}
-                                                    {isAdmin && !isThisLeader && (
-                                                        <button
-                                                            style={s.menuItem}
-                                                            onClick={() => makeLeader(m.userId)}
-                                                        >
-                                                            Make Leader (Admin)
-                                                        </button>
-                                                    )}
-                                                    {isAdmin && !isThisCoLeader && !isThisMember && (
-                                                        <button
-                                                            style={s.menuItem}
-                                                            onClick={() => makeCoLeader(m.userId)}
-                                                        >
-                                                            Demote to Co-leader
-                                                        </button>
-                                                    )}
-
-                                                    {/* Leader/Admin: promote MEMBER -> CO_LEADER */}
-                                                    {canPromoteToCoLeader && (
-                                                        <button
-                                                            style={s.menuItem}
-                                                            onClick={() => makeCoLeader(m.userId)}
-                                                        >
-                                                            Promote to Co-leader
-                                                        </button>
-                                                    )}
-
-                                                    {/* Leader or Admin: CO_LEADER -> MEMBER */}
-                                                    {canDemoteToMember && (
-                                                        <button
-                                                            style={s.menuItem}
-                                                            onClick={() => makeMember(m.userId)}
-                                                        >
-                                                            Demote to Member
-                                                        </button>
-                                                    )}
-
-                                                    {/* Kick */}
-                                                    {canKickThisUser && (
-                                                        <button
-                                                            style={{...s.menuItem, color: "#b00020"}}
-                                                            onClick={() => kickMember(m.userId)}
-                                                        >
-                                                            Kick
-                                                        </button>
-                                                    )}
+                            {canApproveRequests && (
+                                <>
+                                    <div style={s.sectionHeader}>
+                                        <h3 style={s.h3}>Pending Requests</h3>
+                                    </div>
+                                    <div style={s.card}>
+                                        {pending.length === 0 && <div style={s.muted}>No pending requests.</div>}
+                                        {pending.map((r) => (
+                                            <div key={r.id} style={s.pendingRow}>
+                                                <div>
+                                                    <div style={{fontWeight: 600}}>{userLabel(r.userId)}</div>
+                                                    <div style={s.meta}>Request ID: {r.id}</div>
                                                 </div>
-                                            )}
-                                        </li>
-                                    );
-                                })}
-                                {sortedMembers.length === 0 && <li style={s.muted}>No members yet.</li>}
-                            </ul>
+                                                <div style={s.actions}>
+                                                    <button
+                                                        onClick={() => decide(r.id, "approve")}
+                                                        style={s.primaryBtnSm}
+                                                    >
+                                                        Approve
+                                                    </button>
+                                                    <button
+                                                        onClick={() => decide(r.id, "reject")}
+                                                        style={s.dangerBtnSm}
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
                         </div>
-
-                        {canApproveRequests && (
-                            <>
-                                <div style={s.sectionHeader}>
-                                    <h3 style={s.h3}>Pending Requests</h3>
-                                </div>
-                                <div style={s.card}>
-                                    {pending.length === 0 && <div style={s.muted}>No pending requests.</div>}
-                                    {pending.map((r) => (
-                                        <div key={r.id} style={s.pendingRow}>
-                                            <div>
-                                                <div style={{fontWeight: 600}}>{userLabel(r.userId)}</div>
-                                                <div style={s.meta}>Request ID: {r.id}</div>
-                                            </div>
-                                            <div style={s.actions}>
-                                                <button
-                                                    onClick={() => decide(r.id, "approve")}
-                                                    style={s.primaryBtnSm}
-                                                >
-                                                    Approve
-                                                </button>
-                                                <button
-                                                    onClick={() => decide(r.id, "reject")}
-                                                    style={s.dangerBtnSm}
-                                                >
-                                                    Reject
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </>
-                        )}
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }
@@ -850,14 +853,14 @@ const s = {
         boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
         marginBottom: 12,
     },
-    headerCard: { width:"100%", backgroundColor: "#605f5f", marginTop:50},
-    headerTop: { display: "flex", padding:"20", justifyContent: "space-between",  },
-    title: { margin: 0, fontSize: "24px", lineHeight: 1.2,color: "#FFFFE4", fontWeight:"700" },
-    desc: { marginTop: 8, color: "#444", lineHeight: 1.6 },
+    headerCard: {width: "100%", backgroundColor: "#605f5f", marginTop: 50},
+    headerTop: {display: "flex", padding: "20", justifyContent: "space-between",},
+    title: {margin: 0, fontSize: "24px", lineHeight: 1.2, color: "#FFFFE4", fontWeight: "700"},
+    desc: {marginTop: 8, color: "#444", lineHeight: 1.6},
 
-    grid: { display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, alignItems: "start", margin:"15px" },
-    sectionHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", margin: "8px 0" },
-    h3: { margin: "10px", color:"#FFFFE3"},
+    grid: {display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, alignItems: "start", margin: "15px"},
+    sectionHeader: {display: "flex", justifyContent: "space-between", alignItems: "center", margin: "8px 0"},
+    h3: {margin: "10px", color: "#FFFFE3"},
 
     newsForm: {
         ...cardLike(),
@@ -888,10 +891,10 @@ const s = {
     primaryBtnSm: button("#0b57d0", "#fff", true),
     dangerBtnSm: button("#b00020", "#fff", true),
 
-    cardHead: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
-    meta: { opacity: 0.7, fontSize: 12, marginTop: 6 },
+    cardHead: {display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8},
+    meta: {opacity: 0.7, fontSize: 12, marginTop: 6},
 
-    list: { listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 },
+    list: {listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8},
     listItem: {
         padding: "5px 10px",
         border: "1px solid #eee",
@@ -900,7 +903,7 @@ const s = {
         justifyContent: "space-between",
         alignItems: "center",
     },
-    muted: { color: "#777" },
+    muted: {color: "#777"},
 
     badge: {
         background: "#eef2f7",
@@ -935,7 +938,7 @@ const s = {
         alignItems: "center",
         marginBottom: 8,
     },
-    actions: { display: "flex", gap: 8 },
+    actions: {display: "flex", gap: 8},
 
     // tiny absolute dropdown menu
     menu: {
@@ -975,6 +978,7 @@ function button(bg, fg, small = false) {
         boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
     };
 }
+
 function cardLike() {
     return {
         background: "#fff",

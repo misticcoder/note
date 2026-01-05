@@ -10,13 +10,6 @@ body {
 }
 
 
-.page {
-    min-height: 100vh;
-    background-color: #2f2f2f;
-    display: flex;
-    justify-content: center;
-}
-
 .container{
     width: 100%;
     max-width: 1200px;
@@ -32,7 +25,10 @@ body {
     background-color:#4a4a4a;
     margin: 0 auto;
     min-height: 100vh;
+    display: flex;
+    justify-content: center;
 }
+
 
 .toast-container {
     position: fixed;

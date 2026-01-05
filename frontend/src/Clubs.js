@@ -46,7 +46,8 @@ export default function Clubs() {
                     category: c.category ?? "OTHER",
                     createdAt: c.createdAt ? new Date(c.createdAt) : null,
                     memberCount: c.memberCount ?? 0,
-                    eventCount: c.eventCount ?? 0
+                    eventCount: c.eventCount ?? 0,
+                    upcomingEventCount: c.upcomingEventCount ?? 0
                 }));
 
                 setClubs(rows);
@@ -195,6 +196,7 @@ export default function Clubs() {
                                 <div style={{flex: 4}}>Description</div>
                                 <div style={{width: 100}}>Members</div>
                                 <div style={{width: 100}}>Events</div>
+                                <div style={{width: 100}}>Upcoming Events</div>
                                 {isAdmin && <div style={{width: 180, textAlign: "right"}}>Actions</div>}
                             </div>
 
@@ -225,6 +227,8 @@ export default function Clubs() {
 
                                     <div style={{width: 100}}>{cl.memberCount}</div>
                                     <div style={{width: 100}}>{cl.eventCount}</div>
+                                    <div style={{width: 100}}>{cl.upcomingEventCount}</div>
+
 
                                     {isAdmin && (
                                         <div style={{width: 180, textAlign: "right"}}>
