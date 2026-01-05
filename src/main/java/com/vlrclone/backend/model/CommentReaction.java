@@ -4,39 +4,45 @@ import com.vlrclone.backend.Enums.ReactionType;
 import jakarta.persistence.*;
 
 @Entity
-@Table(
-        name = "comment_reactions",
-        uniqueConstraints = @UniqueConstraint(
-                columnNames = {"comment_id", "username"}
-        )
-)
+@Table(name = "comment_reactions")
 public class CommentReaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "comment_id")
+    @ManyToOne(optional = false)
     private Comment comment;
 
+    @ManyToOne(optional = false)
+    private User user;
+
     @Column(nullable = false)
-    private String username;
+    private ReactionType reactionType;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ReactionType type;
+    /* getters / setters */
 
+    public Comment getComment() {
+        return comment;
+    }
 
+    public void setComment(Comment comment) {
+        this.comment = comment;
+    }
 
-    public Long getId() { return id; }
+    public User getUser() {
+        return user;
+    }
 
-    public Comment getComment() { return comment; }
-    public void setComment(Comment comment) { this.comment = comment; }
+    public void setUser(User user) {
+        this.user = user;
+    }
 
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public ReactionType getReactionType() {
+        return reactionType;
+    }
 
-    public ReactionType getType() { return type; }
-    public void setType(ReactionType type) { this.type = type; }
+    public void setReactionType(ReactionType reactionType) {
+        this.reactionType = reactionType;
+    }
 }

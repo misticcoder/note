@@ -1,5 +1,6 @@
 package com.vlrclone.backend.dto;
 
+import com.vlrclone.backend.Enums.ReactionType;
 import com.vlrclone.backend.model.Comment;
 
 import java.time.LocalDateTime;
@@ -13,6 +14,7 @@ public class CommentDto {
     public Long parentId;
 
     public int reactionCount;
+    public ReactionType myReaction;
 
     /* Factory method */
     public static CommentDto from(Comment c) {
@@ -23,6 +25,7 @@ public class CommentDto {
         dto.createdAt = c.getCreatedAt();
         dto.parentId = c.getParentId();
         dto.reactionCount = c.getReactions() == null ? 0 : c.getReactions().size();
+
         return dto;
     }
 }

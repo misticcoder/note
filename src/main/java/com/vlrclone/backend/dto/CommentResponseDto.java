@@ -1,5 +1,6 @@
 package com.vlrclone.backend.dto;
 
+import com.vlrclone.backend.Enums.ReactionType;
 import com.vlrclone.backend.model.Comment;
 import com.vlrclone.backend.model.CommentReaction;
 
@@ -16,7 +17,7 @@ public class CommentResponseDto {
     public Long parentId;
 
     public Map<String, Long> reactionCounts = new HashMap<>();
-    public String myReaction;
+    public ReactionType myReaction;
 
     public static CommentResponseDto from(
             Comment c,
@@ -31,14 +32,14 @@ public class CommentResponseDto {
 
         for (CommentReaction r : c.getReactions()) {
             dto.reactionCounts.merge(
-                    r.getType().name(),
+                    r.getReactionType().name(),
                     1L,
                     Long::sum
             );
 
             if (currentUsername != null &&
-                    currentUsername.equals(r.getUsername())) {
-                dto.myReaction = r.getType().name();
+                    currentUsername.equals(r.getUser().getUsername())) {
+                dto.myReaction = r.getReactionType();
             }
         }
 

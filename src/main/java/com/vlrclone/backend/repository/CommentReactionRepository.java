@@ -1,6 +1,8 @@
 package com.vlrclone.backend.repository;
 
+import com.vlrclone.backend.Enums.ReactionType;
 import com.vlrclone.backend.model.CommentReaction;
+import com.vlrclone.backend.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -10,10 +12,15 @@ public interface CommentReactionRepository
         extends JpaRepository<CommentReaction, Long> {
 
     Optional<CommentReaction>
-    findByComment_IdAndUsername(Long commentId, String username);
+    findByComment_IdAndUser(Long commentId, User user);
 
     List<CommentReaction>
     findByComment_Id(Long commentId);
 
-    void deleteByComment_IdAndUsername(Long commentId, String username);
+    long countByCommentIdAndReactionType(
+            Long commentId,
+            ReactionType type
+    );
+
+    void deleteByComment_IdAndUser(Long commentId, User user);
 }

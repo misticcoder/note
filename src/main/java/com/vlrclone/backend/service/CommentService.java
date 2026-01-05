@@ -4,12 +4,14 @@ import com.vlrclone.backend.Enums.ReactionType;
 import com.vlrclone.backend.dto.CommentResponseDto;
 import com.vlrclone.backend.model.Comment;
 import com.vlrclone.backend.model.CommentReaction;
+import com.vlrclone.backend.model.User;
 import com.vlrclone.backend.repository.CommentReactionRepository;
 import com.vlrclone.backend.repository.CommentRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class CommentService {
@@ -37,24 +39,24 @@ public class CommentService {
     @Transactional
     public void toggleReaction(
             Long commentId,
-            String username,
+            User user,
             ReactionType type
     ) {
         Comment comment = comments.findById(commentId)
                 .orElseThrow();
 
-        reactions.findByComment_IdAndUsername(commentId, username)
+        reactions.findByComment_IdAndUser(commentId, user)
                 .ifPresentOrElse(existing -> {
-                    if (existing.getType() == type) {
+                    if (Objects.equals(existing.getReactionType(), type)) {
                         reactions.delete(existing);
                     } else {
-                        existing.setType(type);
+                        existing.setReactionType(type);
                     }
                 }, () -> {
                     CommentReaction r = new CommentReaction();
                     r.setComment(comment);
-                    r.setUsername(username);
-                    r.setType(type);
+                    r.setUser(user);
+                    r.setReactionType(type);
                     reactions.save(r);
                 });
     }
