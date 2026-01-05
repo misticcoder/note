@@ -8,6 +8,23 @@ body {
 .title{
     color: #FFFFE3;
 }
+
+
+.page {
+    min-height: 100vh;
+    background-color: #2f2f2f;
+    display: flex;
+    justify-content: center;
+}
+
+.container{
+    width: 100%;
+    max-width: 1200px;
+    padding: 60px 24px 24px;
+    box-sizing: border-box;
+    background-color: #4a4a4a
+}
+
 .page{
     width: 100%;
     max-width: 1200px;

@@ -3,6 +3,7 @@ import { AuthContext } from "./AuthContext";
 import EditEventModal from "./Events/EditEventModal";
 import "./styles/events.css";
 import EventTable from "./Events/EventTable";
+import "./styles/index.css"
 
 export default function Events() {
     const { user } = useContext(AuthContext);
@@ -391,201 +392,204 @@ export default function Events() {
        RENDER
     ===================== */
     return (
-        <main className="events-page">
-            <header className="events-top">
-                <h1>Events</h1>
+        <div className={"page"}>
+            <main className="container">
+                <header className="events-top">
+                    <h1>Events</h1>
 
-                <div className="events-controls">
-                    <input
-                        placeholder="Search events…"
-                        value={q}
-                        onChange={(e) => setQ(e.target.value)}
-                    />
+                    <div className="events-controls">
+                        <input
+                            placeholder="Search events…"
+                            value={q}
+                            onChange={(e) => setQ(e.target.value)}
+                        />
 
-                    <select
-                        value={sort}
-                        onChange={(e) => setSort(e.target.value)}
-                        aria-label="Sort events"
-                    >
-                        <option value="date">Sort by Start Date</option>
-                        <option value="title">Sort by Title</option>
-                        <option value="status">Sort by Status</option>
-                    </select>
-                </div>
-
-                <div className="event-status-tabs">
-                    {[
-                        {key: "upcoming", label: "Upcoming"},
-                        {key: "ongoing", label: "Ongoing"},
-                        {key: "past", label: "Past"},
-                        {key: "all", label: "All"},
-                    ].map(t => (
-                        <button
-                            key={t.key}
-                            type="button"
-                            className={status === t.key ? "active" : ""}
-                            onClick={() => setStatus(t.key)}
+                        <select
+                            value={sort}
+                            onChange={(e) => setSort(e.target.value)}
+                            aria-label="Sort events"
                         >
-                            {t.label}
-                        </button>
-                    ))}
-                </div>
+                            <option value="date">Sort by Start Date</option>
+                            <option value="title">Sort by Title</option>
+                            <option value="status">Sort by Status</option>
+                        </select>
+                    </div>
 
-                {allTags.length > 0 && (
-                    <div className="event-tags-filter">
-                        {allTags.map(tag => {
-                            const tagName = typeof tag === "string" ? tag : tag.name;
-                            const active = selectedTags.includes(tagName);
+                    <div className="event-status-tabs">
+                        {[
+                            {key: "upcoming", label: "Upcoming"},
+                            {key: "ongoing", label: "Ongoing"},
+                            {key: "past", label: "Past"},
+                            {key: "all", label: "All"},
+                        ].map(t => (
+                            <button
+                                key={t.key}
+                                type="button"
+                                className={status === t.key ? "active" : ""}
+                                onClick={() => setStatus(t.key)}
+                            >
+                                {t.label}
+                            </button>
+                        ))}
+                    </div>
 
-                            return (
-                                <span
-                                    key={tagName}
-                                    className={`tag-chip ${active ? "active" : ""}`}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        window.location.hash = `#/events/tag/${encodeURIComponent(tagName)}`;
-                                    }}
+                    {allTags.length > 0 && (
+                        <div className="event-tags-filter">
+                            {allTags.map(tag => {
+                                const tagName = typeof tag === "string" ? tag : tag.name;
+                                const active = selectedTags.includes(tagName);
 
-                                >
+                                return (
+                                    <span
+                                        key={tagName}
+                                        className={`tag-chip ${active ? "active" : ""}`}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            window.location.hash = `#/events/tag/${encodeURIComponent(tagName)}`;
+                                        }}
+
+                                    >
                                     {tagName}
                                 </span>
-                            );
-                        })}
+                                );
+                            })}
 
-                        <button
-                            type="button"
-                            className="cancel-btn"
-                            disabled={selectedTags.length === 0}
-                            onClick={() => {
-                                setSelectedTags([]);
-                                setStatus("upcoming");
-                                window.location.hash = "#/events";
-                            }}
-                        >
-                            Clear
-                        </button>
-
-
-                    </div>
-                )}
+                            <button
+                                type="button"
+                                className="cancel-btn"
+                                disabled={selectedTags.length === 0}
+                                onClick={() => {
+                                    setSelectedTags([]);
+                                    setStatus("upcoming");
+                                    window.location.hash = "#/events";
+                                }}
+                            >
+                                Clear
+                            </button>
 
 
-                {isAdmin && (
-                    <button className={"button"} onClick={() => setShowAdd(true)}>
-                        + Add Event
-                    </button>
-                )}
-
-                {/* ADD MODAL */}
-                {isAdmin && showAdd && (
-                    <div className={"events-controls"}>
-                        <div>
-                            <h3>Add Event</h3>
-                            <form onSubmit={createEvent} style={{display: "grid", gap: 10}}>
-
-                                <select
-                                    value={form.clubId || ""}
-                                    onChange={e => setForm(f => ({...f, clubId: e.target.value}))}
-                                >
-                                    <option value="">No Club (Independent)</option>
-                                    {clubs.map(c => (
-                                        <option key={c.id} value={c.id}>{c.name}</option>
-                                    ))}
-                                </select>
-
-
-                                <input
-                                    name="title"
-                                    placeholder="Event Name"
-                                    value={form.title}
-                                    onChange={handleChange}
-                                    required
-                                    className={"input"}
-                                />
-
-                                <textarea
-                                    name="content"
-                                    placeholder="Description"
-                                    value={form.content}
-                                    onChange={handleChange}
-                                    rows={4}
-                                    className={"textarea"}
-                                />
-
-                                <input
-                                    name="location"
-                                    placeholder="Location"
-                                    value={form.location}
-                                    onChange={handleChange}
-                                    className={"input"}
-                                />
-
-
-                                <input
-                                    type="datetime-local"
-                                    name="startAt"
-                                    value={form.startAt}
-                                    onChange={handleChange}
-                                    required
-
-                                />
-
-                                <input
-                                    type="datetime-local"
-                                    name="endAt"
-                                    value={form.endAt}
-                                    onChange={handleChange}
-
-                                />
-
-                                <input
-                                    placeholder="Tags (comma separated)"
-                                    value={form.tags || ""}
-                                    onChange={e =>
-                                        setForm(prev => ({...prev, tags: e.target.value}))
-                                    }
-                                />
-
-
-                                <div style={{display: "flex", justifyContent: "flex-end", gap: 8}}>
-                                    <button type="button" onClick={() => setShowAdd(false)} className={"cancel-btn"}>
-                                        Cancel
-                                    </button>
-                                    <button type="submit" className={"btn-primary"}>
-                                        Create
-                                    </button>
-                                </div>
-                            </form>
                         </div>
-                    </div>
+                    )}
+
+
+                    {isAdmin && (
+                        <button className={"button"} onClick={() => setShowAdd(true)}>
+                            + Add Event
+                        </button>
+                    )}
+
+                    {/* ADD MODAL */}
+                    {isAdmin && showAdd && (
+                        <div className={"events-controls"}>
+                            <div>
+                                <h3>Add Event</h3>
+                                <form onSubmit={createEvent} style={{display: "grid", gap: 10}}>
+
+                                    <select
+                                        value={form.clubId || ""}
+                                        onChange={e => setForm(f => ({...f, clubId: e.target.value}))}
+                                    >
+                                        <option value="">No Club (Independent)</option>
+                                        {clubs.map(c => (
+                                            <option key={c.id} value={c.id}>{c.name}</option>
+                                        ))}
+                                    </select>
+
+
+                                    <input
+                                        name="title"
+                                        placeholder="Event Name"
+                                        value={form.title}
+                                        onChange={handleChange}
+                                        required
+                                        className={"input"}
+                                    />
+
+                                    <textarea
+                                        name="content"
+                                        placeholder="Description"
+                                        value={form.content}
+                                        onChange={handleChange}
+                                        rows={4}
+                                        className={"textarea"}
+                                    />
+
+                                    <input
+                                        name="location"
+                                        placeholder="Location"
+                                        value={form.location}
+                                        onChange={handleChange}
+                                        className={"input"}
+                                    />
+
+
+                                    <input
+                                        type="datetime-local"
+                                        name="startAt"
+                                        value={form.startAt}
+                                        onChange={handleChange}
+                                        required
+
+                                    />
+
+                                    <input
+                                        type="datetime-local"
+                                        name="endAt"
+                                        value={form.endAt}
+                                        onChange={handleChange}
+
+                                    />
+
+                                    <input
+                                        placeholder="Tags (comma separated)"
+                                        value={form.tags || ""}
+                                        onChange={e =>
+                                            setForm(prev => ({...prev, tags: e.target.value}))
+                                        }
+                                    />
+
+
+                                    <div style={{display: "flex", justifyContent: "flex-end", gap: 8}}>
+                                        <button type="button" onClick={() => setShowAdd(false)}
+                                                className={"cancel-btn"}>
+                                            Cancel
+                                        </button>
+                                        <button type="submit" className={"btn-primary"}>
+                                            Create
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </header>
+
+                {loading && <p className="muted">Loading…</p>}
+                {err && <p className="error">{err}</p>}
+
+                {!loading && !err && (
+                    <EventTable
+                        events={sorted}
+                        loading={loading}
+                        error={err}
+                        showClub={true}
+                        isAdmin={isAdmin}
+                        onEdit={setEditingEvent}
+                        onDelete={deleteEvent}
+                    />
                 )}
-            </header>
-
-            {loading && <p className="muted">Loading…</p>}
-            {err && <p className="error">{err}</p>}
-
-            {!loading && !err && (
-                <EventTable
-                    events={sorted}
-                    loading={loading}
-                    error={err}
-                    showClub={true}
-                    isAdmin={isAdmin}
-                    onEdit={setEditingEvent}
-                    onDelete={deleteEvent}
-                />
-            )}
 
 
-            {/* EDIT MODAL */}
-            {editingEvent && (
-                <EditEventModal
-                    event={editingEvent}
-                    clubs={clubs}
-                    onSave={saveEvent}
-                    onClose={() => setEditingEvent(null)}
-                />
-            )}
-        </main>
+                {/* EDIT MODAL */}
+                {editingEvent && (
+                    <EditEventModal
+                        event={editingEvent}
+                        clubs={clubs}
+                        onSave={saveEvent}
+                        onClose={() => setEditingEvent(null)}
+                    />
+                )}
+            </main>
+        </div>
     );
 }

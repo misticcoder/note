@@ -1,6 +1,7 @@
 // frontend/src/AdminClubs.jsx
 import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "./AuthContext";
+import "./styles/index.css";
 
 export default function Clubs() {
     const { user } = useContext(AuthContext);
@@ -138,123 +139,140 @@ export default function Clubs() {
        RENDER
     ========================= */
     return (
-        <div style={styles.wrap}>
-            <div style={styles.headerRow}>
-                <h2>Clubs</h2>
-                <div>
-                    <select
-                        value={category}
-                        onChange={e => setCategory(e.target.value)}
-                        style={{ ...styles.search, marginRight: 8 }}
-                    >
-                        <option value="ALL">All categories</option>
-                        <option value="SPORTS">Sports</option>
-                        <option value="ACADEMIC">Academic</option>
-                        <option value="SOCIETY">Society</option>
-                        <option value="FAMILY">Family</option>
-                        <option value="SOCIAL">Social</option>
-                        <option value="OTHER">Other</option>
-                    </select>
+        <div className={"page"}>
+            <div className={"container"}>
+                <div style={styles.wrap}>
+                    <div style={styles.headerRow}>
+                        <h2>Clubs</h2>
+                        <div>
+                            <select
+                                value={category}
+                                onChange={e => setCategory(e.target.value)}
+                                style={{...styles.search, marginRight: 8}}
+                            >
+                                <option value="ALL">All categories</option>
+                                <option value="SPORTS">Sports</option>
+                                <option value="ACADEMIC">Academic</option>
+                                <option value="SOCIETY">Society</option>
+                                <option value="FAMILY">Family</option>
+                                <option value="SOCIAL">Social</option>
+                                <option value="OTHER">Other</option>
+                            </select>
 
-                    <select
-                        value={sortBy}
-                        onChange={e => setSortBy(e.target.value)}
-                        style={styles.search}
-                    >
-                        <option value="NAME_ASC">Name (A–Z)</option>
-                        <option value="NAME_DESC">Name (Z–A)</option>
-                        <option value="CREATED_NEW">Newest first</option>
-                        <option value="CREATED_OLD">Oldest first</option>
-                        <option value="MEMBERS_DESC">Most members</option>
-                        <option value="EVENTS_DESC">Most events</option>
-                    </select>
+                            <select
+                                value={sortBy}
+                                onChange={e => setSortBy(e.target.value)}
+                                style={styles.search}
+                            >
+                                <option value="NAME_ASC">Name (A–Z)</option>
+                                <option value="NAME_DESC">Name (Z–A)</option>
+                                <option value="CREATED_NEW">Newest first</option>
+                                <option value="CREATED_OLD">Oldest first</option>
+                                <option value="MEMBERS_DESC">Most members</option>
+                                <option value="EVENTS_DESC">Most events</option>
+                            </select>
 
-                    <input
-                        placeholder="Search by name / description / ID…"
-                        value={q}
-                        onChange={e => setQ(e.target.value)}
-                        style={styles.search}
-                    />
+                            <input
+                                placeholder="Search by name / description / ID…"
+                                value={q}
+                                onChange={e => setQ(e.target.value)}
+                                style={styles.search}
+                            />
 
-                    <a href="#/" style={styles.backLink}>← Back</a>
-                </div>
-            </div>
-
-            {loading && <p>Loading…</p>}
-            {err && <p style={{ color: "red" }}>{err}</p>}
-
-            {!loading && !err && (
-                <div style={styles.tableWrap}>
-                    <div style={{ ...styles.row, ...styles.head }}>
-                        <div style={{ width: 60 }}>#</div>
-                        <div style={{ width: 120 }}>Category</div>
-                        <div style={{ flex: 2 }}>Name</div>
-                        <div style={{ flex: 4 }}>Description</div>
-                        <div style={{ width: 100 }}>Members</div>
-                        <div style={{ width: 100 }}>Events</div>
-                        {isAdmin && <div style={{ width: 180, textAlign: "right" }}>Actions</div>}
+                            <a href="#/" style={styles.backLink}>← Back</a>
+                        </div>
                     </div>
 
-                    {filtered.map((cl, idx) => (
-                        <div key={cl.id} style={styles.row}>
-                            <div style={{ width: 60 }}>{idx + 1}</div>
-                            <div style={{ width: 120 }}>{cl.category}</div>
+                    {loading && <p>Loading…</p>}
+                    {err && <p style={{color: "red"}}>{err}</p>}
 
-                            <div style={{ flex: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                <a href={`#/clubs/${cl.id}`} style={{ textDecoration: "none" }}>
-                                    {cl.name}
-                                </a>
+                    {!loading && !err && (
+                        <div style={styles.tableWrap}>
+                            <div style={{...styles.row, ...styles.head}}>
+                                <div style={{width: 60}}>#</div>
+                                <div style={{width: 120}}>Category</div>
+                                <div style={{flex: 2}}>Name</div>
+                                <div style={{flex: 4}}>Description</div>
+                                <div style={{width: 100}}>Members</div>
+                                <div style={{width: 100}}>Events</div>
+                                {isAdmin && <div style={{width: 180, textAlign: "right"}}>Actions</div>}
                             </div>
 
-                            <div style={{ flex: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                {cl.description}
-                            </div>
+                            {filtered.map((cl, idx) => (
+                                <div key={cl.id} style={styles.row}>
+                                    <div style={{width: 60}}>{idx + 1}</div>
+                                    <div style={{width: 120}}>{cl.category}</div>
 
-                            <div style={{ width: 100 }}>{cl.memberCount}</div>
-                            <div style={{ width: 100 }}>{cl.eventCount}</div>
+                                    <div style={{
+                                        flex: 2,
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap"
+                                    }}>
+                                        <a href={`#/clubs/${cl.id}`} style={{textDecoration: "none"}}>
+                                            {cl.name}
+                                        </a>
+                                    </div>
 
-                            {isAdmin && (
-                                <div style={{ width: 180, textAlign: "right" }}>
-                                    <button style={styles.editBtn} onClick={() => openEdit(cl)}>Edit</button>
-                                    <button style={styles.delBtn} onClick={() => deleteClub(cl)}>Delete</button>
+                                    <div style={{
+                                        flex: 4,
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap"
+                                    }}>
+                                        {cl.description}
+                                    </div>
+
+                                    <div style={{width: 100}}>{cl.memberCount}</div>
+                                    <div style={{width: 100}}>{cl.eventCount}</div>
+
+                                    {isAdmin && (
+                                        <div style={{width: 180, textAlign: "right"}}>
+                                            <button style={styles.editBtn} onClick={() => openEdit(cl)}>Edit</button>
+                                            <button style={styles.delBtn} onClick={() => deleteClub(cl)}>Delete</button>
+                                        </div>
+                                    )}
                                 </div>
+                            ))}
+
+                            {filtered.length === 0 && (
+                                <div style={{padding: "12px 8px"}}>No clubs found.</div>
                             )}
                         </div>
-                    ))}
+                    )}
 
-                    {filtered.length === 0 && (
-                        <div style={{ padding: "12px 8px" }}>No clubs found.</div>
+                    {isAdmin && showEdit && editClub && (
+                        <div style={styles.backdrop}>
+                            <div style={styles.modal}>
+                                <h3>Edit Club</h3>
+                                <form onSubmit={saveEdit} style={{display: "flex", flexDirection: "column", gap: 10}}>
+                                    <input
+                                        value={editClub.name}
+                                        onChange={e => setEditClub(c => ({...c, name: e.target.value}))}
+                                        required
+                                        style={styles.input}
+                                    />
+                                    <textarea
+                                        value={editClub.description}
+                                        onChange={e => setEditClub(c => ({...c, description: e.target.value}))}
+                                        rows={6}
+                                        style={styles.textarea}
+                                    />
+                                    <div style={{display: "flex", justifyContent: "flex-end", gap: 8}}>
+                                        <button type="button" onClick={() => {
+                                            setShowEdit(false);
+                                            setEditClub(null);
+                                        }} style={styles.cancelBtn}>
+                                            Cancel
+                                        </button>
+                                        <button type="submit" style={styles.saveBtn}>Save</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     )}
                 </div>
-            )}
-
-            {isAdmin && showEdit && editClub && (
-                <div style={styles.backdrop}>
-                    <div style={styles.modal}>
-                        <h3>Edit Club</h3>
-                        <form onSubmit={saveEdit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                            <input
-                                value={editClub.name}
-                                onChange={e => setEditClub(c => ({ ...c, name: e.target.value }))}
-                                required
-                                style={styles.input}
-                            />
-                            <textarea
-                                value={editClub.description}
-                                onChange={e => setEditClub(c => ({ ...c, description: e.target.value }))}
-                                rows={6}
-                                style={styles.textarea}
-                            />
-                            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-                                <button type="button" onClick={() => { setShowEdit(false); setEditClub(null); }} style={styles.cancelBtn}>
-                                    Cancel
-                                </button>
-                                <button type="submit" style={styles.saveBtn}>Save</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            </div>
         </div>
     );
 }
@@ -263,22 +281,37 @@ export default function Clubs() {
    STYLES
 ========================= */
 const styles = {
-    wrap: { padding: 20, maxWidth: 1100, margin: "0 auto" },
-    headerRow: { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 30 },
-    search: { padding: "6px 8px", border: "1px solid #ccc", borderRadius: 6, marginRight: 12 },
-    backLink: { textDecoration: "none", border: "1px solid #ccc", padding: "6px 10px", borderRadius: 6, background: "#f8f8f8", color: "#333" },
+    wrap: {padding: 20, maxWidth: 1100, margin: "0 auto"},
+    headerRow: {display: "flex", justifyContent: "space-between", alignItems: "center"},
+    search: {padding: "6px 8px", border: "1px solid #ccc", borderRadius: 6, marginRight: 12},
+    backLink: {
+        textDecoration: "none",
+        border: "1px solid #ccc",
+        padding: "6px 10px",
+        borderRadius: 6,
+        background: "#f8f8f8",
+        color: "#333"
+    },
 
-    tableWrap: { background: "#fff", border: "1px solid #ddd", borderRadius: 8, overflow: "hidden" },
-    row: { display: "flex", gap: 8, padding: "10px 8px", borderBottom: "1px solid #eee", alignItems: "center" },
-    head: { background: "#f5f5f5", fontWeight: "bold" },
+    tableWrap: {background: "#fff", border: "1px solid #ddd", borderRadius: 8, overflow: "hidden"},
+    row: {display: "flex", gap: 8, padding: "10px 8px", borderBottom: "1px solid #eee", alignItems: "center"},
+    head: {background: "#f5f5f5", fontWeight: "bold"},
 
-    delBtn: { padding: "6px 10px", background: "#b00020", color: "#fff", border: "none", borderRadius: 6, marginLeft: 8 },
-    editBtn: { padding: "6px 10px", background: "#0b57d0", color: "#fff", border: "none", borderRadius: 6 },
+    delBtn: {padding: "6px 10px", background: "#b00020", color: "#fff", border: "none", borderRadius: 6, marginLeft: 8},
+    editBtn: {padding: "6px 10px", background: "#0b57d0", color: "#fff", border: "none", borderRadius: 6},
 
-    backdrop: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 },
-    modal: { background: "#fff", padding: 20, borderRadius: 8, width: 480 },
-    input: { padding: "8px 10px", border: "1px solid #ccc", borderRadius: 6 },
-    textarea: { padding: "8px 10px", border: "1px solid #ccc", borderRadius: 6 },
-    cancelBtn: { padding: "6px 10px", background: "#ccc", border: "none", borderRadius: 6 },
-    saveBtn: { padding: "6px 10px", background: "#0b57d0", color: "#fff", border: "none", borderRadius: 6 }
+    backdrop: {
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.35)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000
+    },
+    modal: {background: "#fff", padding: 20, borderRadius: 8, width: 480},
+    input: {padding: "8px 10px", border: "1px solid #ccc", borderRadius: 6},
+    textarea: {padding: "8px 10px", border: "1px solid #ccc", borderRadius: 6},
+    cancelBtn: {padding: "6px 10px", background: "#ccc", border: "none", borderRadius: 6},
+    saveBtn: {padding: "6px 10px", background: "#0b57d0", color: "#fff", border: "none", borderRadius: 6}
 };
