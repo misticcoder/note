@@ -1,6 +1,7 @@
 package com.vlrclone.backend.controller;
 
 import com.vlrclone.backend.dto.UpdateProfileDto;
+import com.vlrclone.backend.dto.UserClubDto;
 import com.vlrclone.backend.dto.UserEventDto;
 import com.vlrclone.backend.dto.UserProfileDto;
 import com.vlrclone.backend.model.User;
@@ -116,4 +117,11 @@ public class ProfileController {
             );
         }
     }
+
+    @GetMapping("/clubs")
+    public List<UserClubDto> myClubs(@RequestParam String email) {
+        User user = currentUser.requireUserByEmail(email);
+        return profileService.getUserClubs(user.getId());
+    }
+
 }

@@ -38,31 +38,15 @@ export default function Clubs() {
 
                 const baseClubs = await res.json();
 
-                // Fetch event counts in parallel
-                const rows = await Promise.all(
-                    (Array.isArray(baseClubs) ? baseClubs : []).map(async (c) => {
-                        let eventCount = 0;
-                        try {
-                            const er = await fetch(`/api/clubs/${c.id}/events`);
-                            if (er.ok) {
-                                const events = await er.json();
-                                eventCount = Array.isArray(events) ? events.length : 0;
-                            }
-                        } catch {
-                            eventCount = 0;
-                        }
-
-                        return {
-                            id: c.id,
-                            name: c.name ?? "",
-                            description: c.description ?? "",
-                            category: c.category ?? "OTHER",
-                            createdAt: c.createdAt ? new Date(c.createdAt) : null,
-                            memberCount: Array.isArray(c.members) ? c.members.length : 0,
-                            eventCount
-                        };
-                    })
-                );
+                const rows = (Array.isArray(baseClubs) ? baseClubs : []).map(c => ({
+                    id: c.id,
+                    name: c.name ?? "",
+                    description: c.description ?? "",
+                    category: c.category ?? "OTHER",
+                    createdAt: c.createdAt ? new Date(c.createdAt) : null,
+                    memberCount: c.memberCount ?? 0,
+                    eventCount: c.eventCount ?? 0
+                }));
 
                 setClubs(rows);
                 setErr("");

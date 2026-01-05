@@ -1,12 +1,15 @@
 package com.vlrclone.backend.service;
 
+import com.vlrclone.backend.Enums.ClubSort;
 import com.vlrclone.backend.Enums.Status;
 import com.vlrclone.backend.dto.UpdateProfileDto;
+import com.vlrclone.backend.dto.UserClubDto;
 import com.vlrclone.backend.dto.UserEventDto;
 import com.vlrclone.backend.dto.UserProfileDto;
 import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.model.EventAttendance;
 import com.vlrclone.backend.model.User;
+import com.vlrclone.backend.repository.ClubMemberRepository;
 import com.vlrclone.backend.repository.EventAttendanceRepository;
 import com.vlrclone.backend.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -21,11 +24,15 @@ public class UserProfileService {
 
     private final UserRepository userRepository;
     private final EventAttendanceRepository attendanceRepository;
+    private final ClubMemberRepository clubMemberRepository;
+    private final ClubService clubService;
 
     public UserProfileService(UserRepository userRepository,
-                              EventAttendanceRepository attendanceRepository) {
+                              EventAttendanceRepository attendanceRepository, ClubMemberRepository clubMemberRepository, ClubService clubService) {
         this.userRepository = userRepository;
         this.attendanceRepository = attendanceRepository;
+        this.clubMemberRepository = clubMemberRepository;
+        this.clubService = clubService;
     }
 
     public UserProfileDto getProfile(Long userId) {
@@ -120,6 +127,46 @@ public class UserProfileService {
         userRepository.save(user);
 
         return getProfile(userId);
+    }
+
+    public List<UserClubDto> getUserClubs(Long userId) {
+
+        var memberships = clubMemberRepository.findByUserId(userId);
+
+        if (memberships.isEmpty()) {
+            return List.of();
+        }
+
+        // 1️⃣ Collect club IDs
+        List<Long> clubIds = memberships.stream()
+                .map(m -> m.getClub().getId())
+                .toList();
+
+        // 2️⃣ Fetch event counts ONCE
+        var eventCounts = clubService.getEventCountsByClubIds(clubIds);
+
+        // 3️⃣ Build DTOs
+        return memberships.stream()
+                .map(m -> {
+                    var club = m.getClub();
+
+                    UserClubDto dto = new UserClubDto();
+                    dto.id = club.getId();
+                    dto.name = club.getName();
+                    dto.logoUrl = club.getLogoUrl();
+                    dto.category = club.getCategory();
+                    dto.role = m.getRole().name();
+
+                    // safe counts
+                    dto.memberCount = club.getMembers() == null
+                            ? 0
+                            : club.getMembers().size();
+
+                    dto.eventCount = Math.toIntExact(eventCounts.getOrDefault(club.getId(), 0L));
+
+                    return dto;
+                })
+                .toList();
     }
 
 

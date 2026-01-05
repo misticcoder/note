@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../AuthContext";
 import EventTable from "../Events/EventTable";
 import "../styles/profile.css";
+import ProfileClubsTable from "../Clubs/ProfileClubsTable";
 
 export default function ProfilePage() {
     const { user, setUser } = useContext(AuthContext);
@@ -11,6 +12,8 @@ export default function ProfilePage() {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [clubs, setClubs] = useState([]);
+
 
     const [activeTab, setActiveTab] = useState("overview")
 
@@ -22,14 +25,14 @@ export default function ProfilePage() {
         setLoading(true);
 
         Promise.all([
-            fetch(`/api/me/profile?email=${encodeURIComponent(user.email)}`)
-                .then(r => r.ok ? r.json() : Promise.reject()),
-            fetch(`/api/me/events?email=${encodeURIComponent(user.email)}`)
-                .then(r => r.ok ? r.json() : Promise.reject())
+            fetch(`/api/me/profile?email=${encodeURIComponent(user.email)}`).then(r => r.json()),
+            fetch(`/api/me/events?email=${encodeURIComponent(user.email)}`).then(r => r.json()),
+            fetch(`/api/me/clubs?email=${encodeURIComponent(user.email)}`).then(r => r.json())
         ])
-            .then(([profileData, eventsData]) => {
+            .then(([profileData, eventsData, clubsData]) => {
                 setProfile(profileData);
                 setEvents(eventsData);
+                setClubs(clubsData);
                 setLoading(false);
             })
             .catch(() => {
@@ -115,6 +118,12 @@ export default function ProfilePage() {
                         setEventsView={setEventsView}
                     />
                 )}
+
+                {activeTab === "clubs" && (
+                    <ProfileClubsTable clubs={clubs} />
+                )}
+
+
 
                 {activeTab === "badges" && (
                     <div className="muted">Badges coming soon</div>
@@ -367,5 +376,36 @@ function EditProfileTab({ profile, email, onSave, onAvatarUpdated }) {
                 {saving ? "Saving…" : "Save Changes"}
             </button>
         </form>
+    );
+}
+
+function ClubsTab({ clubs }) {
+    if (!clubs.length) {
+        return <div className="muted">You are not a member of any clubs yet.</div>;
+    }
+
+    return (
+        <div className="profile-clubs">
+            {clubs.map(c => (
+                <a
+                    key={c.id}
+                    href={`#/clubs/${c.id}`}
+                    className="profile-club-card"
+                >
+                    {c.logoUrl ? (
+                        <img src={c.logoUrl} alt={c.name} />
+                    ) : (
+                        <div className="club-placeholder">
+                            {c.name[0]}
+                        </div>
+                    )}
+
+                    <div className="club-info">
+                        <strong>{c.name}</strong>
+                        <span className="muted">{c.role}</span>
+                    </div>
+                </a>
+            ))}
+        </div>
     );
 }

@@ -156,3 +156,39 @@
     font-size: 15px;
 }
 
+.profile-clubs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.profile-club-card {
+    display: flex;
+    gap: 12px;
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    text-decoration: none;
+    color: inherit;
+    align-items: center;
+}
+
+.profile-club-card img {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.club-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background: #041e42;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+

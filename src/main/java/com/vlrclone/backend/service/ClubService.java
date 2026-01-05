@@ -259,4 +259,18 @@ public class ClubService {
             long memberCount,
             long eventCount
     ) {}
+
+    public Map<Long, Long> getEventCountsByClubIds(List<Long> clubIds) {
+        if (clubIds == null || clubIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return eventRepo.findByClubIdIn(clubIds).stream()
+                .filter(e -> e.getClub() != null)
+                .collect(Collectors.groupingBy(
+                        e -> e.getClub().getId(),
+                        Collectors.counting()
+                ));
+    }
+
 }
