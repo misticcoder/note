@@ -9,8 +9,6 @@ import "./styles/Threads.css";
 function buildCommentTree(comments) {
     const map = new Map();
     const roots = [];
-    const [error, setError] = useState(null);
-
 
     comments.forEach(c => {
         map.set(c.id, { ...c, replies: [] });
@@ -27,6 +25,7 @@ function buildCommentTree(comments) {
 
     return roots;
 }
+
 
 /* ===============================
    Comment Section
@@ -95,7 +94,7 @@ export default function CommentSection({
     return (
 
         <div className="comments-card">
-            <h3>Comments</h3>
+            <h3 style={{color:"#000"}}>Comments</h3>
 
             {tree.length === 0 && <p>No comments yet.</p>}
 

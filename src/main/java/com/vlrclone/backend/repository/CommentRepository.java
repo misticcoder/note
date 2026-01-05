@@ -13,4 +13,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     void deleteAllByPostId(Long postId);
 
 
+    List<Comment> findByEventIdAndParentIdIsNullOrderByCreatedAtDesc(Long eventId);
+
+    List<Comment> findByParentIdOrderByCreatedAtAsc(Long parentId);
 }

@@ -5,6 +5,7 @@ import PostFeed from "./Post/PostFeed";
 import EditEventModal from "./Events/EditEventModal";
 import StarRating from "./components/StarRating";
 import "./styles/events.css";
+import EventCommentSection from "./Events/EventCommentSection";
 
 export default function EventPage() {
     const { user } = useContext(AuthContext);
@@ -375,9 +376,18 @@ export default function EventPage() {
                             )}
                         </div>
 
+
                         <h3>Description</h3>
-                        <p>{event.content || "No description provided."}</p>
+                        <p style={{margin:"10px"}}>{event.content || "No description provided."}</p>
+                        <div>
+                            <EventCommentSection
+                                eventId={event.id}
+                                eventStatus={eventStatus}
+                                rsvp={rsvp}
+                            />
+                        </div>
                     </div>
+
                 )}
 
                 {activeTab === "posts" && <PostFeed eventId={event.id} />}

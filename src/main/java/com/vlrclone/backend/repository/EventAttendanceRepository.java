@@ -25,5 +25,6 @@ public interface EventAttendanceRepository
             Long userId,
             List<Status> statuses
     );
-
+    boolean existsByEventIdAndUserId(Long eventId, Long userId);
+    boolean existsByEventIdAndUserIdAndStatus(Long eventId, Long userId, Status status);
 }

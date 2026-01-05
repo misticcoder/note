@@ -20,6 +20,10 @@ public class Comment {
     @Column(nullable = true)
     private Long postId;
 
+    @Column(nullable = true)
+    private Long eventId;
+
+
     /* Core fields */
 
     @Column(nullable = false)
@@ -70,4 +74,7 @@ public class Comment {
 
     public Long getParentId() { return parentId; }
     public void setParentId(Long parentId) { this.parentId = parentId; }
+
+    public Long getEventId() { return eventId; }
+    public void setEventId(Long eventId) { this.eventId = eventId; }
 }
