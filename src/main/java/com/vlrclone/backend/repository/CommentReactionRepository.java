@@ -9,15 +9,11 @@ import java.util.Optional;
 public interface CommentReactionRepository
         extends JpaRepository<CommentReaction, Long> {
 
-    Optional<CommentReaction> findByCommentIdAndUsername(
-            Long commentId,
-            String username
-    );
+    Optional<CommentReaction>
+    findByComment_IdAndUsername(Long commentId, String username);
 
-    List<CommentReaction> findByCommentId(Long commentId);
+    List<CommentReaction>
+    findByComment_Id(Long commentId);
 
-    long countByCommentIdAndReactionType(
-            Long commentId,
-            com.vlrclone.backend.Enums.ReactionType reactionType
-    );
+    void deleteByComment_IdAndUsername(Long commentId, String username);
 }

@@ -1,55 +1,47 @@
 package com.vlrclone.backend.dto;
 
-import com.vlrclone.backend.Enums.ReactionType;
+import com.vlrclone.backend.model.Comment;
+import com.vlrclone.backend.model.CommentReaction;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 
 public class CommentResponseDto {
 
-    private Long id;
-    private String username;
-    private String comment;
-    private LocalDateTime createdAt;
-    private ReactionSummaryDto reactions;
-    private Long parentId;
+    public Long id;
+    public String username;
+    public String comment;
+    public LocalDateTime createdAt;
+    public Long parentId;
 
-    public CommentResponseDto(
-            Long id,
-            String username,
-            String comment,
-            LocalDateTime createdAt,
-            ReactionSummaryDto reactions,
-            Long parentId
+    public Map<String, Long> reactionCounts = new HashMap<>();
+    public String myReaction;
+
+    public static CommentResponseDto from(
+            Comment c,
+            String currentUsername
     ) {
-        this.id = id;
-        this.username = username;
-        this.comment = comment;
-        this.createdAt = createdAt;
-        this.reactions = reactions;
-        this.parentId = parentId;
-    }
+        CommentResponseDto dto = new CommentResponseDto();
+        dto.id = c.getId();
+        dto.username = c.getUsername();
+        dto.comment = c.getComment();
+        dto.createdAt = c.getCreatedAt();
+        dto.parentId = c.getParentId();
 
-    public Long getId() {
-        return id;
-    }
+        for (CommentReaction r : c.getReactions()) {
+            dto.reactionCounts.merge(
+                    r.getType().name(),
+                    1L,
+                    Long::sum
+            );
 
-    public String getUsername() {
-        return username;
-    }
+            if (currentUsername != null &&
+                    currentUsername.equals(r.getUsername())) {
+                dto.myReaction = r.getType().name();
+            }
+        }
 
-    public String getComment() {
-        return comment;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public ReactionSummaryDto getReactions() {
-        return reactions;
-    }
-    public Long getParentId() {
-        return parentId;
+        return dto;
     }
 }

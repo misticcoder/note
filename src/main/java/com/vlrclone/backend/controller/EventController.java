@@ -1,21 +1,18 @@
 // src/main/java/com/vlrclone/backend/controller/EventController.java
 package com.vlrclone.backend.controller;
 
-import com.vlrclone.backend.Enums.Status;
-import com.vlrclone.backend.dto.CommentDto;
 import com.vlrclone.backend.dto.EventUpdateDto;
-import com.vlrclone.backend.model.Comment;
 import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.model.EventRating;
 import com.vlrclone.backend.model.User;
-import com.vlrclone.backend.repository.*;
-import com.vlrclone.backend.service.CurrentUserService;
+import com.vlrclone.backend.repository.ClubRepository;
+import com.vlrclone.backend.repository.EventRatingRepository;
+import com.vlrclone.backend.repository.EventRepository;
+import com.vlrclone.backend.repository.UserRepository;
 import com.vlrclone.backend.service.EventService;
 import jakarta.transaction.Transactional;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 
@@ -28,25 +25,19 @@ public class EventController {
     private final EventRatingRepository ratings;
     private final EventService service;
     private final ClubRepository clubs;
-    private final CommentRepository commentRepository;
-    private final EventAttendanceRepository eventAttendanceRepository;
-    private final CurrentUserService currentUser;
 
     public EventController(
             EventRepository events,
             UserRepository users,
             EventRatingRepository ratings,
             EventService service,
-            ClubRepository clubs,
-            CommentRepository commentRepository, EventAttendanceRepository eventAttendanceRepository, CurrentUserService currentUser) {
+            ClubRepository clubs
+    ) {
         this.events = events;
         this.users = users;
         this.ratings = ratings;
         this.service = service;
         this.clubs = clubs;
-        this.commentRepository = commentRepository;
-        this.eventAttendanceRepository = eventAttendanceRepository;
-        this.currentUser = currentUser;
     }
 
     /* =====================
@@ -348,71 +339,4 @@ public class EventController {
                 service.findByClub(clubId, normalizeStatus(status))
         );
     }
-
-    @GetMapping("/{eventId}/comments")
-    public List<CommentDto> getEventComments(@PathVariable Long eventId) {
-        return commentRepository
-                .findByEventIdAndParentIdIsNullOrderByCreatedAtDesc(eventId)
-                .stream()
-                .map(CommentDto::from)
-                .toList();
-    }
-    @PostMapping("/{eventId}/comments")
-    public CommentDto addEventComment(
-            @PathVariable Long eventId,
-            @RequestParam String requesterEmail,
-            @RequestBody Map<String, String> body
-    ) {
-
-        User user = currentUser.requireUserByEmail(requesterEmail);
-
-        // 🔒 Only GOING users can comment
-        boolean attended = eventAttendanceRepository.existsByEventIdAndUserIdAndStatus(
-                eventId, user.getId(), Status.GOING
-        );
-
-        if (!attended) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only attendees can comment");
-        }
-
-        Comment c = new Comment();
-        c.setEventId(eventId);
-        c.setUsername(user.getUsername());
-        c.setComment(body.getOrDefault("comment", "").trim());
-
-        if (c.getComment().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Comment required");
-        }
-
-        return CommentDto.from(commentRepository.save(c));
-    }
-
-    @DeleteMapping("/{eventId}/comments/{commentId}")
-    public ResponseEntity<?> deleteEventComment(
-            @PathVariable Long eventId,
-            @PathVariable Long commentId,
-            @RequestParam String requesterEmail
-    ) {
-        User requester = currentUser.requireUserByEmail(requesterEmail);
-
-        Comment c = commentRepository.findById(commentId)
-                .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found"));
-
-        if (!Objects.equals(c.getEventId(), eventId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found");
-        }
-
-        boolean isAdmin = requester.getRole() == User.Role.ADMIN;
-        boolean isOwner = requester.getUsername().equals(c.getUsername());
-
-        if (!isAdmin && !isOwner) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed");
-        }
-
-        commentRepository.delete(c);
-        return ResponseEntity.ok(Map.of("status", "deleted"));
-    }
-
-
 }

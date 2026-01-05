@@ -1,7 +1,6 @@
 // src/Comments/CommentItem.js
 import { useState } from "react";
 import {timeAgo} from "../components/timeAgo";
-import "../styles/events.css";
 
 export default function CommentItem({
                                         comment,
@@ -30,7 +29,7 @@ export default function CommentItem({
             <div className="yt-main">
                 {/* Header */}
                 <div className="yt-header">
-                    <span className="comment-username">@{comment.username}</span>
+                    <span className="yt-username">@{comment.username}</span>
                     <span className="yt-time">
                         · {timeAgo(comment.createdAt)}
                     </span>
@@ -48,8 +47,9 @@ export default function CommentItem({
 
                 {/* Actions */}
                 <div className="yt-actions">
+
                     <button onClick={() => toggleReaction(comment, "LIKE")}>
-                        👍 {comment.reactions?.counts?.LIKE || 0}
+                        👍 {comment.reactionType?.counts?.LIKE || 0}
                     </button>
                     <button onClick={() => toggleReaction(comment, "DISLIKE")}>
                         👎

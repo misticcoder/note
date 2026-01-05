@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api")
 public class CommentController {
 
@@ -37,10 +36,12 @@ public class CommentController {
         this.commentService = commentService;
     }
 
-    /* ===================== THREAD COMMENTS ===================== */
+    /* ============================================================
+       THREAD COMMENTS
+    ============================================================ */
 
     @GetMapping("/threads/{threadId}/comments")
-    public ResponseEntity<?> threadComments(
+    public ResponseEntity<?> getThreadComments(
             @PathVariable Long threadId,
             @RequestParam(required = false) String username
     ) {
@@ -49,10 +50,12 @@ public class CommentController {
                     .body(Map.of("message", "Thread not found"));
         }
 
-        List<CommentResponseDto> out =
-                commentService.getCommentsWithReactions(threadId, username);
+        List<Comment> list =
+                comments.findByThreadIdOrderByCreatedAtAsc(threadId);
 
-        return ResponseEntity.ok(out);
+        return ResponseEntity.ok(
+                commentService.mapWithReactions(list, username)
+        );
     }
 
     @PostMapping("/threads/{threadId}/comments")
@@ -99,17 +102,24 @@ public class CommentController {
                     .body(Map.of("message", "Thread not found"));
         }
 
-        return deleteCommentInternal(commentId, requesterEmail, threadId);
+        return deleteCommentInternal(commentId, requesterEmail, threadId, null);
     }
 
-    /* ===================== POST COMMENTS ===================== */
+    /* ============================================================
+       POST COMMENTS
+    ============================================================ */
 
     @GetMapping("/posts/{postId}/comments")
-    public List<CommentResponseDto> postComments(
+    public ResponseEntity<List<CommentResponseDto>> getPostComments(
             @PathVariable Long postId,
             @RequestParam(required = false) String username
     ) {
-        return commentService.getPostCommentsWithReactions(postId, username);
+        List<Comment> list =
+                comments.findByPostIdOrderByCreatedAtAsc(postId);
+
+        return ResponseEntity.ok(
+                commentService.mapWithReactions(list, username)
+        );
     }
 
     @PostMapping("/posts/{postId}/comments")
@@ -146,23 +156,26 @@ public class CommentController {
             @PathVariable Long commentId,
             @RequestParam String requesterEmail
     ) {
-        return deleteCommentInternal(commentId, requesterEmail, null);
+        return deleteCommentInternal(commentId, requesterEmail, null, postId);
     }
 
-    /* ===================== SHARED HELPERS ===================== */
+    /* ============================================================
+       SHARED DELETE LOGIC
+    ============================================================ */
 
     private ResponseEntity<?> deleteCommentInternal(
             Long commentId,
             String requesterEmail,
-            Long expectedThreadId
+            Long expectedThreadId,
+            Long expectedPostId
     ) {
-        var requester = users.findByEmail(requesterEmail).orElse(null);
+        User requester = users.findByEmail(requesterEmail).orElse(null);
         if (requester == null) {
             return ResponseEntity.status(403)
                     .body(Map.of("message", "Requester not found"));
         }
 
-        var c = comments.findById(commentId).orElse(null);
+        Comment c = comments.findById(commentId).orElse(null);
         if (c == null) {
             return ResponseEntity.status(404)
                     .body(Map.of("message", "Comment not found"));
@@ -170,6 +183,12 @@ public class CommentController {
 
         if (expectedThreadId != null &&
                 !expectedThreadId.equals(c.getThreadId())) {
+            return ResponseEntity.status(404)
+                    .body(Map.of("message", "Comment not found"));
+        }
+
+        if (expectedPostId != null &&
+                !expectedPostId.equals(c.getPostId())) {
             return ResponseEntity.status(404)
                     .body(Map.of("message", "Comment not found"));
         }
@@ -188,16 +207,18 @@ public class CommentController {
         return ResponseEntity.ok(Map.of("status", "success"));
     }
 
+    /* ============================================================
+       HELPERS
+    ============================================================ */
+
     private Long parseParentId(Map<String, String> body) {
-        if (!body.containsKey("parentId") || body.get("parentId") == null) {
-            return null;
-        }
+        if (!body.containsKey("parentId")) return null;
         try {
-            return Long.valueOf(body.get("parentId"));
+            return body.get("parentId") == null
+                    ? null
+                    : Long.valueOf(body.get("parentId"));
         } catch (NumberFormatException e) {
             return null;
         }
     }
-
-
 }

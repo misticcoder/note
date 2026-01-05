@@ -3,14 +3,12 @@ package com.vlrclone.backend.model;
 import com.vlrclone.backend.Enums.ReactionType;
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Table(
         name = "comment_reactions",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"comment_id", "username"})
-        }
+        uniqueConstraints = @UniqueConstraint(
+                columnNames = {"comment_id", "username"}
+        )
 )
 public class CommentReaction {
 
@@ -18,8 +16,8 @@ public class CommentReaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comment_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "comment_id")
     private Comment comment;
 
     @Column(nullable = false)
@@ -27,42 +25,18 @@ public class CommentReaction {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ReactionType reactionType;
+    private ReactionType type;
 
-    @Column(nullable = false)
-    private LocalDateTime reactedAt = LocalDateTime.now();
 
-    // ===== Getters & Setters =====
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
 
-    public Comment getComment() {
-        return comment;
-    }
+    public Comment getComment() { return comment; }
+    public void setComment(Comment comment) { this.comment = comment; }
 
-    public void setComment(Comment comment) {
-        this.comment = comment;
-    }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public ReactionType getReactionType() {
-        return reactionType;
-    }
-
-    public void setReactionType(ReactionType reactionType) {
-        this.reactionType = reactionType;
-    }
-
-    public LocalDateTime getReactedAt() {
-        return reactedAt;
-    }
+    public ReactionType getType() { return type; }
+    public void setType(ReactionType type) { this.type = type; }
 }

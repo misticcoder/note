@@ -1,54 +1,43 @@
 package com.vlrclone.backend.controller;
 
-import com.vlrclone.backend.dto.ReactionRequest;
 import com.vlrclone.backend.Enums.ReactionType;
-import com.vlrclone.backend.dto.ReactionSummaryDto;
-import com.vlrclone.backend.service.CommentReactionService;
+import com.vlrclone.backend.model.CommentReaction;
+import com.vlrclone.backend.service.CommentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/comments")
 public class CommentReactionController {
 
-    private final CommentReactionService reactionService;
+    private final CommentService service;
 
-    public CommentReactionController(CommentReactionService reactionService) {
-        this.reactionService = reactionService;
+    public CommentReactionController(CommentService service) {
+        this.service = service;
     }
 
-    /**
-     * React or change reaction
-     */
     @PostMapping("/{commentId}/reactions")
-    public ResponseEntity<Void> react(
+    public ResponseEntity<?> react(
             @PathVariable Long commentId,
-            @RequestParam(required = false) String username,
-            @RequestBody(required = false) ReactionRequest request
+            @RequestParam String username,
+            @RequestBody Map<String, String> body
     ) {
-        reactionService.react(commentId, username, request.getReactionType());
+        var type = ReactionType.valueOf(
+                body.get("reactionType")
+        );
+
+        service.toggleReaction(commentId, username, type);
         return ResponseEntity.ok().build();
     }
 
-    /**
-     * Remove reaction
-     */
     @DeleteMapping("/{commentId}/reactions")
-    public ResponseEntity<Void> removeReaction(
+    public ResponseEntity<?> remove(
             @PathVariable Long commentId,
             @RequestParam String username
     ) {
-        reactionService.removeReaction(commentId, username);
-        return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/{commentId}/reactions")
-    public ResponseEntity<ReactionSummaryDto> getReactions(
-            @PathVariable Long commentId,
-            @RequestParam String username
-    ) {
-        return ResponseEntity.ok(
-                reactionService.getReactionSummary(commentId, username)
-        );
+        service.toggleReaction(commentId, username, null);
+        return ResponseEntity.ok().build();
     }
 }

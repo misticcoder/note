@@ -1,63 +1,61 @@
 package com.vlrclone.backend.service;
 
+import com.vlrclone.backend.Enums.ReactionType;
 import com.vlrclone.backend.dto.CommentResponseDto;
 import com.vlrclone.backend.model.Comment;
+import com.vlrclone.backend.model.CommentReaction;
+import com.vlrclone.backend.repository.CommentReactionRepository;
 import com.vlrclone.backend.repository.CommentRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 public class CommentService {
 
-    private final CommentRepository commentRepository;
-    private final CommentReactionService reactionService;
+    private final CommentRepository comments;
+    private final CommentReactionRepository reactions;
 
     public CommentService(
-            CommentRepository commentRepository,
-            CommentReactionService reactionService
+            CommentRepository comments,
+            CommentReactionRepository reactions
     ) {
-        this.commentRepository = commentRepository;
-        this.reactionService = reactionService;
+        this.comments = comments;
+        this.reactions = reactions;
     }
 
-    @Transactional(readOnly = true)
-    public List<CommentResponseDto> getCommentsWithReactions(
-            Long threadId,
+    public List<CommentResponseDto> mapWithReactions(
+            List<Comment> list,
             String username
     ) {
-        return commentRepository.findByThreadIdOrderByCreatedAtAsc(threadId)
-                .stream()
-                .map(c -> new CommentResponseDto(
-                        c.getId(),
-                        c.getUsername(),
-                        c.getComment(),
-                        c.getCreatedAt(),
-                        reactionService.getReactionSummary(c.getId(), username),
-                        c.getParentId()
-                ))
+        return list.stream()
+                .map(c -> CommentResponseDto.from(c, username))
                 .toList();
     }
 
-    @Transactional(readOnly = true)
-    public List<CommentResponseDto> getPostCommentsWithReactions(
-            Long postId,
-            String username
+    @Transactional
+    public void toggleReaction(
+            Long commentId,
+            String username,
+            ReactionType type
     ) {
-        return commentRepository.findByPostIdOrderByCreatedAtAsc(postId)
-                .stream()
-                .map(c -> new CommentResponseDto(
-                        c.getId(),
-                        c.getUsername(),
-                        c.getComment(),
-                        c.getCreatedAt(),
-                        reactionService.getReactionSummary(c.getId(), username),
-                        c.getParentId()
-                ))
-                .toList();
+        Comment comment = comments.findById(commentId)
+                .orElseThrow();
+
+        reactions.findByComment_IdAndUsername(commentId, username)
+                .ifPresentOrElse(existing -> {
+                    if (existing.getType() == type) {
+                        reactions.delete(existing);
+                    } else {
+                        existing.setType(type);
+                    }
+                }, () -> {
+                    CommentReaction r = new CommentReaction();
+                    r.setComment(comment);
+                    r.setUsername(username);
+                    r.setType(type);
+                    reactions.save(r);
+                });
     }
-
-
-
 }
