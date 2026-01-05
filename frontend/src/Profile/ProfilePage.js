@@ -4,7 +4,8 @@ import EventTable from "../Events/EventTable";
 import "../styles/profile.css";
 
 export default function ProfilePage() {
-    const { user } = useContext(AuthContext);
+    const { user, setUser } = useContext(AuthContext);
+
 
     const [profile, setProfile] = useState(null);
     const [events, setEvents] = useState([]);
@@ -49,6 +50,24 @@ export default function ProfilePage() {
         return <div className="profile-page error">{error}</div>;
     }
 
+    const saveProfile = async (updates) => {
+        const res = await fetch(
+            `/api/me/profile?email=${encodeURIComponent(user.email)}`,
+            {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updates)
+            }
+        );
+
+        if (!res.ok) throw new Error();
+
+        const updated = await res.json();
+        setProfile(updated);
+        setActiveTab("overview");
+    };
+
+
     return (
         <div className="profile-page">
             <ProfileHeader profile={profile} />
@@ -75,6 +94,12 @@ export default function ProfilePage() {
                     active={activeTab === "badges"}
                     onClick={() => setActiveTab("badges")}
                 />
+                <TabButton
+                    label="Edit Profile"
+                    active={activeTab === "edit"}
+                    onClick={() => setActiveTab("edit")}
+                />
+
             </div>
 
             {/* Tab Content */}
@@ -91,10 +116,28 @@ export default function ProfilePage() {
                     />
                 )}
 
-
                 {activeTab === "badges" && (
                     <div className="muted">Badges coming soon</div>
                 )}
+
+                {activeTab === "edit" && (
+                    <EditProfileTab
+                        profile={profile}
+                        email={user.email}
+                        onSave={saveProfile}
+                        onAvatarUpdated={(updated) => {
+                            setProfile(updated);
+
+                            setUser(prev => ({
+                                ...prev,
+                                avatarUrl: updated.avatarUrl,
+                                displayName: updated.displayName,
+                            }));
+                        }}
+
+                    />
+                )}
+
             </div>
         </div>
     );
@@ -103,14 +146,26 @@ export default function ProfilePage() {
 /* ───────────────────────────────────────── */
 
 function ProfileHeader({ profile }) {
+    const initial = (profile?.displayName || profile?.username || "?")[0];
+
+
     return (
         <div className="profile-header">
             <div className="profile-avatar">
-                {profile.avatarUrl ? (
-                    <img src={profile.avatarUrl} alt="avatar" />
+                {profile?.avatarUrl ? (
+                    <img
+                        src={profile.avatarUrl}
+                        alt="avatar"
+                        style={{
+                            width: 80,
+                            height: 80,
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                        }}
+                    />
                 ) : (
                     <div className="avatar-placeholder">
-                        {(profile.displayName || profile.username)[0]}
+                        {initial}
                     </div>
                 )}
             </div>
@@ -136,12 +191,40 @@ function ProfileHeader({ profile }) {
     );
 }
 
-function OverviewTab(){
-    return(
-        <div> Whats Up? </div>
 
-    )
+function OverviewTab({ profile }) {
+    return (
+        <div className="overview-tab">
+
+            <div className="overview-section">
+                <h2>{profile.displayName || profile.username}</h2>
+                <div className="muted">@{profile.username}</div>
+                <div className="role-badge">{profile.role}</div>
+
+                {profile.bio && (
+                    <p className="profile-bio">{profile.bio}</p>
+                )}
+            </div>
+
+            <div className="overview-stats">
+                <div className="stat-card">
+                    <strong>{profile.eventsJoined}</strong>
+                    <span>Events Joined</span>
+                </div>
+
+                <div className="stat-card">
+                    <strong>{profile.participationScore}</strong>
+                    <span>Participation</span>
+                </div>
+            </div>
+
+            <div className="overview-section muted">
+                Recent activity coming soon
+            </div>
+        </div>
+    );
 }
+
 
 
 function TabButton({ label, active, onClick }) {
@@ -205,5 +288,84 @@ function EventsTab({ events, eventsView, setEventsView }) {
                 </div>
             )}
         </div>
+    );
+}
+
+function EditProfileTab({ profile, email, onSave, onAvatarUpdated }) {
+    const [form, setForm] = useState({
+        displayName: profile.displayName || "",
+        bio: profile.bio || "",
+    });
+
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState("");
+
+    const submit = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        setError("");
+
+        try {
+            await onSave(form);
+        } catch {
+            setError("Failed to save profile");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <form className="edit-profile-form" onSubmit={submit}>
+            {error && <div className="error">{error}</div>}
+
+            <label>
+                <h3 className={"title"}>Display Name</h3>
+                <input
+                    value={form.displayName}
+                    onChange={e => setForm({ ...form, displayName: e.target.value })}
+                />
+            </label>
+
+            <label>
+                <h3 className={"title"}>Bio</h3>
+                <textarea
+                    rows={4}
+                    value={form.bio}
+                    onChange={e => setForm({ ...form, bio: e.target.value })}
+                />
+            </label>
+
+            <label>
+                <h3 className={"title"}>Change Avatar</h3>
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+
+                        const formData = new FormData();
+                        formData.append("file", file);
+
+                        const res = await fetch(
+                            `/api/me/avatar?email=${encodeURIComponent(email)}`,
+                            { method: "POST", body: formData }
+                        );
+
+                        if (!res.ok) {
+                            alert("Avatar upload failed");
+                            return;
+                        }
+
+                        const updated = await res.json();
+                        onAvatarUpdated(updated);
+                    }}
+                />
+            </label>
+
+            <button type="submit" disabled={saving}>
+                {saving ? "Saving…" : "Save Changes"}
+            </button>
+        </form>
     );
 }

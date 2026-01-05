@@ -1,6 +1,7 @@
 package com.vlrclone.backend.service;
 
 import com.vlrclone.backend.Enums.Status;
+import com.vlrclone.backend.dto.UpdateProfileDto;
 import com.vlrclone.backend.dto.UserEventDto;
 import com.vlrclone.backend.dto.UserProfileDto;
 import com.vlrclone.backend.model.Event;
@@ -98,5 +99,28 @@ public class UserProfileService {
                 })
                 .toList();
     }
+
+    @Transactional
+    public UserProfileDto updateProfile(Long userId, UpdateProfileDto dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow();
+
+        if (dto.displayName != null) {
+            user.setDisplayName(dto.displayName.trim());
+        }
+
+        if (dto.bio != null) {
+            user.setBio(dto.bio.trim());
+        }
+
+        if (dto.avatarUrl != null) {
+            user.setAvatarUrl(dto.avatarUrl.trim());
+        }
+
+        userRepository.save(user);
+
+        return getProfile(userId);
+    }
+
 
 }
