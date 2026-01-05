@@ -1,8 +1,11 @@
 package com.vlrclone.backend.dto;
 
+import com.vlrclone.backend.model.User;
+
 public class UserProfileDto {
     public Long id;
     public String username;
+    public User.Role role;
     public String displayName;
     public String avatarUrl;
     public String bio;
@@ -27,6 +30,12 @@ public class UserProfileDto {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+    public User.Role getRole() {
+        return role;
+    }
+    public void setRole(User.Role role) {
+        this.role = role;
     }
 
     public String getDisplayName() {

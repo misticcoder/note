@@ -44,6 +44,7 @@ public class UserProfileService {
         UserProfileDto dto = new UserProfileDto();
         dto.id = user.getId();
         dto.username = user.getUsername();
+        dto.role = user.getRole();
         dto.displayName = resolveDisplayName(user);
         dto.bio = user.getBio();
         dto.avatarUrl = user.getAvatarUrl();
