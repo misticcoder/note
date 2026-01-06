@@ -95,6 +95,7 @@ public class CommentService {
                 .toList();
     }
 
+
     public List<CommentResponseDto> getThreadComments(
             Long threadId,
             String viewerUsername
@@ -107,17 +108,19 @@ public class CommentService {
                 .toList();
     }
 
+
     public List<CommentResponseDto> getEventComments(
             Long eventId,
             String viewerUsername
     ) {
         User viewer = resolveViewer(viewerUsername);
 
-        return comments.findByEventIdAndParentIdIsNullOrderByCreatedAtDesc(eventId)
+        return comments.findByEventIdOrderByCreatedAtAsc(eventId)
                 .stream()
                 .map(c -> map(c, viewer))
                 .toList();
     }
+
 
     /* ============================================================
        CORE DTO MAPPER
@@ -160,14 +163,7 @@ public class CommentService {
         return users.findByUsername(username).orElse(null);
     }
 
-    public List<CommentResponseDto> mapWithReactions(
-            List<Comment> list,
-            String username
-    ) {
-        return list.stream()
-                .map(c -> CommentResponseDto.from(c, username))
-                .toList();
-    }
+
 
     @Transactional
     public void toggleReaction(Long commentId, User user, ReactionType type) {

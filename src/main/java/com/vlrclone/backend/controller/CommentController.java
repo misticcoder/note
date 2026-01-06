@@ -55,7 +55,7 @@ public class CommentController {
                 comments.findByThreadIdOrderByCreatedAtAsc(threadId);
 
         return ResponseEntity.ok(
-                commentService.mapWithReactions(list, username)
+                commentService.getThreadComments(threadId, username)
         );
     }
 
@@ -119,7 +119,7 @@ public class CommentController {
                 comments.findByPostIdOrderByCreatedAtAsc(postId);
 
         return ResponseEntity.ok(
-                commentService.mapWithReactions(list, username)
+                commentService.getPostComments(postId, username)
         );
     }
 
