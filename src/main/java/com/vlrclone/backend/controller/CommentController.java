@@ -1,6 +1,7 @@
 // src/main/java/com/vlrclone/backend/controller/CommentController.java
 package com.vlrclone.backend.controller;
 
+import com.vlrclone.backend.Enums.ReactionType;
 import com.vlrclone.backend.dto.CommentResponseDto;
 import com.vlrclone.backend.model.Comment;
 import com.vlrclone.backend.model.User;
@@ -276,4 +277,5 @@ public class CommentController {
     ) {
         return deleteCommentInternal(commentId, requesterEmail, null, null);
     }
+
 }

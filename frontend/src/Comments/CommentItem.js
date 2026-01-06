@@ -1,6 +1,8 @@
 // src/Comments/CommentItem.js
 import { useState } from "react";
 import {timeAgo} from "../components/timeAgo";
+import "../styles/comments.css";
+import "../styles/Threads.css";
 
 export default function CommentItem({
                                         comment,
@@ -49,11 +51,17 @@ export default function CommentItem({
                 <div className="yt-actions">
 
                     <button onClick={() => toggleReaction(comment, "LIKE")}>
-                        👍 {comment.reactionType?.counts?.LIKE || 0}
+                        👍 {comment.reactionCounts?.LIKE || 0}
                     </button>
-                    <button onClick={() => toggleReaction(comment, "DISLIKE")}>
-                        👎
+
+
+                    <button
+                        onClick={() => toggleReaction(comment, "DISLIKE")}
+                    >
+                        👎 {comment.reactionCounts?.DISLIKE || 0}
                     </button>
+
+
                     <button onClick={() => onReply(comment.id)}>
                         Reply
                     </button>

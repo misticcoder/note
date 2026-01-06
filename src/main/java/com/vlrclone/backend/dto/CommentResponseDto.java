@@ -30,18 +30,12 @@ public class CommentResponseDto {
         dto.createdAt = c.getCreatedAt();
         dto.parentId = c.getParentId();
 
+        Map<String, Long> counts = new HashMap<>();
         for (CommentReaction r : c.getReactions()) {
-            dto.reactionCounts.merge(
-                    r.getReactionType().name(),
-                    1L,
-                    Long::sum
-            );
-
-            if (currentUsername != null &&
-                    currentUsername.equals(r.getUser().getUsername())) {
-                dto.myReaction = r.getReactionType();
-            }
+            String key = r.getReactionType().name();
+            counts.put(key, counts.getOrDefault(key, 0L) + 1);
         }
+        dto.reactionCounts = counts;
 
         return dto;
     }

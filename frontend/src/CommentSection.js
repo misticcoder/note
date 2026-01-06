@@ -48,44 +48,36 @@ export default function CommentSection({
 
     const tree = buildCommentTree(Array.isArray(comments) ? comments : []);
 
-    /* -------- Reaction toggle -------- */
     async function toggleReaction(comment, type) {
-        if (!user) return;
+        if (!user || !comment?.id) return;
 
-        const hasReacted = comment.reactions?.myReaction === type;
-        const url = `/api/comments/${comment.id}/reactions?username=${encodeURIComponent(
-            user.username
-        )}`;
-
-        try {
-            if (hasReacted) {
-                await fetch(url, { method: "DELETE" });
-            } else {
-                await fetch(url, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ reactionType: type })
-                });
+        await fetch(
+            `/api/comments/${comment.id}/reactions?requesterEmail=${encodeURIComponent(
+                user.email
+            )}`,
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ type }),
             }
-            refreshComments?.();
-        } catch (e) {
-            console.error("Reaction failed", e);
-        }
+        );
+
+        refreshComments?.();
     }
 
     /* -------- Submit handler -------- */
     const handleSubmit = (e) => {
         e.preventDefault();
-         if (!user) return;
+        if (!user) return;
 
-         const text = newComment.trim();
+        const text = newComment.trim();
 
-         if (!text) return;
+        if (!text) return;
 
-         if (text.length > 400){
-             setError("comment is too long (max 400 characters)")
-             return;
-         }
+        if (text.length > 400){
+            setError("comment is too long (max 400 characters)")
+            return;
+        }
 
         onSubmit(e, replyTo);
         setReplyTo(null);

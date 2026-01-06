@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "comments")
@@ -42,7 +44,8 @@ public class Comment {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
-    private List<CommentReaction> reactions = new ArrayList<>();
+    private Set<CommentReaction> reactions = new HashSet<>();
+
 
     /* Replies */
 
@@ -67,8 +70,9 @@ public class Comment {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
 
-    public List<CommentReaction> getReactions() { return reactions; }
-    public void setReactions(List<CommentReaction> reactions) {
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Set<CommentReaction> getReactions() { return reactions; }
+    public void setReactions(Set<CommentReaction> reactions) {
         this.reactions = reactions;
     }
 

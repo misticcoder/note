@@ -168,4 +168,27 @@ public class CommentService {
                 .map(c -> CommentResponseDto.from(c, username))
                 .toList();
     }
+
+    @Transactional
+    public void toggleReaction(Long commentId, User user, ReactionType type) {
+        Comment comment = comments.findById(commentId)
+                .orElseThrow();
+
+        reactions.findByCommentIdAndUser(commentId, user)
+                .ifPresentOrElse(existing -> {
+                    if (existing.getReactionType() == type) {
+                        reactions.delete(existing);
+                    } else {
+                        existing.setReactionType(type);
+                        reactions.save(existing);
+                    }
+                }, () -> {
+                    CommentReaction r = new CommentReaction();
+                    r.setComment(comment);
+                    r.setUser(user);
+                    r.setReactionType(type);
+                    reactions.save(r);
+                });
+    }
+
 }

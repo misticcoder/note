@@ -5,29 +5,15 @@ import CommentSection from "../CommentSection";
 import ConfirmDialog from "../hooks/ConfirmDialog";
 import { useConfirm } from "../hooks/useConfirm";
 
-import "../styles/comments.css";
-
-export default function EventCommentSection({
-                                                eventId,
-                                                eventStatus,
-                                                rsvp,
-                                            }) {
+export default function EventCommentSection({ eventId }) {
     const { user } = useContext(AuthContext);
 
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState("");
 
-    /* ===================== CONFIRM ===================== */
+    const { confirmState, confirm, handleConfirm, handleCancel } = useConfirm();
 
-    const {
-        confirmState,
-        confirm,
-        handleConfirm,
-        handleCancel,
-    } = useConfirm();
-
-    /* ===================== FETCH COMMENTS ===================== */
-
+    /* ===================== FETCH ===================== */
     const fetchComments = useCallback(async () => {
         if (!eventId) return;
 
@@ -36,12 +22,6 @@ export default function EventCommentSection({
             : "";
 
         const res = await fetch(`/api/events/${eventId}/comments${q}`);
-
-        if (!res.ok) {
-            setComments([]);
-            return;
-        }
-
         const data = await res.json();
         setComments(Array.isArray(data) ? data : []);
     }, [eventId, user?.username]);
@@ -50,8 +30,7 @@ export default function EventCommentSection({
         fetchComments();
     }, [fetchComments]);
 
-    /* ===================== POST COMMENT ===================== */
-
+    /* ===================== POST ===================== */
     const submitComment = async (e, parentId = null) => {
         e.preventDefault();
         if (!user) return;
@@ -59,31 +38,21 @@ export default function EventCommentSection({
         const text = newComment.trim();
         if (!text) return;
 
-        try {
-            const res = await fetch(
-                `/api/events/${eventId}/comments`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        username: user.username,   // ✅ REQUIRED
-                        comment: text,
-                        parentId
-                    })
-                }
-            );
+        await fetch(`/api/events/${eventId}/comments`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                username: user.username,
+                comment: text,
+                parentId,
+            }),
+        });
 
-            if (!res.ok) throw new Error();
-
-            setNewComment("");
-            fetchComments();
-        } catch {
-            alert("Failed to post comment");
-        }
+        setNewComment("");
+        fetchComments();
     };
 
-    /* ===================== DELETE COMMENT ===================== */
-
+    /* ===================== DELETE ===================== */
     const deleteComment = async (commentId) => {
         await fetch(
             `/api/events/${eventId}/comments/${commentId}?requesterEmail=${encodeURIComponent(
@@ -91,20 +60,36 @@ export default function EventCommentSection({
             )}`,
             { method: "DELETE" }
         );
-
         fetchComments();
     };
 
-    const requestDelete = (commentId) => {
-        confirm(commentId, async (id) => {
+    const requestDelete = (id) => {
+        confirm(id, async () => {
             await deleteComment(id);
         });
     };
 
-    /* ===================== RENDER ===================== */
+    /* ===================== REACTION ===================== */
+    const toggleReaction = async (comment, type) => {
+        if (!user || !comment?.id) return;
 
+        await fetch(
+            `/api/comments/${comment.id}/reactions?requesterEmail=${encodeURIComponent(
+                user.email
+            )}`,
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ type }),
+            }
+        );
+
+        fetchComments();
+    };
+
+    /* ===================== RENDER ===================== */
     return (
-        <div className="comments-card-wrapper">
+        <div className={"comments-card-wrapper"}>
             <CommentSection
                 comments={comments}
                 user={user}
@@ -112,13 +97,14 @@ export default function EventCommentSection({
                 setNewComment={setNewComment}
                 onSubmit={submitComment}
                 onDelete={requestDelete}
+                toggleReaction={toggleReaction}   // ✅ PASS FUNCTION
                 refreshComments={fetchComments}
             />
 
             <ConfirmDialog
                 open={confirmState.open}
                 title="Delete Comment"
-                message="Are you sure you want to delete this comment? This action cannot be undone."
+                message="Are you sure you want to delete this comment?"
                 onConfirm={handleConfirm}
                 onCancel={handleCancel}
             />
