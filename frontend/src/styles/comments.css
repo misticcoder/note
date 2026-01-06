@@ -29,3 +29,11 @@
     font-size: 12px;
     color: #555;
 }
+
+.comments-card-wrapper {
+    color: #1f1f1f;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+}

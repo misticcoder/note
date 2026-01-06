@@ -2,16 +2,29 @@
 import { useEffect, useState, useContext, useCallback } from "react";
 import { AuthContext } from "../AuthContext";
 import CommentSection from "../CommentSection";
+import ConfirmDialog from "../hooks/ConfirmDialog";
+import { useConfirm } from "../hooks/useConfirm";
+
+import "../styles/comments.css";
 
 export default function EventCommentSection({
                                                 eventId,
                                                 eventStatus,
-                                                rsvp
+                                                rsvp,
                                             }) {
     const { user } = useContext(AuthContext);
 
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState("");
+
+    /* ===================== CONFIRM ===================== */
+
+    const {
+        confirmState,
+        confirm,
+        handleConfirm,
+        handleCancel,
+    } = useConfirm();
 
     /* ===================== FETCH COMMENTS ===================== */
 
@@ -72,8 +85,6 @@ export default function EventCommentSection({
     /* ===================== DELETE COMMENT ===================== */
 
     const deleteComment = async (commentId) => {
-        if (!user) return;
-
         await fetch(
             `/api/events/${eventId}/comments/${commentId}?requesterEmail=${encodeURIComponent(
                 user.email
@@ -84,17 +95,33 @@ export default function EventCommentSection({
         fetchComments();
     };
 
+    const requestDelete = (commentId) => {
+        confirm(commentId, async (id) => {
+            await deleteComment(id);
+        });
+    };
+
     /* ===================== RENDER ===================== */
 
     return (
-        <CommentSection
-            comments={comments}
-            user={user}
-            newComment={newComment}
-            setNewComment={setNewComment}
-            onSubmit={submitComment}
-            onDelete={deleteComment}
-            refreshComments={fetchComments}
-        />
+        <div className="comments-card-wrapper">
+            <CommentSection
+                comments={comments}
+                user={user}
+                newComment={newComment}
+                setNewComment={setNewComment}
+                onSubmit={submitComment}
+                onDelete={requestDelete}
+                refreshComments={fetchComments}
+            />
+
+            <ConfirmDialog
+                open={confirmState.open}
+                title="Delete Comment"
+                message="Are you sure you want to delete this comment? This action cannot be undone."
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+            />
+        </div>
     );
 }
