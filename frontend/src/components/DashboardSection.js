@@ -10,7 +10,7 @@ export default function DashboardSection({
         <section className="dashboard-section">
             {(title || actionLabel) && (
                 <div className="dashboard-section-header">
-                    {title && <h3>{title}</h3>}
+                    {title && <h3 className={"title"}>{title}</h3>}
 
                     {actionLabel && onAction && (
                         <button

@@ -3,6 +3,7 @@ import { AuthContext } from "../AuthContext";
 import EventTable from "../Events/EventTable";
 import "../styles/profile.css";
 import ProfileClubsTable from "../Clubs/ProfileClubsTable";
+import "../styles/events.css";
 
 import DashboardSection from "../components/DashboardSection";
 
@@ -140,8 +141,8 @@ export default function ProfilePage() {
                         profile={profile}
                         events={events}
                         clubs={clubs}
-                        allEvents={allEvents}              // ✅ ADD
-                        joinedEventIds={joinedEventIds}    // ✅ ADD
+                        allEvents={allEvents}
+                        joinedEventIds={joinedEventIds}
                         onGoToEvents={() => setActiveTab("events")}
                         onGoToClubs={() => setActiveTab("clubs")}
                         onEditProfile={() => setActiveTab("edit")}
@@ -274,18 +275,22 @@ function OverviewTab({
         <div className="overview-tab">
 
             {/* ───── Identity ───── */}
-            <DashboardSection>
-                <h2>Welcome back, {profile.displayName || profile.username}</h2>
-                <div className="muted">@{profile.username}</div>
-                <span className="role-badge">{profile.role}</span>
+            <div className={"overview-header"}>
 
+                <h2 className={"title"}>Welcome back, {profile.displayName || profile.username}</h2>
+                <div className="muted">@{profile.username}</div>
+                <span className="badge">{profile.role}</span>
+
+            </div>
+
+            <div className={"title"}>
                 {profile.bio && (
                     <p className="profile-bio">{profile.bio}</p>
                 )}
-            </DashboardSection>
+            </div>
 
             {/* ───── Stats ───── */}
-            <DashboardSection>
+            <div>
                 <div className="overview-stats">
                     <div className="stat-card">
                         <strong>{profile.eventsJoined}</strong>
@@ -302,7 +307,7 @@ function OverviewTab({
                         <span>Clubs</span>
                     </div>
                 </div>
-            </DashboardSection>
+            </div>
 
             {/* ───── Upcoming Events ───── */}
             <DashboardSection
@@ -310,33 +315,22 @@ function OverviewTab({
                 actionLabel="View all"
                 onAction={onGoToEvents}
             >
-                {upcomingEvents.length ? (
-                    <ul className="overview-event-list">
-                        {upcomingEvents.map(e => (
-                            <li key={e.id}>
-                                <strong>{e.title}</strong>
-                                <div className="muted">
-                                    {new Date(e.startAt).toLocaleString()}
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <div className="muted">No upcoming events</div>
-                )}
+                <EventTable
+                    events={upcomingEvents}
+
+                    showClub={true}
+                />
             </DashboardSection>
 
-            <RecommendedEvents
-                allEvents={allEvents}
-                joinedEventIds={joinedEventIds}
-                clubs={clubs}
-                profile={profile}
-                onViewEvents={onGoToEvents}
-            />
-
-
-
-
+            <DashboardSection>
+                <RecommendedEvents
+                    allEvents={allEvents}
+                    joinedEventIds={joinedEventIds}
+                    clubs={clubs}
+                    profile={profile}
+                    onViewEvents={onGoToEvents}
+                />
+            </DashboardSection>
 
             {/* ───── Clubs ───── */}
             <DashboardSection
@@ -344,25 +338,19 @@ function OverviewTab({
                 actionLabel="View all"
                 onAction={onGoToClubs}
             >
-                {clubs.length ? (
-                    <div className="overview-clubs-preview">
-                        {clubs.slice(0, 4).map(c => (
-                            <div key={c.id} className="overview-club-chip">
-                                {c.name}
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="muted">You are not in any clubs</div>
-                )}
+                <ClubsTab
+                    clubs={clubs}
+                />
             </DashboardSection>
 
             {/* ───── Actions ───── */}
-            <DashboardSection>
+
+            <DashboardSection
+                title="Actions">
                 <div className="overview-actions">
-                    <button onClick={onEditProfile}>Edit Profile</button>
-                    <button onClick={onGoToEvents}>Browse Events</button>
-                    <button onClick={onGoToClubs}>Discover Clubs</button>
+                    <button onClick={onEditProfile} className={"button"}>Edit Profile</button>
+                    <button onClick={onGoToEvents} className={"button"}>Browse Events</button>
+                    <button onClick={onGoToClubs} className={"button"}>Discover Clubs</button>
                 </div>
             </DashboardSection>
 
@@ -530,17 +518,15 @@ function ClubsTab({ clubs }) {
                     className="profile-club-card"
                 >
                     {c.logoUrl ? (
-                        <img src={c.logoUrl} alt={c.name} />
+                        <img src={c.logoUrl} alt={c.name}/>
                     ) : (
                         <div className="club-placeholder">
                             {c.name[0]}
                         </div>
                     )}
+                    <strong className={"club-info"}>{c.name}</strong>
+                    <span className="muted">{c.role}</span>
 
-                    <div className="club-info">
-                        <strong>{c.name}</strong>
-                        <span className="muted">{c.role}</span>
-                    </div>
                 </a>
             ))}
         </div>
@@ -663,24 +649,17 @@ function RecommendedEvents({
     return (
         <div className="overview-section">
             <div className="overview-section-header">
-                <h3>Recommended for You</h3>
+                <h3 className={"title"}>Recommended for You</h3>
                 <button className="link-btn" onClick={onViewEvents}>
                     View all
                 </button>
             </div>
 
             <ul className="overview-event-list">
-                {recommended.map(e => (
-                    <li key={e.id}>
-                        <strong>{e.title}</strong>
-                        <div className="muted">
-                            {new Date(e.startAt).toLocaleString()}
-                        </div>
-                        <div className="recommend-reason">
-                            {getRecommendationReason(e, userClubIds)}
-                        </div>
-                    </li>
-                ))}
+                <EventTable
+                    events={recommended}
+                    showClub={true}
+                />
             </ul>
         </div>
     );

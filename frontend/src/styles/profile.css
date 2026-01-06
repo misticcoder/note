@@ -164,8 +164,9 @@
 
 .profile-club-card {
     display: flex;
-    gap: 12px;
-    padding: 10px;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 15px;
     border: 1px solid #eee;
     border-radius: 8px;
     text-decoration: none;
@@ -174,7 +175,7 @@
 }
 
 .profile-club-card img {
-    width: 48px;
+    width: 50px;
     height: 48px;
     border-radius: 8px;
     object-fit: cover;
@@ -190,6 +191,11 @@
     align-items: center;
     justify-content: center;
     font-weight: bold;
+}
+
+.club-info{
+    display: flex;
+    color: #ffffe3;
 }
 
 .overview-section {
@@ -248,8 +254,7 @@
 
 .overview-actions {
     display: flex;
-    gap: 10px;
-    margin-top: 20px;
+    margin: 0 auto;
 }
 
 .overview-stats {
@@ -260,6 +265,7 @@
 }
 
 .stat-card {
+    color: #ffffe3;
     background: #1f1f1f;
     border-radius: 8px;
     padding: 14px;
@@ -304,8 +310,11 @@
 
 .overview-actions button {
     background: #2a2a2a;
+    width: 200px;
+    padding: 20px;
     border: 1px solid #333;
     font-size: 13px;
+    color: #ffffe3;
 }
 
 .dashboard-section {
@@ -376,4 +385,118 @@
     font-size: 11px;
     color: #aaa;
     margin-top: 2px;
+}
+
+.overview-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* From Uiverse.io by elijahgummer */
+.badge {
+    position: relative;
+    text-decoration: none;
+    padding: 8px 16px;
+    color: white;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+
+    border-radius: 999px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    user-select: none;
+}
+
+.badge span {
+    width: 25px;
+    height: 25px;
+    position: absolute;
+    top: -12px;
+    right: -2px;
+    transform: rotate(-20deg);
+    filter: blur(0.5px);
+}
+
+.badge span:before,
+.badge span:after {
+    content: "";
+    position: absolute;
+}
+
+.badge span:before {
+    width: 1px;
+    height: 100%;
+    left: 12px;
+    background: linear-gradient(
+            to bottom,
+            transparent,
+            rgba(255, 255, 255, 0.7),
+            transparent
+    );
+}
+
+.badge span:after {
+    width: 100%;
+    height: 1px;
+    top: 12px;
+    background: linear-gradient(
+            to left,
+            transparent,
+            rgba(255, 255, 255, 0.7),
+            transparent
+    );
+}
+
+.badge:hover span:after {
+    display: block;
+    animation: rotate 3s ease-in-out; /* Adjust timing as needed */
+}
+.badge:hover span::before {
+    display: block;
+    animation: rotate 3s ease-in-out; /* Adjust timing as needed */
+}
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg) scale(1);
+    }
+    50% {
+        transform: rotate(180deg) scale(1.8);
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+    }
+}
+
+.badge:before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 32px 0 rgba(105, 106, 111, 0.37);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    top: -1px;
+    right: -1px;
+    bottom: -1px;
+    left: -1px;
+    border-radius: 999px;
+}
+
+.inspired {
+    position: absolute;
+    bottom: 8%;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.inspired:hover {
+    color: rgba(255, 255, 255, 0.8);
 }
