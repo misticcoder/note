@@ -5,6 +5,7 @@ import PostFeed from "./Post/PostFeed";
 import EditEventModal from "./Events/EditEventModal";
 import StarRating from "./components/StarRating";
 import "./styles/events.css";
+import "./styles/index.css";
 import EventCommentSection from "./Events/EventCommentSection";
 
 export default function EventPage() {
@@ -319,172 +320,174 @@ export default function EventPage() {
        RENDER
     ===================== */
     return (
-        <main className="event-page">
-            {/* Pass computed status into header so pills/tags are consistent */}
-            <EventHeader
-                event={{ ...event, status: eventStatus }}
-                activeTab={activeTab}
-                rsvp={rsvp}
-                onRSVP={sendRSVP}
-                onCancelRSVP={cancelRSVP}
-                isAdmin={isAdmin}
-                onEdit={() => setEditingEvent(event)}
-                onDelete={deleteEvent}
-                canEdit={isAdmin && eventStatus !== "ENDED"}
-            />
-
-            <section className="event-content">
-                {activeTab === "overview" && (
-                    <div className="event-overview">
-                        <div className="event-rating">
-                            <StarRating
-                                value={
-                                    rating.myRating !== null
-                                        ? rating.myRating
-                                        : Math.round(rating.average)
-                                }
-                                disabled={
-                                    !user ||
-                                    rsvp !== "GOING" ||
-                                    eventStatus !== "ENDED"
-                                }
-                                onRate={submitRating}
-                            />
-
-                            <div className="rating-meta">
-                                {rating.count > 0
-                                    ? `${rating.average.toFixed(1)} (${rating.count} ratings)`
-                                    : "No ratings yet"}
-                            </div>
-
-                            {!user && (
-                                <div className="rating-hint muted">
-                                    Log in to rate this event
-                                </div>
-                            )}
-
-                            {user && rsvp !== "GOING" && (
-                                <div className="rating-hint muted">
-                                    Only attendees can rate
-                                </div>
-                            )}
-
-                            {eventStatus !== "ENDED" && (
-                                <div className="rating-hint muted">
-                                    Ratings open after the event ends
-                                </div>
-                            )}
-                        </div>
-
-
-                        <h3>Description</h3>
-                        <p style={{margin:"10px"}}>{event.content || "No description provided."}</p>
-                        <div>
-                            <EventCommentSection
-                                eventId={event.id}
-                                eventStatus={eventStatus}
-                                rsvp={rsvp}
-                                comments={event.comments}
-                            />
-                        </div>
-                    </div>
-
-                )}
-
-                {activeTab === "posts" && <PostFeed eventId={event.id} />}
-
-                {activeTab === "attendees" && (
-                    <div className="event-attendees">
-                        <div className="attendee-search">
-                            <input
-                                type="text"
-                                placeholder="Search attendees…"
-                                value={attendeeQuery}
-                                onChange={(e) => setAttendeeQuery(e.target.value)}
-                            />
-                        </div>
-
-                        {attendeesLoading ? (
-                            <div className="muted">Loading attendees…</div>
-                        ) : (
-                            <div className="event-attendees-grid">
-                                {/* GOING */}
-                                <div className="attendee-column">
-                                    <h3 className="attendee-heading">
-                                        Going ({filteredGoing.length})
-                                    </h3>
-
-                                    {filteredGoing.length === 0 ? (
-                                        <div className="muted">No matches.</div>
-                                    ) : (
-                                        filteredGoing.map((a) => (
-                                            <div
-                                                key={a.id}
-                                                className={`attendee-row ${
-                                                    user && a.username === user.username
-                                                        ? "is-me"
-                                                        : ""
-                                                }`}
-                                            >
-                                                <div className="avatar">
-                                                    {a.username[0].toUpperCase()}
-                                                </div>
-                                                <div className="name">
-                                                    {a.username}
-                                                    {user && a.username === user.username && (
-                                                        <span className="you-badge">You</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-
-                                {/* MAYBE */}
-                                <div className="attendee-column">
-                                    <h3 className="attendee-heading">
-                                        Maybe ({filteredMaybe.length})
-                                    </h3>
-
-                                    {filteredMaybe.length === 0 ? (
-                                        <div className="muted">No matches.</div>
-                                    ) : (
-                                        filteredMaybe.map((a) => (
-                                            <div
-                                                key={a.id}
-                                                className={`attendee-row ${
-                                                    user && a.username === user.username
-                                                        ? "is-me"
-                                                        : ""
-                                                }`}
-                                            >
-                                                <div className="avatar">
-                                                    {a.username[0].toUpperCase()}
-                                                </div>
-                                                <div className="name">
-                                                    {a.username}
-                                                    {user && a.username === user.username && (
-                                                        <span className="you-badge">You</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
-            </section>
-
-            {editingEvent && (
-                <EditEventModal
-                    event={editingEvent}
-                    onSave={saveEvent}
-                    onClose={() => setEditingEvent(null)}
+        <div className="page">
+            <div className={"container"}>
+                {/* Pass computed status into header so pills/tags are consistent */}
+                <EventHeader
+                    event={{ ...event, status: eventStatus }}
+                    activeTab={activeTab}
+                    rsvp={rsvp}
+                    onRSVP={sendRSVP}
+                    onCancelRSVP={cancelRSVP}
+                    isAdmin={isAdmin}
+                    onEdit={() => setEditingEvent(event)}
+                    onDelete={deleteEvent}
+                    canEdit={isAdmin && eventStatus !== "ENDED"}
                 />
-            )}
-        </main>
+
+                <section className="event-content">
+                    {activeTab === "overview" && (
+                        <div className="event-overview">
+                            <div className="event-rating">
+                                <StarRating
+                                    value={
+                                        rating.myRating !== null
+                                            ? rating.myRating
+                                            : Math.round(rating.average)
+                                    }
+                                    disabled={
+                                        !user ||
+                                        rsvp !== "GOING" ||
+                                        eventStatus !== "ENDED"
+                                    }
+                                    onRate={submitRating}
+                                />
+
+                                <div className="rating-meta">
+                                    {rating.count > 0
+                                        ? `${rating.average.toFixed(1)} (${rating.count} ratings)`
+                                        : "No ratings yet"}
+                                </div>
+
+                                {!user && (
+                                    <div className="rating-hint muted">
+                                        Log in to rate this event
+                                    </div>
+                                )}
+
+                                {user && rsvp !== "GOING" && (
+                                    <div className="rating-hint muted">
+                                        Only attendees can rate
+                                    </div>
+                                )}
+
+                                {eventStatus !== "ENDED" && (
+                                    <div className="rating-hint muted">
+                                        Ratings open after the event ends
+                                    </div>
+                                )}
+                            </div>
+
+
+                            <h3>Description</h3>
+                            <p style={{margin:"10px"}}>{event.content || "No description provided."}</p>
+                            <div>
+                                <EventCommentSection
+                                    eventId={event.id}
+                                    eventStatus={eventStatus}
+                                    rsvp={rsvp}
+                                    comments={event.comments}
+                                />
+                            </div>
+                        </div>
+
+                    )}
+
+                    {activeTab === "posts" && <PostFeed eventId={event.id} />}
+
+                    {activeTab === "attendees" && (
+                        <div className="event-attendees">
+                            <div className="attendee-search">
+                                <input
+                                    type="text"
+                                    placeholder="Search attendees…"
+                                    value={attendeeQuery}
+                                    onChange={(e) => setAttendeeQuery(e.target.value)}
+                                />
+                            </div>
+
+                            {attendeesLoading ? (
+                                <div className="muted">Loading attendees…</div>
+                            ) : (
+                                <div className="event-attendees-grid">
+                                    {/* GOING */}
+                                    <div className="attendee-column">
+                                        <h3 className="attendee-heading">
+                                            Going ({filteredGoing.length})
+                                        </h3>
+
+                                        {filteredGoing.length === 0 ? (
+                                            <div className="muted">No matches.</div>
+                                        ) : (
+                                            filteredGoing.map((a) => (
+                                                <div
+                                                    key={a.id}
+                                                    className={`attendee-row ${
+                                                        user && a.username === user.username
+                                                            ? "is-me"
+                                                            : ""
+                                                    }`}
+                                                >
+                                                    <div className="avatar">
+                                                        {a.username[0].toUpperCase()}
+                                                    </div>
+                                                    <div className="name">
+                                                        {a.username}
+                                                        {user && a.username === user.username && (
+                                                            <span className="you-badge">You</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+
+                                    {/* MAYBE */}
+                                    <div className="attendee-column">
+                                        <h3 className="attendee-heading">
+                                            Maybe ({filteredMaybe.length})
+                                        </h3>
+
+                                        {filteredMaybe.length === 0 ? (
+                                            <div className="muted">No matches.</div>
+                                        ) : (
+                                            filteredMaybe.map((a) => (
+                                                <div
+                                                    key={a.id}
+                                                    className={`attendee-row ${
+                                                        user && a.username === user.username
+                                                            ? "is-me"
+                                                            : ""
+                                                    }`}
+                                                >
+                                                    <div className="avatar">
+                                                        {a.username[0].toUpperCase()}
+                                                    </div>
+                                                    <div className="name">
+                                                        {a.username}
+                                                        {user && a.username === user.username && (
+                                                            <span className="you-badge">You</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </section>
+
+                {editingEvent && (
+                    <EditEventModal
+                        event={editingEvent}
+                        onSave={saveEvent}
+                        onClose={() => setEditingEvent(null)}
+                    />
+                )}
+            </div>
+        </div>
     );
 }
 
