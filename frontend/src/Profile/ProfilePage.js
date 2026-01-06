@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import {useContext, useEffect, useMemo, useState} from "react";
 import { AuthContext } from "../AuthContext";
 import EventTable from "../Events/EventTable";
 import "../styles/profile.css";
@@ -17,11 +17,15 @@ export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [clubs, setClubs] = useState([]);
+    const [allEvents, setAllEvents] = useState([]);
+
 
 
     const [activeTab, setActiveTab] = useState("overview")
 
     const [eventsView, setEventsView] = useState("upcoming")
+
+
 
     useEffect(() => {
         if (!user?.email) return;
@@ -31,19 +35,30 @@ export default function ProfilePage() {
         Promise.all([
             fetch(`/api/me/profile?email=${encodeURIComponent(user.email)}`).then(r => r.json()),
             fetch(`/api/me/events?email=${encodeURIComponent(user.email)}`).then(r => r.json()),
-            fetch(`/api/me/clubs?email=${encodeURIComponent(user.email)}`).then(r => r.json())
+            fetch(`/api/me/clubs?email=${encodeURIComponent(user.email)}`).then(r => r.json()),
+            fetch(`/api/events`).then(r => r.json())
         ])
-            .then(([profileData, eventsData, clubsData]) => {
+            .then(([profileData, eventsData, clubsData, allEventsData]) => {
                 setProfile(profileData);
                 setEvents(eventsData);
                 setClubs(clubsData);
-                setLoading(false);
+                setAllEvents(allEventsData);
             })
             .catch(() => {
                 setError("Failed to load profile");
+            })
+            .finally(() => {
                 setLoading(false);
             });
     }, [user]);
+
+
+    const joinedEventIds = useMemo(
+        () => new Set(events.map(e => e.id)),
+        [events]
+    );
+
+
 
     if (!user) {
         return <div className="profile-page">Please log in</div>;
@@ -125,10 +140,13 @@ export default function ProfilePage() {
                         profile={profile}
                         events={events}
                         clubs={clubs}
+                        allEvents={allEvents}              // ✅ ADD
+                        joinedEventIds={joinedEventIds}    // ✅ ADD
                         onGoToEvents={() => setActiveTab("events")}
                         onGoToClubs={() => setActiveTab("clubs")}
                         onEditProfile={() => setActiveTab("edit")}
                     />
+
                 )}
 
 
@@ -238,10 +256,13 @@ function OverviewTab({
                          profile,
                          events,
                          clubs,
+                         allEvents,
+                         joinedEventIds,
                          onGoToEvents,
                          onGoToClubs,
                          onEditProfile
                      }) {
+
     const now = new Date();
 
     const upcomingEvents = events
@@ -304,6 +325,18 @@ function OverviewTab({
                     <div className="muted">No upcoming events</div>
                 )}
             </DashboardSection>
+
+            <RecommendedEvents
+                allEvents={allEvents}
+                joinedEventIds={joinedEventIds}
+                clubs={clubs}
+                profile={profile}
+                onViewEvents={onGoToEvents}
+            />
+
+
+
+
 
             {/* ───── Clubs ───── */}
             <DashboardSection
@@ -592,4 +625,79 @@ function DashboardCard({ title, description, actions }) {
             </div>
         </div>
     );
+}
+
+function RecommendedEvents({
+                               allEvents,
+                               joinedEventIds,
+                               clubs,
+                               profile,
+                               onViewEvents
+                           }) {
+    const now = new Date();
+    const userClubIds = new Set(clubs.map(c => c.id));
+
+    const recommended = allEvents
+        .filter(e => e?.startAt && new Date(e.startAt) > now)
+        .filter(e => !joinedEventIds.has(e.id))
+        .map(e => {
+            let score = 50;
+
+            if (e.club && userClubIds.has(e.club.id)) score += 40;
+
+            const daysAway =
+                (new Date(e.startAt) - now) / (1000 * 60 * 60 * 24);
+            if (daysAway <= 7) score += 20;
+
+            if (profile.role === "ADMIN" || profile.role === "LEADER") {
+                score += 10;
+            }
+
+            return { ...e, _score: score };
+        })
+        .sort((a, b) => b._score - a._score)
+        .slice(0, 3);
+
+    if (!recommended.length) return null;
+
+    return (
+        <div className="overview-section">
+            <div className="overview-section-header">
+                <h3>Recommended for You</h3>
+                <button className="link-btn" onClick={onViewEvents}>
+                    View all
+                </button>
+            </div>
+
+            <ul className="overview-event-list">
+                {recommended.map(e => (
+                    <li key={e.id}>
+                        <strong>{e.title}</strong>
+                        <div className="muted">
+                            {new Date(e.startAt).toLocaleString()}
+                        </div>
+                        <div className="recommend-reason">
+                            {getRecommendationReason(e, userClubIds)}
+                        </div>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+
+
+function getRecommendationReason(event, userClubIds) {
+    if (event.club && userClubIds.has(event.club.id)) {
+        return "Because you're a member of this club";
+    }
+
+    const days =
+        (new Date(event.startAt) - new Date()) / (1000 * 60 * 60 * 24);
+
+    if (days <= 7) {
+        return "Happening soon";
+    }
+
+    return "Popular upcoming event";
 }
