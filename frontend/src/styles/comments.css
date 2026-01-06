@@ -37,3 +37,28 @@
     border-radius: 8px;
     padding: 16px;
 }
+
+.reaction-btn {
+    border: none;
+    background: transparent;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.reaction-btn.active {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    font-weight: 600;
+}
+
+
+.reaction-btn:hover {
+    background: #f1f5f9;
+}
+
+.reaction-btn.active {
+    background: #e0f2fe;
+    color: #0369a1;
+    font-weight: 600;
+}

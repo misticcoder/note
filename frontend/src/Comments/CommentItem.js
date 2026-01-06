@@ -1,8 +1,6 @@
-// src/Comments/CommentItem.js
 import { useState } from "react";
-import {timeAgo} from "../components/timeAgo";
+import { timeAgo } from "../components/timeAgo";
 import "../styles/comments.css";
-import "../styles/Threads.css";
 
 export default function CommentItem({
                                         comment,
@@ -20,51 +18,42 @@ export default function CommentItem({
     const replies = comment.replies || [];
     const replyCount = replies.length;
 
+    const myReaction = comment.myReaction; // ✅ from backend
+    const counts = comment.reactionCounts || {};
+
     return (
         <li className="yt-comment">
-            {/* Avatar */}
             <div className="yt-avatar">
                 {comment.username[0].toUpperCase()}
             </div>
 
-            {/* Main */}
             <div className="yt-main">
-                {/* Header */}
                 <div className="yt-header">
                     <span className="yt-username">@{comment.username}</span>
                     <span className="yt-time">
                         · {timeAgo(comment.createdAt)}
                     </span>
-
                 </div>
 
-                {/* Body */}
-                <div className={"comment-content"}>
-                    <div className="yt-text">
-                        {comment.comment}
-                    </div>
+                <div className="yt-text">{comment.comment}</div>
 
-                </div>
-
-
-                {/* Actions */}
+                {/* ===================== ACTIONS ===================== */}
                 <div className="yt-actions">
-
-                    <button onClick={() => toggleReaction(comment, "LIKE")}>
-                        👍 {comment.reactionCounts?.LIKE || 0}
+                    <button
+                        className={`reaction-btn ${myReaction === "LIKE" ? "active" : ""}`}
+                        onClick={() => toggleReaction(comment, "LIKE")}
+                    >
+                        👍 {counts.LIKE || 0}
                     </button>
-
 
                     <button
+                        className={`reaction-btn ${myReaction === "DISLIKE" ? "active" : ""}`}
                         onClick={() => toggleReaction(comment, "DISLIKE")}
                     >
-                        👎 {comment.reactionCounts?.DISLIKE || 0}
+                        👎 {counts.DISLIKE || 0}
                     </button>
 
-
-                    <button onClick={() => onReply(comment.id)}>
-                        Reply
-                    </button>
+                    <button onClick={() => onReply(comment.id)}>Reply</button>
 
                     {canDelete && (
                         <button
@@ -76,7 +65,6 @@ export default function CommentItem({
                     )}
                 </div>
 
-                {/* Replies toggle */}
                 {replyCount > 0 && (
                     <button
                         className="yt-toggle"
@@ -88,7 +76,6 @@ export default function CommentItem({
                     </button>
                 )}
 
-                {/* Replies */}
                 {showReplies && (
                     <ul className="yt-replies">
                         {replies.map(r => (
