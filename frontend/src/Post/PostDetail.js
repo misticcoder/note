@@ -8,6 +8,7 @@ import ConfirmDialog from "../hooks/ConfirmDialog";
 import { useConfirm } from "../hooks/useConfirm";
 import EditPostModal from "./EditPostModal";
 import "../styles/Posts.css";
+import "../styles/comments.css";
 
 export default function PostDetailPage() {
     const { user } = useContext(AuthContext);

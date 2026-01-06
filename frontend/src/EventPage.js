@@ -384,6 +384,7 @@ export default function EventPage() {
                                 eventId={event.id}
                                 eventStatus={eventStatus}
                                 rsvp={rsvp}
+                                comments={event.comments}
                             />
                         </div>
                     </div>

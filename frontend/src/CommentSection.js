@@ -49,7 +49,7 @@ export default function CommentSection({
     const tree = buildCommentTree(Array.isArray(comments) ? comments : []);
 
     async function toggleReaction(comment, type) {
-        if (!user || !comment?.id) return;
+        if (!user) return;
 
         await fetch(
             `/api/comments/${comment.id}/reactions?requesterEmail=${encodeURIComponent(
@@ -62,8 +62,9 @@ export default function CommentSection({
             }
         );
 
-        refreshComments?.();
+        refreshComments();
     }
+
 
     /* -------- Submit handler -------- */
     const handleSubmit = (e) => {

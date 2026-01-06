@@ -69,23 +69,6 @@ export default function EventCommentSection({ eventId }) {
         });
     };
 
-    /* ===================== REACTION ===================== */
-    const toggleReaction = async (comment, type) => {
-        if (!user || !comment?.id) return;
-
-        await fetch(
-            `/api/comments/${comment.id}/reactions?requesterEmail=${encodeURIComponent(
-                user.email
-            )}`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ type }),
-            }
-        );
-
-        fetchComments();
-    };
 
     /* ===================== RENDER ===================== */
     return (
@@ -97,7 +80,7 @@ export default function EventCommentSection({ eventId }) {
                 setNewComment={setNewComment}
                 onSubmit={submitComment}
                 onDelete={requestDelete}
-                toggleReaction={toggleReaction}   // ✅ PASS FUNCTION
+                // ✅ PASS FUNCTION
                 refreshComments={fetchComments}
             />
 
