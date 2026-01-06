@@ -7,49 +7,56 @@ import com.vlrclone.backend.model.CommentReaction;
 import com.vlrclone.backend.model.User;
 import com.vlrclone.backend.repository.CommentReactionRepository;
 import com.vlrclone.backend.repository.CommentRepository;
+import com.vlrclone.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 
 @Service
 public class CommentService {
 
     private final CommentRepository comments;
     private final CommentReactionRepository reactions;
+    private final UserRepository users;
 
     public CommentService(
             CommentRepository comments,
-            CommentReactionRepository reactions
+            CommentReactionRepository reactions,
+            UserRepository users
     ) {
         this.comments = comments;
         this.reactions = reactions;
+        this.users = users;
     }
 
-    public List<CommentResponseDto> mapWithReactions(
-            List<Comment> list,
-            String username
-    ) {
-        return list.stream()
-                .map(c -> CommentResponseDto.from(c, username))
-                .toList();
-    }
+    /* ============================================================
+       REACTION ACTIONS
+    ============================================================ */
 
     @Transactional
-    public void toggleReaction(
+    public void react(
             Long commentId,
-            User user,
-            ReactionType type
+            String requesterEmail,
+            String reactionType
     ) {
-        Comment comment = comments.findById(commentId)
-                .orElseThrow();
+        User user = users.findByEmail(requesterEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        reactions.findByComment_IdAndUser(commentId, user)
+        ReactionType type = ReactionType.valueOf(reactionType);
+
+        Comment comment = comments.findById(commentId)
+                .orElseThrow(() -> new IllegalArgumentException("Comment not found"));
+
+        reactions.findByCommentIdAndUserId(commentId, user.getId())
                 .ifPresentOrElse(existing -> {
-                    if (Objects.equals(existing.getReactionType(), type)) {
+                    if (existing.getReactionType() == type) {
+                        // toggle off
                         reactions.delete(existing);
                     } else {
+                        // switch reaction
                         existing.setReactionType(type);
                     }
                 }, () -> {
@@ -59,5 +66,106 @@ public class CommentService {
                     r.setReactionType(type);
                     reactions.save(r);
                 });
+    }
+
+    @Transactional
+    public void removeReaction(
+            Long commentId,
+            String requesterEmail
+    ) {
+        User user = users.findByEmail(requesterEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        reactions.deleteByCommentIdAndUserId(commentId, user.getId());
+    }
+
+    /* ============================================================
+       READ (POST / THREAD / EVENT)
+    ============================================================ */
+
+    public List<CommentResponseDto> getPostComments(
+            Long postId,
+            String viewerUsername
+    ) {
+        User viewer = resolveViewer(viewerUsername);
+
+        return comments.findByPostIdOrderByCreatedAtAsc(postId)
+                .stream()
+                .map(c -> map(c, viewer))
+                .toList();
+    }
+
+    public List<CommentResponseDto> getThreadComments(
+            Long threadId,
+            String viewerUsername
+    ) {
+        User viewer = resolveViewer(viewerUsername);
+
+        return comments.findByThreadIdOrderByCreatedAtAsc(threadId)
+                .stream()
+                .map(c -> map(c, viewer))
+                .toList();
+    }
+
+    public List<CommentResponseDto> getEventComments(
+            Long eventId,
+            String viewerUsername
+    ) {
+        User viewer = resolveViewer(viewerUsername);
+
+        return comments.findByEventIdAndParentIdIsNullOrderByCreatedAtDesc(eventId)
+                .stream()
+                .map(c -> map(c, viewer))
+                .toList();
+    }
+
+    /* ============================================================
+       CORE DTO MAPPER
+    ============================================================ */
+
+    private CommentResponseDto map(Comment c, User viewer) {
+        CommentResponseDto dto = new CommentResponseDto();
+
+        dto.id = c.getId();
+        dto.username = c.getUsername();
+        dto.comment = c.getComment();
+        dto.createdAt = c.getCreatedAt();
+        dto.parentId = c.getParentId();
+
+        // ---- Reaction counts ----
+        Map<String, Long> counts = new HashMap<>();
+        for (CommentReaction r : c.getReactions()) {
+            String key = r.getReactionType().name();
+            counts.put(key, counts.getOrDefault(key, 0L) + 1);
+        }
+        dto.reactionCounts = counts;
+
+        // ---- My reaction ----
+        if (viewer != null) {
+            reactions.findByCommentIdAndUserId(c.getId(), viewer.getId())
+                    .ifPresent(r ->
+                            dto.myReaction = r.getReactionType()
+                    );
+        }
+
+        return dto;
+    }
+
+    /* ============================================================
+       HELPERS
+    ============================================================ */
+
+    private User resolveViewer(String username) {
+        if (username == null || username.isBlank()) return null;
+        return users.findByUsername(username).orElse(null);
+    }
+
+    public List<CommentResponseDto> mapWithReactions(
+            List<Comment> list,
+            String username
+    ) {
+        return list.stream()
+                .map(c -> CommentResponseDto.from(c, username))
+                .toList();
     }
 }

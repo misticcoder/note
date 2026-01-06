@@ -2,6 +2,8 @@
 package com.vlrclone.backend.controller;
 
 import com.vlrclone.backend.Enums.ReactionType;
+import com.vlrclone.backend.dto.CommentDto;
+import com.vlrclone.backend.dto.CommentResponseDto;
 import com.vlrclone.backend.model.Comment;
 import com.vlrclone.backend.model.CommentReaction;
 import com.vlrclone.backend.model.User;
@@ -11,6 +13,7 @@ import com.vlrclone.backend.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -31,6 +34,15 @@ public class CommentReactionController {
         this.userRepo = userRepo;
     }
 
+
+    @GetMapping("/{commentId}")
+    public Comment getComment(
+            @PathVariable Long commentId
+    ){
+        Comment comment = commentRepo.findById(commentId).get();
+        return comment;
+    }
+
     /* ============================================================
        ADD / TOGGLE REACTION
     ============================================================ */
@@ -38,11 +50,10 @@ public class CommentReactionController {
     @PostMapping("/{commentId}/reactions")
     public ResponseEntity<?> react(
             @PathVariable Long commentId,
-            @RequestBody CommentReaction commentReaction,
-            @RequestBody Map<String, String> body
-    ) {
-        String username = body.get("username");
-        ReactionType type = commentReaction.getReactionType();
+            @RequestBody CommentResponseDto commentResponseDto
+            ) {
+        String username = commentResponseDto.username;
+        ReactionType type = commentResponseDto.myReaction;
 
         if (username == null || type == null) {
             return ResponseEntity.badRequest()
@@ -62,7 +73,7 @@ public class CommentReactionController {
         }
 
         var existing =
-                reactionRepo.findByComment_IdAndUser(commentId, user);
+                reactionRepo.findByCommentIdAndUser(commentId, user);
 
         // Same reaction → remove (toggle off)
         if (existing.isPresent() &&
@@ -73,7 +84,7 @@ public class CommentReactionController {
         }
 
         // Different reaction → replace
-        reactionRepo.deleteByComment_IdAndUser(commentId, user);
+        reactionRepo.deleteByCommentIdAndUser(commentId, user);
 
         CommentReaction r = new CommentReaction();
         r.setComment(comment);
@@ -99,7 +110,7 @@ public class CommentReactionController {
                     .body(Map.of("message", "User not found"));
         }
 
-        reactionRepo.deleteByComment_IdAndUser(commentId, user);
+        reactionRepo.deleteByCommentIdAndUser(commentId, user);
         return ResponseEntity.ok(Map.of("status", "removed"));
     }
 }

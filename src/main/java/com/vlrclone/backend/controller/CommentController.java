@@ -222,4 +222,58 @@ public class CommentController {
             return null;
         }
     }
+
+    /* ===================== EVENTS ===================== */
+
+    /* ============================================================
+   EVENT COMMENTS
+============================================================ */
+
+    @GetMapping("/events/{eventId}/comments")
+    public ResponseEntity<List<CommentResponseDto>> getEventComments(
+            @PathVariable Long eventId,
+            @RequestParam(required = false) String username
+    ) {
+        return ResponseEntity.ok(
+                commentService.getEventComments(eventId, username)
+        );
+    }
+
+    @PostMapping("/events/{eventId}/comments")
+    public ResponseEntity<?> createEventComment(
+            @PathVariable Long eventId,
+            @RequestBody Map<String, String> body
+    ) {
+        String username = body.get("username");
+        String text = body.getOrDefault("comment", "").trim();
+
+        if (username == null || username.isBlank() || text.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "username and comment are required"));
+        }
+
+        Long parentId = parseParentId(body);
+        if (parentId != null && !comments.existsById(parentId)) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Parent comment not found"));
+        }
+
+        Comment c = new Comment();
+        c.setEventId(eventId);
+        c.setUsername(username);
+        c.setComment(text);
+        c.setParentId(parentId);
+
+        return ResponseEntity.ok(comments.save(c));
+    }
+
+
+    @DeleteMapping("/events/{eventId}/comments/{commentId}")
+    public ResponseEntity<?> deleteEventComment(
+            @PathVariable Long eventId,
+            @PathVariable Long commentId,
+            @RequestParam String requesterEmail
+    ) {
+        return deleteCommentInternal(commentId, requesterEmail, null, null);
+    }
 }

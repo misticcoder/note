@@ -13,6 +13,8 @@ export default function EventCommentSection({
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState("");
 
+    /* ===================== FETCH COMMENTS ===================== */
+
     const fetchComments = useCallback(async () => {
         if (!eventId) return;
 
@@ -21,6 +23,7 @@ export default function EventCommentSection({
             : "";
 
         const res = await fetch(`/api/events/${eventId}/comments${q}`);
+
         if (!res.ok) {
             setComments([]);
             return;
@@ -34,6 +37,8 @@ export default function EventCommentSection({
         fetchComments();
     }, [fetchComments]);
 
+    /* ===================== POST COMMENT ===================== */
+
     const submitComment = async (e, parentId = null) => {
         e.preventDefault();
         if (!user) return;
@@ -41,34 +46,36 @@ export default function EventCommentSection({
         const text = newComment.trim();
         if (!text) return;
 
-        const res = await fetch(
-            `/api/events/${eventId}/comments?requesterEmail=${encodeURIComponent(
-                user.email
-            )}`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    comment: text,
-                    parentId
-                })
-            }
-        );
+        try {
+            const res = await fetch(
+                `/api/events/${eventId}/comments`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        username: user.username,   // ✅ REQUIRED
+                        comment: text,
+                        parentId
+                    })
+                }
+            );
 
-        if (!res.ok) {
+            if (!res.ok) throw new Error();
+
+            setNewComment("");
+            fetchComments();
+        } catch {
             alert("Failed to post comment");
-            return;
         }
-
-        setNewComment("");
-        fetchComments();
     };
+
+    /* ===================== DELETE COMMENT ===================== */
 
     const deleteComment = async (commentId) => {
         if (!user) return;
 
         await fetch(
-            `/api/comments/${commentId}?requesterEmail=${encodeURIComponent(
+            `/api/events/${eventId}/comments/${commentId}?requesterEmail=${encodeURIComponent(
                 user.email
             )}`,
             { method: "DELETE" }
@@ -76,6 +83,8 @@ export default function EventCommentSection({
 
         fetchComments();
     };
+
+    /* ===================== RENDER ===================== */
 
     return (
         <CommentSection

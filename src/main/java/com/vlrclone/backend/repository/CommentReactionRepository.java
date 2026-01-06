@@ -12,15 +12,27 @@ public interface CommentReactionRepository
         extends JpaRepository<CommentReaction, Long> {
 
     Optional<CommentReaction>
-    findByComment_IdAndUser(Long commentId, User user);
+    findByCommentIdAndUser(Long commentId, User user);
 
     List<CommentReaction>
-    findByComment_Id(Long commentId);
+    findByCommentId(Long commentId);
 
     long countByCommentIdAndReactionType(
             Long commentId,
             ReactionType type
     );
 
-    void deleteByComment_IdAndUser(Long commentId, User user);
+    void deleteByCommentIdAndUser(Long commentId, User user);
+
+    Optional<CommentReaction> findByCommentIdAndUserId(
+            Long commentId,
+            Long userId
+    );
+
+    void deleteByCommentIdAndUserId(
+            Long commentId,
+            Long userId
+    );
+
+
 }
