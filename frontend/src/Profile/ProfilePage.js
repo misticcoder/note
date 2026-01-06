@@ -4,6 +4,10 @@ import EventTable from "../Events/EventTable";
 import "../styles/profile.css";
 import ProfileClubsTable from "../Clubs/ProfileClubsTable";
 
+import DashboardSection from "../components/DashboardSection";
+
+
+
 export default function ProfilePage() {
     const { user, setUser } = useContext(AuthContext);
 
@@ -103,13 +107,30 @@ export default function ProfilePage() {
                     onClick={() => setActiveTab("edit")}
                 />
 
+                {(profile.role === "ADMIN" || profile.role === "LEADER") && (
+                    <TabButton
+                        label="Dashboard"
+                        active={activeTab === "dashboard"}
+                        onClick={() => setActiveTab("dashboard")}
+                    />
+                )}
+
+
             </div>
 
             {/* Tab Content */}
             <div className="profile-tab-content">
                 {activeTab === "overview" && (
-                    <OverviewTab profile={profile} />
+                    <OverviewTab
+                        profile={profile}
+                        events={events}
+                        clubs={clubs}
+                        onGoToEvents={() => setActiveTab("events")}
+                        onGoToClubs={() => setActiveTab("clubs")}
+                        onEditProfile={() => setActiveTab("edit")}
+                    />
                 )}
+
 
                 {activeTab === "events" && (
                     <EventsTab
@@ -146,6 +167,16 @@ export default function ProfilePage() {
 
                     />
                 )}
+
+                {activeTab === "dashboard" && (
+                    <DashboardTab
+                        role={profile.role}
+                        onCreateEvent={() => setActiveTab("events")}
+                        onCreateClub={() => alert("Create club modal later")}
+                        onManageClubs={() => setActiveTab("clubs")}
+                    />
+                )}
+
 
             </div>
         </div>
@@ -201,38 +232,111 @@ function ProfileHeader({ profile }) {
 }
 
 
-function OverviewTab({ profile }) {
+
+
+function OverviewTab({
+                         profile,
+                         events,
+                         clubs,
+                         onGoToEvents,
+                         onGoToClubs,
+                         onEditProfile
+                     }) {
+    const now = new Date();
+
+    const upcomingEvents = events
+        .filter(e => e?.startAt && new Date(e.startAt) >= now)
+        .sort((a, b) => new Date(a.startAt) - new Date(b.startAt))
+        .slice(0, 3);
+
     return (
         <div className="overview-tab">
 
-            <div className="overview-section">
-                <h2>{profile.displayName || profile.username}</h2>
+            {/* ───── Identity ───── */}
+            <DashboardSection>
+                <h2>Welcome back, {profile.displayName || profile.username}</h2>
                 <div className="muted">@{profile.username}</div>
-                <div className="role-badge">{profile.role}</div>
+                <span className="role-badge">{profile.role}</span>
 
                 {profile.bio && (
                     <p className="profile-bio">{profile.bio}</p>
                 )}
-            </div>
+            </DashboardSection>
 
-            <div className="overview-stats">
-                <div className="stat-card">
-                    <strong>{profile.eventsJoined}</strong>
-                    <span>Events Joined</span>
+            {/* ───── Stats ───── */}
+            <DashboardSection>
+                <div className="overview-stats">
+                    <div className="stat-card">
+                        <strong>{profile.eventsJoined}</strong>
+                        <span>Events Joined</span>
+                    </div>
+
+                    <div className="stat-card">
+                        <strong>{profile.participationScore}</strong>
+                        <span>Participation Score</span>
+                    </div>
+
+                    <div className="stat-card">
+                        <strong>{clubs.length}</strong>
+                        <span>Clubs</span>
+                    </div>
                 </div>
+            </DashboardSection>
 
-                <div className="stat-card">
-                    <strong>{profile.participationScore}</strong>
-                    <span>Participation</span>
+            {/* ───── Upcoming Events ───── */}
+            <DashboardSection
+                title="Upcoming Events"
+                actionLabel="View all"
+                onAction={onGoToEvents}
+            >
+                {upcomingEvents.length ? (
+                    <ul className="overview-event-list">
+                        {upcomingEvents.map(e => (
+                            <li key={e.id}>
+                                <strong>{e.title}</strong>
+                                <div className="muted">
+                                    {new Date(e.startAt).toLocaleString()}
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <div className="muted">No upcoming events</div>
+                )}
+            </DashboardSection>
+
+            {/* ───── Clubs ───── */}
+            <DashboardSection
+                title="Your Clubs"
+                actionLabel="View all"
+                onAction={onGoToClubs}
+            >
+                {clubs.length ? (
+                    <div className="overview-clubs-preview">
+                        {clubs.slice(0, 4).map(c => (
+                            <div key={c.id} className="overview-club-chip">
+                                {c.name}
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="muted">You are not in any clubs</div>
+                )}
+            </DashboardSection>
+
+            {/* ───── Actions ───── */}
+            <DashboardSection>
+                <div className="overview-actions">
+                    <button onClick={onEditProfile}>Edit Profile</button>
+                    <button onClick={onGoToEvents}>Browse Events</button>
+                    <button onClick={onGoToClubs}>Discover Clubs</button>
                 </div>
-            </div>
+            </DashboardSection>
 
-            <div className="overview-section muted">
-                Recent activity coming soon
-            </div>
         </div>
     );
 }
+
 
 
 
@@ -406,6 +510,86 @@ function ClubsTab({ clubs }) {
                     </div>
                 </a>
             ))}
+        </div>
+    );
+}
+
+function DashboardTab({
+                          role,
+                          onCreateEvent,
+                          onCreateClub,
+                          onManageClubs
+                      }) {
+    return (
+        <div className="dashboard-tab">
+
+            <h2>Dashboard</h2>
+            <p className="muted">
+                Manage events, clubs, and community activity
+            </p>
+
+            <div className="dashboard-grid">
+
+                {/* EVENTS */}
+                <DashboardCard
+                    title="Events"
+                    description="Create and manage events"
+                    actions={[
+                        { label: "Create Event", onClick: onCreateEvent }
+                    ]}
+                />
+
+                {/* LEADER ONLY */}
+                {role === "LEADER" && (
+                    <DashboardCard
+                        title="My Club"
+                        description="Manage your club events"
+                        actions={[
+                            { label: "Post Event", onClick: onCreateEvent }
+                        ]}
+                    />
+                )}
+
+                {/* ADMIN ONLY */}
+                {role === "ADMIN" && (
+                    <>
+                        <DashboardCard
+                            title="Clubs"
+                            description="Create and manage clubs"
+                            actions={[
+                                { label: "Create Club", onClick: onCreateClub },
+                                { label: "Manage Clubs", onClick: onManageClubs }
+                            ]}
+                        />
+
+                        <DashboardCard
+                            title="Moderation"
+                            description="Review content and activity"
+                            actions={[
+                                { label: "View Reports", onClick: () => alert("Later") }
+                            ]}
+                        />
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}
+
+
+function DashboardCard({ title, description, actions }) {
+    return (
+        <div className="dashboard-card">
+            <h3>{title}</h3>
+            <p className="muted">{description}</p>
+
+            <div className="dashboard-actions">
+                {actions.map((a, i) => (
+                    <button key={i} onClick={a.onClick}>
+                        {a.label}
+                    </button>
+                ))}
+            </div>
         </div>
     );
 }
