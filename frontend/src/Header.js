@@ -1,19 +1,21 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useContext } from "react";
 import { AuthContext } from "./AuthContext";
 import SideNav from "./components/SideNav";
 import GlobalSearch from "./GlobalSearch";
 import "./styles/header.css";
 
 const Header = () => {
-    const [navOpen, setNavOpen] = useState(false);
-    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
     const { user, login, logout, signup } = useContext(AuthContext);
+    const [navOpen, setNavOpen] = useState(false);
+
+    const isAdmin = !!user && String(user.role).toUpperCase() === "ADMIN";
+
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
     const [showModal, setShowModal] = useState(false);
     const [form, setForm] = useState({ email: "", password: "", username: "" });
     const [isSignup, setIsSignup] = useState(false);
     const [error, setError] = useState("");
-
-    const isAdmin = !!user && String(user.role).toUpperCase() === "ADMIN";
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -38,12 +40,6 @@ const Header = () => {
         }
     };
 
-    useEffect(() => {
-        const handleResize = () => setWindowWidth(window.innerWidth);
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, []);
-
     const showLogin = windowWidth > 800;
     const showNews = windowWidth > 700;
     const showEvents = windowWidth > 600;
@@ -58,87 +54,55 @@ const Header = () => {
     };
 
     return (
-        <header style={styles.header}>
-            <div style={styles.container}>
+        <header className="header">
+            <div className="header-inner">
 
-                <button
-                    onClick={() => setNavOpen(true)}
-                    title={"Quick Access Bar"}
-                    style={{
-                        marginRight:"5px",
-                        background: "none",
-                        border: "none",
-                        color: "#fff",
-                        fontSize: 20,
-                        cursor: "pointer"
-                    }}
-                >
-                    ☰
-                </button>
+                {/* Mobile menu */}
+                <div style={{display: "flex", gap: "10px"}}>
+                    <button
+                        className="menu-btn"
+                        onClick={() => setNavOpen(true)}
+                        aria-label="Open menu"
+                    >
+                        ☰
+                    </button>
 
-                <SideNav open={navOpen} onClose={() => setNavOpen(false)}/>
+                    <SideNav open={navOpen} onClose={() => setNavOpen(false)}/>
 
-                {/* Logo */}
-                <a href="#/home" style={styles.logo}
-                title={"Home"}>InfCom</a>
+                    {/* Logo */}
+                    <a href="#/home" className="logo">
+                        InfCom
+                    </a>
+                </div>
 
-                {/* Search Bar */}
-                <GlobalSearch />
+                {/* Search */}
+                <div className="header-search">
+                    <GlobalSearch/>
+                </div>
 
-                {/* Navigation */}
-                <nav style={styles.nav}>
-                    {showThreads && (
-                        <a
-                            href={String(user?.role || '').toUpperCase() === 'ADMIN' ? "#/admin/threads" : "#/threads"}
-                            style={styles.navLink}
-                        >
-                            Threads
-                        </a>
-                    )}
-                    {showClubs &&
-                        <a href={String(user?.role || '').toUpperCase() === 'ADMIN' ? "#/admin/clubs" : "#/clubs"}
-                           style={styles.navLink}>Clubs</a>}
-                    {showEvents &&
-                        <a href={String(user?.role || '').toUpperCase() === 'ADMIN' ? "#/admin/events" : "#/events"}
-                           style={styles.navLink}>Events</a>}
-                    {showNews &&
-                        <a href={String(user?.role || '').toUpperCase() === 'ADMIN' ? "#/admin/news" : "#/news"}
-                           style={styles.navLink}>News</a>}
+                <nav className="nav">
+                    <a href="#/threads">Threads</a>
+                    <a href="#/clubs">Clubs</a>
+                    <a href="#/events">Events</a>
+                    <a href="#/news">News</a>
 
-                    {isAdmin && (
-                        <a
-                            href="#/admin/users"
-                            style={{
-                                marginLeft: 10,
-                                textDecoration: "none",
-                                border: "1px solid #ccc",
-                                padding: "6px 10px",
-                                borderRadius: 6,
-                                background: "#f8f8f8",
-                                color: "#333"
-                            }}
-                        >
-                            Users
-                        </a>
-                    )}
-                </nav>
+                    {isAdmin && <a href="#/admin/users">Users</a>}
 
-                {user ? (
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    {user && (
                         <a
                             href="#/profile"
-                            style={{
-                                color: "#FFFFE3",
-                                textDecoration: "none",
-                                fontWeight: 500,
-                                padding: "6px 10px",
-                                borderRadius: 4,
-                                background: "rgba(255,255,255,0.15)"
-                            }}
+                            className="badge"
                             title="My Profile"
                         >
                             {user.username}
                         </a>
+                    )}
+                </nav>
+
+
+                {user ? (
+                    <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
+
 
                         <button className="Btn" onClick={logout}>
 
@@ -155,60 +119,59 @@ const Header = () => {
                 ) : (
                     showLogin && <button className={"login-button"} onClick={openModal}>Login</button>
                 )}
-
-
-                {/* Modal */}
-                {showModal && (
-                    <div style={styles.modalOverlay}>
-                        <div style={styles.modalContent}>
-                            <h3>{isSignup ? "Sign Up" : "Login"}</h3>
-                            {error && <p style={{color: "red"}}>{error}</p>}
-                            <form onSubmit={handleSubmit}>
-                                {isSignup && (
-                                    <input
-                                        name="username"
-                                        placeholder="Username"
-                                        value={form.username}
-                                        onChange={handleChange}
-                                        required
-                                        style={styles.input}
-                                    />
-                                )}
-                                <input
-                                    name="email"
-                                    type="email"
-                                    placeholder="Email"
-                                    value={form.email}
-                                    onChange={handleChange}
-                                    required
-                                    style={styles.input}
-                                />
-                                <input
-                                    name="password"
-                                    type="password"
-                                    placeholder="Password"
-                                    value={form.password}
-                                    onChange={handleChange}
-                                    required
-                                    style={styles.input}
-                                />
-                                <div style={{display: "flex", justifyContent: "flex-end"}}>
-                                    <button type="submit" style={styles.submitBtn}>
-                                        {isSignup ? "Sign Up" : "Login"}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowModal(false)}
-                                        style={styles.cancelBtn}
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
             </div>
+
+            {/* Modal */}
+            {showModal && (
+                <div style={styles.modalOverlay}>
+                    <div style={styles.modalContent}>
+                        <h3>{isSignup ? "Sign Up" : "Login"}</h3>
+                        {error && <p style={{color: "red"}}>{error}</p>}
+                        <form onSubmit={handleSubmit}>
+                            {isSignup && (
+                                <input
+                                    name="username"
+                                    placeholder="Username"
+                                    value={form.username}
+                                    onChange={handleChange}
+                                    required
+                                    style={styles.input}
+                                />
+                            )}
+                            <input
+                                name="email"
+                                type="email"
+                                placeholder="Email"
+                                value={form.email}
+                                onChange={handleChange}
+                                required
+                                style={styles.input}
+                            />
+                            <input
+                                name="password"
+                                type="password"
+                                placeholder="Password"
+                                value={form.password}
+                                onChange={handleChange}
+                                required
+                                style={styles.input}
+                            />
+                            <div style={{display: "flex", justifyContent: "flex-end"}}>
+                                <button type="submit" style={styles.submitBtn}>
+                                    {isSignup ? "Sign Up" : "Login"}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowModal(false)}
+                                    style={styles.cancelBtn}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </header>
     );
 };
@@ -216,8 +179,7 @@ const Header = () => {
 const styles = {
     header: {
         position: "fixed",
-        top: 0,
-        left: 0,
+        height: "200px",
         width: "100%",
         backgroundColor: "#041E42",
         color: "white",
@@ -225,7 +187,7 @@ const styles = {
     },
     container: {
         maxWidth: "1200px",
-        margin: "0 auto",
+        margin: " auto",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -233,7 +195,7 @@ const styles = {
     },
     logo: {
         fontWeight: "bold",
-        fontSize: "20px",
+        fontSize: "50px",
         color: "#FFFFE3",
         textDecoration: "none",
         cursor: "pointer",
@@ -292,5 +254,6 @@ const styles = {
     submitBtn: { padding: "8px 12px", marginRight: "10px", backgroundColor: "#D50032", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" },
     cancelBtn: { padding: "8px 12px", backgroundColor: "#ccc", color: "#000", border: "none", borderRadius: "4px", cursor: "pointer" },
 };
+
 
 export default Header;

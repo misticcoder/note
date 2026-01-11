@@ -293,7 +293,7 @@ export default function PostFeed({eventId}) {
             {/* CREATE POST */}
             <div className="post-composer">
                 <div className="composer-main">
-                    <div className={"x-header"}>
+                    <div className={"composer-header"}>
                         <div className="post-avatar">
                             {user ? user.username[0].toUpperCase() : "?"}
                         </div>

@@ -21,11 +21,12 @@
    PAGE LAYOUT
 ================================ */
 
-.post-feed {
-    width: 100%;
-    max-width: 720px;
-    margin: 0 auto;
+.post {
+    background: #f3f3f3;
+    padding: 16px;
+    border-radius: 4px;
 }
+
 
 .post-page {
     min-height: 100vh;
@@ -37,7 +38,6 @@
 
 .post-page-inner {
     width: 100%;
-    max-width: 720px;
     display: flex;
     flex-direction: column;
     gap: 1px;
@@ -56,9 +56,14 @@
     border-radius: var(--radius-md);
     background: var(--bg-card);
 }
+.composer-main{
+    width: 100%;
+}
 
 .composer-header{
-    display: inline;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .post-avatar {
@@ -94,7 +99,6 @@
 }
 
 .composer-body textarea::placeholder {
-    color: var(--text-muted);
 }
 
 /* ===============================
@@ -102,8 +106,10 @@
 ================================ */
 
 .composer-footer {
+    width: 100%;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 10px;
 }
 
@@ -202,15 +208,18 @@
     position: relative;
 }
 
+.x-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 5px;
+
+}
+
 .x-body {
     flex: 1;
 }
 
-.x-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
 
 .x-header > div {
     position: relative;
@@ -246,10 +255,12 @@
 ================================ */
 
 .x-actions {
+    border-top: 1px solid var(--border-subtle);
     display: flex;
     gap: 16px;
-    margin:  10px 20px 0;
-    justify-content: space-between;
+    font-size: 13px;
+    color: #666;
+    align-items: center;
 }
 
 .x-action {
@@ -259,7 +270,7 @@
     color: var(--text-muted);
     display: flex;
     gap: 4px;
-    align-items: center;
+    margin: 0 auto;
     font-size: 16px;
     cursor: pointer;
     padding: 4px 6px;

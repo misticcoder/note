@@ -76,8 +76,6 @@ export default function ThreadSection({
                 </button>
             )}
 
-            <h3 className="col-title">{title}</h3>
-
             {threads.map(thread => (
                 <div
                     key={thread.id}

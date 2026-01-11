@@ -1,8 +1,9 @@
 import {useEffect, useState, useContext, useMemo} from "react";
 import { AuthContext } from "./AuthContext";
 import ThreadSection from "./Threads/ThreadSection";
-
+import "./styles/index.css";
 import PostFeed from "./Post/PostFeed";
+import "./styles/Home.css";
 
 
 function Home() {
@@ -65,18 +66,8 @@ function Home() {
             fetch("/api/users").then(r => r.json()).then(setUsers).catch(() => setUsers([]));
         }
 
-        function handleResize() { setWindowWidth(window.innerWidth); }
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
     }, [isAdmin]);
 
-    const hideThreads = windowWidth < 1000;
-    const hideEvents = windowWidth < 800;
-
-    const newsWidth = hideThreads ? (hideEvents ? "70%" : "50%") : "40%";
-    const clubsWidth = hideThreads ? (hideEvents ? "30%" : "25%") : "20%";
-    const threadsWidth = "20%";
-    const eventsWidth = hideThreads ? "25%" : "20%";
 
     // Group clubs by category and sort by member count
     const clubsByCategory = useMemo(() => {
@@ -276,88 +267,61 @@ function Home() {
         return (
             <div
                 key={event.id}
-                style={{
-                    ...styles.Events,
-                    ...(hoveredId === `event-${event.id}` ? boxHover : {})
-                }}
-                onMouseEnter={() => setHoveredId(`event-${event.id}`)}
-                onMouseLeave={() => setHoveredId(null)}
+                className={`card event-row`}
                 onClick={() => (window.location.hash = `#/events/${event.id}`)}
             >
-                <div style={styles.eventTitle}>{event.title}</div>
-                <div
-                    style={{
-                        ...styles.eventTime,
-                        ...(event._status === "LIVE"
-                            ? styles.livePill
-                            : event._status === "ENDED"
-                                ? styles.endedText
-                                : {})
-                    }}
-                >
+                <span className="truncate">{event.title}</span>
+                <span className={`event-pill ${event._status.toLowerCase()}`}>
                     {label}
-                </div>
+                </span>
             </div>
         );
     };
 
-
-
-
     return (
-        <main style={styles.Dashboard}>
-            <div style={styles.container}>
-                <div style={styles.flexRow}>
+        <main className={"page"}>
+            <div className={"container"}>
+                <div className={"home-grid"}>
                     {/* Thread */}
-                    {!hideThreads && (
+                    <aside className={"threads-column"}>
+                        <h3 className="column-title">Threads</h3>
                         <ThreadSection
-                            title="Threads"
-                            width={threadsWidth}
                             showAddButton={isAdmin}
                             onAddThread={() => setShowThreadModal(true)}
                         />
-                    )}
+                    </aside>
+
                     {/* Daily News */}
-
-                    <div
-                        style={{
-                            width: newsWidth,
-                            display: "flex",
-                            flexDirection: "column",
-                            minHeight: "100vh"
-                        }}
-                    >
-                        <h3 style={styles.col_title}>Feed</h3>
+                    <aside className={"column"}>
+                        <h3 className={"column-title"}>Feed</h3>
                         <PostFeed/>
-                    </div>
-
+                    </aside>
 
                     {/* Clubs */}
-                    <div style={{width: clubsWidth, display: "flex", flexDirection: "column"}}>
+                    <aside className={"column"}>
                         {isAdmin && (
-                            <button style={styles.addBtn} onClick={openClubModal}>
+                            <button className={"add-btn"} onClick={openClubModal}>
                                 Add Club
                             </button>
                         )}
 
+
+
                         {clubs.length === 0 && (
-                            <div style={styles.emptyText}>No clubs yet.</div>
+                            <div className={"empty-text"}>No clubs yet.</div>
                         )}
 
 
                         {Object.entries(clubsByCategory).map(([category, list]) => (
                             <div key={category}>
-                                <h4 className={"col-title"}>
+                                <h4 className={"column-title"}>
                                     {category}
                                 </h4>
 
                                 {list.slice(0, 5).map(club => (
                                     <div
                                         key={club.id}
-                                        style={{
-                                            ...styles.Clubs,
-                                            ...(hoveredId === `club-${club.id}` ? boxHover : {})
-                                        }}
+                                        className={`card ${hoveredId === club.id ? "hover" : ""}`}
                                         onMouseEnter={() => setHoveredId(`club-${club.id}`)}
                                         onMouseLeave={() => setHoveredId(null)}
                                         onClick={() => {
@@ -365,20 +329,12 @@ function Home() {
                                         }}
                                     >
                                         <div
-                                            style={{
-                                                flex: 1,
-                                                overflow: "hidden",
-                                                whiteSpace: "nowrap",
-                                                textOverflow: "ellipsis"
-                                            }}
+                                            className={"truncate"}
                                         >
                                             {club.name}
                                         </div>
 
-                                        <span style={{
-                                            fontSize: "11px",
-                                            opacity: 0.8
-                                        }}>
+                                        <span className={"muted"}>
                                             {club.members?.length || 0}
                                         </span>
                                     </div>
@@ -386,52 +342,49 @@ function Home() {
 
                             </div>
                         ))}
-                    </div>
+                    </aside>
 
 
                     {/* Events */}
 
-                    {!hideEvents && (
-                        <div style={{width: eventsWidth, display: "flex", flexDirection: "column"}}>
+                    <aside className={"events-column"}>
 
-                            {isAdmin && (
-                                <button style={styles.addBtn} onClick={() => {
-                                    window.location.hash = "#/events";
-                                }}>Add Event</button>
+                        {isAdmin && (
+                            <button className={"add-btn"} onClick={() => {
+                                window.location.hash = "#/events";
+                            }}>Add Event</button>
+                        )}
+                        <h3 className={"column-title"}>ONGOING Events</h3>
+
+                        <div>
+
+                            {ongoingEvents.length > 0 ? (
+                                ongoingEvents.map(renderEventRow)
+                            ) : (
+                                <div className={"empty-text"}>No ongoing events</div>
                             )}
 
-                            <h3 style={styles.col_title}>ONGOING Events</h3>
-
-                            <div>
-
-                                {ongoingEvents.length > 0 ? (
-                                    ongoingEvents.map(renderEventRow)
-                                ) : (
-                                    <div style={styles.emptyText}>No ongoing events</div>
-                                )}
-
-                            </div>
-
-                            <div>
-                                <h3 style={styles.col_title}>UPCOMING Events</h3>
-                                {upcomingEvents.length > 0 && (
-                                    <>
-                                        {upcomingEvents.slice(0, 5).map(renderEventRow)}
-                                    </>
-                                )}
-                            </div>
-
-                            <div>
-                                <h3 style={styles.col_title}>COMPLETED Events</h3>
-                                {completedEvents.length > 0 && (
-                                    <>
-                                        {completedEvents.slice(0, 3).map(renderEventRow)}
-                                    </>
-                                )}
-                            </div>
-
                         </div>
-                    )}
+
+                        <div>
+                            <h3 className={"column-title"}>UPCOMING Events</h3>
+                            {upcomingEvents.length > 0 && (
+                                <>
+                                    {upcomingEvents.slice(0, 5).map(renderEventRow)}
+                                </>
+                            )}
+                        </div>
+
+                        <div>
+                            <h3 className={"column-title"}>COMPLETED Events</h3>
+                            {completedEvents.length > 0 && (
+                                <>
+                                    {completedEvents.slice(0, 3).map(renderEventRow)}
+                                </>
+                            )}
+                        </div>
+
+                    </aside>
 
 
                 </div>
@@ -539,17 +492,6 @@ function Home() {
     );
 }
 
-const boxBase = {
-    borderTop: "1px solid #cacaca",
-    boxShadow: "0 5px 5px rgba(0,0,0,0.1)",
-    padding: "12px 12px",
-    cursor: "pointer",
-    minHeight: "37px",
-    display: "flex",
-    alignItems: "center",
-    backgroundColor: "#605f5f",
-    transition: "transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease"
-};
 
 const styles = {
     Dashboard: {
@@ -574,10 +516,7 @@ const styles = {
     },
 
 
-    Threads: { ...boxBase, color:"#FFFFE3"},
-    News: { ...boxBase, color:"#FFFFE3"},
-    Clubs: { ...boxBase, color:"#FFFFE3"},
-    Events: { ...boxBase,color:"#FFFFE3"},
+
 
     HeadNews: { position: "relative", width: "100%", height: "150px", marginBottom: "15px", borderRadius: "6px", overflow: "hidden", boxShadow: "0 4px 10px rgba(0,0,0,0.2)", cursor: "pointer" },
     HeadNewsImage: { width: "100%", height: "100%", objectFit: "cover" },
@@ -603,15 +542,7 @@ const styles = {
         paddingRight: "15px",
         display: "inline-block"},
 
-    eventRow: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "0 10px",
-        minHeight: 40,
-        borderTop: "1px solid #555",
-        cursor: "pointer"
-    },
+
     eventTitle: {
         flex: 1,
         minWidth: 0,
@@ -632,13 +563,7 @@ const styles = {
     },
     endedText: {
         color: "#9aa0a6"
-    },
-    emptyText: {
-        ...boxBase,
-        padding: "8px 12px",
-        color: "#9aa0a6",
-        fontSize: "13px",
-        fontStyle: "italic"}
+    }
 };
 
 export default Home;

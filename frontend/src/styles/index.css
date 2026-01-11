@@ -1,5 +1,4 @@
 body {
-    background-color: #2f2f2f;
     font-family: "Roboto",sans-serif;
     height: 100%;
     margin: 0;
@@ -9,19 +8,15 @@ body {
     color: #FFFFE3;
 }
 
-
 .container{
     width: 100%;
     max-width: 1200px;
-    padding: 60px 24px 24px;
+    padding: 10px 24px 24px;
     box-sizing: border-box;
-    background-color: #4a4a4a
+    background-color: #1e1e1e
 }
 
 .page{
-    width: 100%;
-    max-width: 1200px;
-    box-sizing: border-box;
     background-color:#4a4a4a;
     margin: 0 auto;
     min-height: 100vh;
