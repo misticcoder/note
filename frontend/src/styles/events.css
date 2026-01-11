@@ -506,7 +506,7 @@
     padding: 10px;
 }
 
-.events-top h1 {
+.events-top h1, h2, h3 {
     margin: 0;
     font-size: 26px;
     color: #ffffe3;
@@ -840,3 +840,4 @@
 .comment-username{
     color: #0f172a;
 }
+

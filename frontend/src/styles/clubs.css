@@ -193,3 +193,58 @@
     text-decoration: underline;
 }
 
+
+/* =========================
+   TABLE CONTAINER
+========================= */
+.clubs-table {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+/* =========================
+   HEADER + ROW (SHARED)
+========================= */
+
+.clubs-header {
+    background: #f4f4f4;
+    font-weight: 600;
+    font-size: 13px;
+    color: #555;
+    height: 2em;
+}
+
+/* =========================
+   DATA ROW
+========================= */
+.clubs-row {
+    border-top: 1px solid #eee;
+}
+.clubs-header,
+.clubs-row {
+    display: grid;
+    grid-template-columns:
+        40px                /* index */
+        minmax(100px, 1fr)  /* category */
+        minmax(100px, 1fr)  /* Name */
+        minmax(90px, 1fr)   /* Members */
+        minmax(110px, 1fr)  /* Events */
+        minmax(120px, 1fr) /* Upcoming */
+        minmax(120px, 1fr); /* Actions */
+    align-items: center;
+    padding: 12px 14px;
+    column-gap: 12px;
+}
+
+.title{
+    color: #ffffe3;
+}
+
+.clubs-table {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    overflow: hidden;
+}

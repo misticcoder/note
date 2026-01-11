@@ -96,7 +96,7 @@
 ========================= */
 .header {
     width: 100%;
-    position: sticky;
+    position: sticky ;
     z-index: 1000;
 }
 

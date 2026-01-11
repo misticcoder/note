@@ -92,111 +92,114 @@ export default function ProfilePage() {
 
 
     return (
-        <div className="profile-page">
-            <ProfileHeader profile={profile} />
+        <div className={"page"}>
+            <div className={"container"}>
+                <div className="profile-page">
+                    <ProfileHeader profile={profile}/>
 
-            {/* Tabs */}
-            <div className="profile-tabs">
-                <TabButton
-                    label="Overview"
-                    active={activeTab === "overview"}
-                    onClick={() => setActiveTab("overview")}
-                />
-                <TabButton
-                    label="Events"
-                    active={activeTab === "events"}
-                    onClick={() => setActiveTab("events")}
-                />
-                <TabButton
-                    label="Clubs"
-                    active={activeTab === "clubs"}
-                    onClick={() => setActiveTab("clubs")}
-                />
-                <TabButton
-                    label="Badges"
-                    active={activeTab === "badges"}
-                    onClick={() => setActiveTab("badges")}
-                />
-                <TabButton
-                    label="Edit Profile"
-                    active={activeTab === "edit"}
-                    onClick={() => setActiveTab("edit")}
-                />
+                    {/* Tabs */}
+                    <div className="profile-tabs">
+                        <TabButton
+                            label="Overview"
+                            active={activeTab === "overview"}
+                            onClick={() => setActiveTab("overview")}
+                        />
+                        <TabButton
+                            label="Events"
+                            active={activeTab === "events"}
+                            onClick={() => setActiveTab("events")}
+                        />
+                        <TabButton
+                            label="Clubs"
+                            active={activeTab === "clubs"}
+                            onClick={() => setActiveTab("clubs")}
+                        />
+                        <TabButton
+                            label="Badges"
+                            active={activeTab === "badges"}
+                            onClick={() => setActiveTab("badges")}
+                        />
+                        <TabButton
+                            label="Edit Profile"
+                            active={activeTab === "edit"}
+                            onClick={() => setActiveTab("edit")}
+                        />
 
-                {(profile.role === "ADMIN" || profile.role === "LEADER") && (
-                    <TabButton
-                        label="Dashboard"
-                        active={activeTab === "dashboard"}
-                        onClick={() => setActiveTab("dashboard")}
-                    />
-                )}
-
-
-            </div>
-
-            {/* Tab Content */}
-            <div className="profile-tab-content">
-                {activeTab === "overview" && (
-                    <OverviewTab
-                        profile={profile}
-                        events={events}
-                        clubs={clubs}
-                        allEvents={allEvents}
-                        joinedEventIds={joinedEventIds}
-                        onGoToEvents={() => setActiveTab("events")}
-                        onGoToClubs={() => setActiveTab("clubs")}
-                        onEditProfile={() => setActiveTab("edit")}
-                    />
-
-                )}
+                        {(profile.role === "ADMIN" || profile.role === "LEADER") && (
+                            <TabButton
+                                label="Dashboard"
+                                active={activeTab === "dashboard"}
+                                onClick={() => setActiveTab("dashboard")}
+                            />
+                        )}
 
 
-                {activeTab === "events" && (
-                    <EventsTab
-                        events={events}
-                        eventsView={eventsView}
-                        setEventsView={setEventsView}
-                    />
-                )}
+                    </div>
 
-                {activeTab === "clubs" && (
-                    <ProfileClubsTable clubs={clubs} />
-                )}
+                    {/* Tab Content */}
+                    <div className="profile-tab-content">
+                        {activeTab === "overview" && (
+                            <OverviewTab
+                                profile={profile}
+                                events={events}
+                                clubs={clubs}
+                                allEvents={allEvents}
+                                joinedEventIds={joinedEventIds}
+                                onGoToEvents={() => setActiveTab("events")}
+                                onGoToClubs={() => setActiveTab("clubs")}
+                                onEditProfile={() => setActiveTab("edit")}
+                            />
 
-
-
-                {activeTab === "badges" && (
-                    <div className="muted">Badges coming soon</div>
-                )}
-
-                {activeTab === "edit" && (
-                    <EditProfileTab
-                        profile={profile}
-                        email={user.email}
-                        onSave={saveProfile}
-                        onAvatarUpdated={(updated) => {
-                            setProfile(updated);
-
-                            setUser(prev => ({
-                                ...prev,
-                                avatarUrl: updated.avatarUrl,
-                                displayName: updated.displayName,
-                            }));
-                        }}
-
-                    />
-                )}
-
-                {activeTab === "dashboard" && (
-                    <DashboardTab
-                        role={profile.role}
-                        onCreateEvent={() => setActiveTab("events")}
-                        onCreateClub={() => alert("Create club modal later")}
-                        onManageClubs={() => setActiveTab("clubs")}
-                    />
-                )}
+                        )}
 
 
+                        {activeTab === "events" && (
+                            <EventsTab
+                                events={events}
+                                eventsView={eventsView}
+                                setEventsView={setEventsView}
+                            />
+                        )}
+
+                        {activeTab === "clubs" && (
+                            <ProfileClubsTable clubs={clubs}/>
+                        )}
+
+
+                        {activeTab === "badges" && (
+                            <div className="muted">Badges coming soon</div>
+                        )}
+
+                        {activeTab === "edit" && (
+                            <EditProfileTab
+                                profile={profile}
+                                email={user.email}
+                                onSave={saveProfile}
+                                onAvatarUpdated={(updated) => {
+                                    setProfile(updated);
+
+                                    setUser(prev => ({
+                                        ...prev,
+                                        avatarUrl: updated.avatarUrl,
+                                        displayName: updated.displayName,
+                                    }));
+                                }}
+
+                            />
+                        )}
+
+                        {activeTab === "dashboard" && (
+                            <DashboardTab
+                                role={profile.role}
+                                onCreateEvent={() => setActiveTab("events")}
+                                onCreateClub={() => alert("Create club modal later")}
+                                onManageClubs={() => setActiveTab("clubs")}
+                            />
+                        )}
+
+
+                    </div>
+                </div>
             </div>
         </div>
     );
@@ -204,7 +207,7 @@ export default function ProfilePage() {
 
 /* ───────────────────────────────────────── */
 
-function ProfileHeader({ profile }) {
+function ProfileHeader({profile}) {
     const initial = (profile?.displayName || profile?.username || "?")[0];
 
 
@@ -230,27 +233,30 @@ function ProfileHeader({ profile }) {
             </div>
 
             <div className="profile-info">
-                <h1>{profile.displayName || profile.username}</h1>
-                <p className="profile-role">{profile.role}</p>
+                <div>
+                    <h1>Display Name: {profile.displayName || profile.username}</h1>
 
-                {profile.bio && <p className="profile-bio">{profile.bio}</p>}
 
-                <div className="profile-stats">
-                    <div>
-                        <strong>{profile.eventsJoined}</strong>
-                        <span>Events</span>
+                    {profile.bio && <p className="profile-bio"> Bio: {profile.bio}</p>}
+
+                    <div className="profile-stats">
+                        <div>
+                            <strong>{profile.eventsJoined}</strong>
+                            <span>Events</span>
+                        </div>
+                        <div>
+                            <strong>{profile.participationScore}</strong>
+                            <span>Score</span>
+                        </div>
                     </div>
-                    <div>
-                        <strong>{profile.participationScore}</strong>
-                        <span>Score</span>
-                    </div>
+                </div>
+                <div>
+                    <span className="badge">{profile.role}</span>
                 </div>
             </div>
         </div>
     );
 }
-
-
 
 
 function OverviewTab({
@@ -279,7 +285,7 @@ function OverviewTab({
 
                 <h2 className={"title"}>Welcome back, {profile.displayName || profile.username}</h2>
                 <div className="muted">@{profile.username}</div>
-                <span className="badge">{profile.role}</span>
+
 
             </div>
 
@@ -322,7 +328,10 @@ function OverviewTab({
                 />
             </DashboardSection>
 
-            <DashboardSection>
+            <DashboardSection
+                title="RcommendedEvents"
+                actionLabel="View all"
+                onAction={onGoToClubs}>
                 <RecommendedEvents
                     allEvents={allEvents}
                     joinedEventIds={joinedEventIds}
@@ -648,13 +657,6 @@ function RecommendedEvents({
 
     return (
         <div className="overview-section">
-            <div className="overview-section-header">
-                <h3 className={"title"}>Recommended for You</h3>
-                <button className="link-btn" onClick={onViewEvents}>
-                    View all
-                </button>
-            </div>
-
             <ul className="overview-event-list">
                 <EventTable
                     events={recommended}

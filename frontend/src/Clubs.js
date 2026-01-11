@@ -2,6 +2,8 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "./AuthContext";
 import "./styles/index.css";
+import "./styles/events.css";
+import Dropdown from "./components/Dropdown";
 
 export default function Clubs() {
     const { user } = useContext(AuthContext);
@@ -143,8 +145,8 @@ export default function Clubs() {
         <div className={"page"}>
             <div className={"container"}>
                 <div style={styles.wrap}>
-                    <div style={styles.headerRow}>
-                        <h2>Clubs</h2>
+                    <div className={"events-top"}>
+                        <h2 >Clubs</h2>
                         <div>
                             <select
                                 value={category}
@@ -188,52 +190,60 @@ export default function Clubs() {
                     {err && <p style={{color: "red"}}>{err}</p>}
 
                     {!loading && !err && (
-                        <div style={styles.tableWrap}>
-                            <div style={{...styles.row, ...styles.head}}>
-                                <div style={{width: 60}}>#</div>
-                                <div style={{width: 120}}>Category</div>
-                                <div style={{flex: 2}}>Name</div>
-                                <div style={{flex: 4}}>Description</div>
-                                <div style={{width: 100}}>Members</div>
-                                <div style={{width: 100}}>Events</div>
-                                <div style={{width: 100}}>Upcoming Events</div>
-                                {isAdmin && <div style={{width: 180, textAlign: "right"}}>Actions</div>}
+                        <div className={"clubs-table"}>
+                            <div className={"clubs-header"}>
+                                <div>#</div>
+                                <div>Category</div>
+                                <div>Name</div>
+                                <div>Members</div>
+                                <div>Events</div>
+                                <div>Upcoming Events</div>
+                                {isAdmin && <div>Actions</div>}
                             </div>
 
                             {filtered.map((cl, idx) => (
-                                <div key={cl.id} style={styles.row}>
-                                    <div style={{width: 60}}>{idx + 1}</div>
-                                    <div style={{width: 120}}>{cl.category}</div>
-
-                                    <div style={{
-                                        flex: 2,
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                        whiteSpace: "nowrap"
-                                    }}>
+                                <div key={cl.id} className={"clubs-row"}>
+                                    <div >{idx + 1}</div>
+                                    <div >{cl.category}</div>
+                                    <div >
                                         <a href={`#/clubs/${cl.id}`} style={{textDecoration: "none"}}>
                                             {cl.name}
                                         </a>
                                     </div>
-
-                                    <div style={{
-                                        flex: 4,
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                        whiteSpace: "nowrap"
-                                    }}>
-                                        {cl.description}
-                                    </div>
-
-                                    <div style={{width: 100}}>{cl.memberCount}</div>
-                                    <div style={{width: 100}}>{cl.eventCount}</div>
-                                    <div style={{width: 100}}>{cl.upcomingEventCount}</div>
-
+                                    <div>{cl.memberCount > 0 ? (
+                                        <>
+                                            <span className="rating-count">
+                                        {cl.memberCount}
+                                    </span>
+                                        </>
+                                    ) : (
+                                        <span className="muted">No Members</span>
+                                    )}</div>
+                                    <div> {cl.eventCount > 0 ? (
+                                        <>
+                                            <span className="rating-count">
+                                                {cl.eventCount}
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <span className="muted">No Events</span>
+                                    )}</div>
+                                    <div> {cl.upcomingEventCount > 0 ? (
+                                        <>
+                                            <span className="rating-count">
+                                                {cl.upcomingEventCount}
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <span className="muted">No upcoming Events</span>
+                                    )}</div>
 
                                     {isAdmin && (
-                                        <div style={{width: 180, textAlign: "right"}}>
-                                            <button style={styles.editBtn} onClick={() => openEdit(cl)}>Edit</button>
-                                            <button style={styles.delBtn} onClick={() => deleteClub(cl)}>Delete</button>
+                                        <div className="actions">
+                                            <Dropdown
+                                                onEdit={() => openEdit(cl)}
+                                                onDelete={() => onDelete(cl)}
+                                            />
                                         </div>
                                     )}
                                 </div>

@@ -106,6 +106,7 @@
 /* Responsive */
 /* Desktop */
 .home-grid {
+    padding:30px ;
     display: grid;
     grid-template-columns: 220px minmax(0, 1fr) 220px 220px;
     gap: 32px;

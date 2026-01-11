@@ -1,6 +1,6 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "./AuthContext";
-import "./styles/club_header.css";
+import "./styles/clubs.css";
 import ClubHeader from "./ClubHeader";
 import EventTable from "./Events/EventTable";
 
