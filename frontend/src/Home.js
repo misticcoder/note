@@ -284,7 +284,7 @@ function Home() {
                 <div className={"home-grid"}>
                     {/* Thread */}
                     <aside className={"threads-column"}>
-                        <h3 className="column-title">Threads</h3>
+
                         <ThreadSection
                             showAddButton={isAdmin}
                             onAddThread={() => setShowThreadModal(true)}
@@ -305,12 +305,9 @@ function Home() {
                             </button>
                         )}
 
-
-
                         {clubs.length === 0 && (
-                            <div className={"empty-text"}>No clubs yet.</div>
+                            <div className={"muted"}>No clubs yet.</div>
                         )}
-
 
                         {Object.entries(clubsByCategory).map(([category, list]) => (
                             <div key={category}>

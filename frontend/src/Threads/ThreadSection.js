@@ -69,12 +69,14 @@ export default function ThreadSection({
     };
 
     return (
-        <div style={{ width, display: "flex", flexDirection: "column" }}>
+        <div style={{width, display: "flex", flexDirection: "column"}}>
             {showAddButton && user && (
                 <button className="add-btn" onClick={() => setShowModal(true)}>
                     Add Thread
                 </button>
             )}
+
+            <h3 className="column-title">Threads</h3>
 
             {threads.map(thread => (
                 <div
@@ -88,8 +90,8 @@ export default function ThreadSection({
                     }}
                 >
 
-                    <div style={{ display: "flex", flexDirection: "column" }}>
-                        <span style={{ fontWeight: 400 }}>
+                    <div style={{display: "flex", flexDirection: "column"}}>
+                        <span style={{fontWeight: 400}}>
                             {thread.title}
                         </span>
                         <span className={"x-time"}>
@@ -125,7 +127,7 @@ export default function ThreadSection({
                                 className="textarea"
                             />
 
-                            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                            <div style={{display: "flex", gap: 10, justifyContent: "flex-end"}}>
                                 <button
                                     type="button"
                                     className="cancel-btn"
