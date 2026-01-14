@@ -1,6 +1,8 @@
 import { useContext } from "react";
 import { AuthContext } from "./AuthContext";
 import "./styles/events.css";
+import Dropdown from "./components/Dropdown";
+
 
 export default function EventHeader({
                                         event,
@@ -144,26 +146,21 @@ export default function EventHeader({
                                     </button>
                                 </>
                             )}
+
+                            {/* ADMIN ACTIONS */}
+                            <div className={"event-actions"}>
+                                {isAdmin && (
+                                    <Dropdown
+
+                                        onEdit={onEdit}
+                                        onDelete={onDelete}
+                                    />
+                                )}
+                            </div>
                         </div>
                     )}
 
-                    {/* ADMIN ACTIONS */}
-                    {isAdmin && (
-                        <div className="event-admin-actions">
-                            <button
-                                className="admin-btn"
-                                onClick={onEdit}
-                            >
-                                Edit
-                            </button>
-                            <button
-                                className="admin-btn danger"
-                                onClick={onDelete}
-                            >
-                                Delete
-                            </button>
-                        </div>
-                    )}
+
                 </div>
             </div>
 

@@ -246,6 +246,9 @@
 .event-actions {
     display: flex;
     gap: 12px;
+    background-color: #ffffe3;
+    border-radius: 15px;
+
 }
 
 .event-actions button {
@@ -532,7 +535,7 @@
     background: #ffffff;
     border: 1px solid #ddd;
     border-radius: 2px;
-    overflow: hidden;
+
 }
 
 /* =========================
@@ -568,6 +571,38 @@
     column-gap: 12px;
 }
 
+.events-row {
+    border-top: 1px solid #eee;
+}
+.events-header,
+.events-row {
+    display: grid;
+    grid-template-columns:
+        48px                /* index */
+        minmax(220px, 2fr)  /* event */
+        minmax(120px, 1fr)  /* club */
+        minmax(90px, 1fr)   /* status */
+        minmax(110px, 1fr);  /* rating */
+
+    align-items: center;
+    padding: 12px 14px;
+    column-gap: 12px;
+}
+
+.events-header.has-actions,
+.events-row.has-actions {
+    display: grid;
+    grid-template-columns:
+        48px                /* index */
+        minmax(220px, 2fr)  /* event */
+        minmax(120px, 1fr)  /* club */
+        minmax(90px, 1fr)   /* status */
+        minmax(110px, 1fr)  /* rating */
+        minmax(120px, 1fr); /* actions */
+    align-items: center;
+    padding: 12px 14px;
+    column-gap: 12px;
+}
 .events-header .club-col,
 .events-row .club-col {
     white-space: nowrap;
@@ -588,7 +623,6 @@
    RANK COLUMN
 ========================= */
 .rank {
-
     padding-right: 10px;
     font-weight: 600;
     color: #666;

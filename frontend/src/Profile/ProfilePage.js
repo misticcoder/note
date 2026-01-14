@@ -5,6 +5,7 @@ import "../styles/profile.css";
 import ProfileClubsTable from "../Clubs/ProfileClubsTable";
 import "../styles/events.css";
 
+import "../styles/buttons.css"
 import DashboardSection from "../components/DashboardSection";
 
 
@@ -222,45 +223,47 @@ function ProfileHeader({profile}) {
 
     return (
         <div className="profile-header">
-            <div className="profile-avatar">
-                {profile?.avatarUrl ? (
-                    <img
-                        src={profile.avatarUrl}
-                        alt="avatar"
-                        style={{
-                            width: 80,
-                            height: 80,
-                            borderRadius: "50%",
-                            objectFit: "cover",
-                        }}
-                    />
-                ) : (
-                    <div className="avatar-placeholder">
-                        {initial}
-                    </div>
-                )}
-            </div>
-
-            <div className="profile-info">
-                <div>
-                    <h1>Display Name: {profile.displayName || profile.username}</h1>
-
-
-                    {profile.bio && <p className="profile-bio"> Bio: {profile.bio}</p>}
-
-                    <div className="profile-stats">
-                        <div>
-                            <strong>{profile.eventsJoined}</strong>
-                            <span>Events</span>
+            <div className={"profile-top"}>
+                <div className="profile-avatar">
+                    {profile?.avatarUrl ? (
+                        <img
+                            src={profile.avatarUrl}
+                            alt="avatar"
+                            style={{
+                                width: 80,
+                                height: 80,
+                                borderRadius: "50%",
+                                objectFit: "cover",
+                            }}
+                        />
+                    ) : (
+                        <div className="avatar-placeholder">
+                            {initial}
                         </div>
-                        <div>
-                            <strong>{profile.participationScore}</strong>
-                            <span>Score</span>
-                        </div>
-                    </div>
+                    )}
                 </div>
-                <div>
-                    <span className="badge">{profile.role}</span>
+
+                <div className="profile-info">
+                    <div>
+                        <h1>Display Name: {profile.displayName || profile.username}</h1>
+
+
+                        {profile.bio && <p className="profile-bio"> Bio: {profile.bio}</p>}
+
+                        <div className="profile-stats">
+                            <div>
+                                <strong>{profile.eventsJoined}</strong>
+                                <span>Events</span>
+                            </div>
+                            <div>
+                                <strong>{profile.participationScore}</strong>
+                                <span>Score</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <span className="badge">{profile.role}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -313,7 +316,7 @@ function OverviewTab({
                     </div>
 
                     <div className="stat-card">
-                        <strong>{profile.participationScore}</strong>
+                    <strong>{profile.participationScore}</strong>
                         <span>Participation Score</span>
                     </div>
 
@@ -366,9 +369,10 @@ function OverviewTab({
             <DashboardSection
                 title="Actions">
                 <div className="overview-actions">
-                    <button onClick={onEditProfile} className={"button"}>Edit Profile</button>
-                    <button onClick={onGoToEvents} className={"button"}>Browse Events</button>
-                    <button onClick={onGoToClubs} className={"button"}>Discover Clubs</button>
+                    <button onClick={onEditProfile}
+                            title={"Edit Profile"} className={"dbutton"}>Edit Profile</button>
+                    <button title={"Browse Events"} onClick={onGoToEvents} className={"dbutton"}>Browse Events</button>
+                    <button title={"Browse Clubs"} onClick={onGoToClubs} className={"dbutton"}>Discover Clubs</button>
                 </div>
             </DashboardSection>
 

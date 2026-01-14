@@ -203,7 +203,7 @@ export default function Clubs() {
 
                             {filtered.map((cl, idx) => (
                                 <div key={cl.id} className={"clubs-row"}>
-                                    <div >{idx + 1}</div>
+                                    <div className={"rank"}>{idx + 1}</div>
                                     <div >{cl.category}</div>
                                     <div >
                                         <a href={`#/clubs/${cl.id}`} style={{textDecoration: "none"}}>

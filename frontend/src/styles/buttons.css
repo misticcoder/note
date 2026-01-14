@@ -22,7 +22,7 @@
 
 /* DOWNLOAD */
 /* From Uiverse.io by mrhyddenn */
-.button {
+.dbutton {
     -moz-appearance: none;
     -webkit-appearance: none;
     appearance: none;
@@ -39,8 +39,8 @@
     transition: all .15s ease;
 }
 
-.button::before,
-.button::after {
+.dbutton::before,
+.dbutton::after {
     content: '';
     display: block;
     position: absolute;
@@ -51,36 +51,36 @@
     transition: all .15s ease;
 }
 
-.button::before {
+.dbutton::before {
     top: 0;
     border-bottom-width: 0;
 }
 
-.button::after {
+.dbutton::after {
     bottom: 0;
     border-top-width: 0;
 }
 
-.button:active,
-.button:focus {
+.dbutton:active,
+.dbutton:focus {
     outline: none;
 }
 
-.button:active::before,
-.button:active::after {
+.dbutton:active::before,
+.dbutton:active::after {
     right: 3px;
     left: 3px;
 }
 
-.button:active::before {
+.dbutton:active::before {
     top: 3px;
 }
 
-.button:active::after {
+.dbutton:active::after {
     bottom: 3px;
 }
 
-.button_lg {
+.dbutton_lg {
     position: relative;
     display: block;
     padding: 10px 20px;
@@ -90,7 +90,7 @@
     box-shadow: inset 0px 0px 0px 1px transparent;
 }
 
-.button_lg::before {
+.dbutton_lg::before {
     content: '';
     display: block;
     position: absolute;
@@ -101,7 +101,7 @@
     background-color: #0f1923;
 }
 
-.button_lg::after {
+.dbutton_lg::after {
     content: '';
     display: block;
     position: absolute;
@@ -113,7 +113,7 @@
     transition: all .2s ease;
 }
 
-.button_sl {
+.dbutton_sl {
     display: block;
     position: absolute;
     top: 0;
@@ -125,19 +125,19 @@
     transition: all .2s ease;
 }
 
-.button_text {
+.dbutton_text {
     position: relative;
 }
 
-.button:hover {
+.dbutton:hover {
     color: #0f1923;
 }
 
-.button:hover .button_sl {
+.dbutton:hover .button_sl {
     width: calc(100% + 15px);
 }
 
-.button:hover .button_lg::after {
+.dbutton:hover .button_lg::after {
     background-color: #fff;
 }
 

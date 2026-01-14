@@ -4,6 +4,7 @@ import { AuthContext } from "../AuthContext";
 import "../styles/table.css";
 import "../styles/Threads.css";
 import Dropdown from "../components/Dropdown";
+import {timeAgo} from "../components/timeAgo";
 
 export default function ThreadList() {
     const { user } = useContext(AuthContext);
@@ -30,6 +31,8 @@ export default function ThreadList() {
                     .map(t => ({
                         id: t.id,
                         title: t.title ?? t.name ?? "",
+                        published: t.published ?? t.published?? "TBA",
+                        author: t.author ?? t.author?? "unknown",
                         content: t.content ?? t.body ?? ""
                     }));
                 setThreads(rows);
@@ -120,26 +123,45 @@ export default function ThreadList() {
                     {err && <p style={{color: "red"}}>{err}</p>}
 
                     {!loading && !err && (
-                        <div className={"table"} >
-                            <div className={"table-header"}>
-                                <div >ID</div>
-                                <div >Title</div>
-                                <div >Content</div>
-                                {isAdmin && <div style={{width: 180, textAlign: "right"}}>Actions</div>}
+                        <div className={"table"}>
+                            <div className={`table-header ${isAdmin ? "admin" : "user"}`}>
+                                <div>ID</div>
+                                <div>Title</div>
+                                <div>Author</div>
+                                <div>Content</div>
+                                {isAdmin && <div style={{textAlign: "right"}}>Actions</div>}
                             </div>
 
-                            {filtered.map((th) => (
-                                <div key={th.id} className={"table-row"}>
-                                    <div>{th.id}</div>
-                                    <div >
-                                        <a href={`#/threads/${th.id}`} style={{textDecoration: "none"}}>{th.title}</a>
-                                    </div>
-                                    <div>
-                                        {th.content}
+
+                            {filtered.map((th, i) => (
+                                <div
+                                    key={th.id}
+                                    className={`table-row ${isAdmin ? "admin" : "user"}`}
+                                    onClick={() =>
+                                        (window.location.hash = `#/threads/${th.id}`)
+                                    }
+                                >
+                                    <div className={"rank"}>{i + 1}</div>
+
+                                    <div className="event-main">
+                                        <div className="event-title">{th.title}</div>
+
+                                        <div className="event-meta">
+                                            {th.published
+                                                ? new Date(th.published).toLocaleString()
+                                                : "TBA"}
+                                        </div>
+
                                     </div>
 
+                                    <div className="row-meta">
+                                        {th.author && ` by ${th.author}`}
+                                    </div>
+
+                                    <div>{th.content}</div>
+
                                     {isAdmin && (
-                                        <div className="actions">
+                                        <div style={{textAlign: "right"}}>
                                             <Dropdown
                                                 onEdit={() => openEdit(th)}
                                                 onDelete={() => deleteThread(th)}
@@ -148,6 +170,7 @@ export default function ThreadList() {
                                     )}
                                 </div>
                             ))}
+
 
                             {filtered.length === 0 && (
                                 <div style={{padding: "12px 8px"}}>No threads found.</div>

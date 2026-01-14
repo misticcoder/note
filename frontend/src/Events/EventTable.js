@@ -6,7 +6,7 @@ export default function EventTable({
                                        loading = false,
                                        error = "",
                                        showClub = true,
-                                       isAdmin = false,
+                                       isPrivileged = false,
                                        onEdit,
                                        onDelete
                                    }) {
@@ -41,13 +41,14 @@ export default function EventTable({
 
     return (
         <div className="events-table">
-            <div className="events-header">
+            <div className={`events-header ${isPrivileged ? "has-actions" : ""}`}>
+
                 <div>#</div>
                 <div>Event</div>
                 {showClub && <div className="club-col">Club</div>}
                 <div>Status</div>
                 <div>Avg. Rating</div>
-                {isAdmin && <div className="actions-col">Actions</div>}
+                {isPrivileged && <div className="actions-col">Actions</div>}
             </div>
 
             {events.map((ev, i) => {
@@ -56,7 +57,9 @@ export default function EventTable({
                 return (
                     <div
                         key={ev.id}
-                        className="events-row clickable"
+                        className={`events-row clickable ${
+                            isPrivileged ? "has-actions" : ""
+                        }`}
                         onClick={() =>
                             (window.location.hash = `#/events/${ev.id}`)
                         }
@@ -119,7 +122,7 @@ export default function EventTable({
                             )}
                         </div>
 
-                        {isAdmin && (
+                        {isPrivileged && (
                             <div className="actions">
                                 <Dropdown
                                     onEdit={() => onEdit(ev)}

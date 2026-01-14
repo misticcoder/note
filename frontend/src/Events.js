@@ -474,7 +474,7 @@ export default function Events() {
 
 
                         {isAdmin && (
-                            <button className={"button"} onClick={() => setShowAdd(true)}>
+                            <button title={"Create new event"} className={"dbutton"} style={{color:"#ffffe3"}} onClick={() => setShowAdd(true)}>
                                 + Add Event
                             </button>
                         )}
@@ -574,7 +574,7 @@ export default function Events() {
                             loading={loading}
                             error={err}
                             showClub={true}
-                            isAdmin={isAdmin}
+                            isPrivileged={isAdmin}
                             onEdit={setEditingEvent}
                             onDelete={deleteEvent}
                         />
