@@ -145,10 +145,7 @@
     display: flex;
     gap: 24px;
     max-width: 1200px;
-    margin: 0 auto;                 /* centers layout */
-    padding: 60px 24px 24px;
     align-items: flex-start;
-    box-sizing: border-box;
 }
 
 /* LEFT column */
@@ -288,6 +285,7 @@
 }
 .thread-title {
     margin: 0 0 6px 0;
+    color: black;
 }
 
 .thread-meta {
@@ -406,4 +404,12 @@
     font-weight: 600;
     color: #e0e0e0;
     margin-bottom: 12px;
+}
+
+.thread-page-title{
+    font-size: 28px;
+    font-weight: 700;
+    color: #ffffe3;
+    text-decoration: underline;
+    margin-right: 8px;
 }

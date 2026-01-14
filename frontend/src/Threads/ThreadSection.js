@@ -75,13 +75,10 @@ export default function ThreadSection({
                     Add Thread
                 </button>
             )}
-
-            <h3 className="column-title">Threads</h3>
-
             {threads.map(thread => (
                 <div
                     key={thread.id}
-                    className="threads"
+                    className="card"
                     style={hoveredId === thread.id ? boxHover : {}}
                     onMouseEnter={() => setHoveredId(thread.id)}
                     onMouseLeave={() => setHoveredId(null)}
@@ -91,7 +88,7 @@ export default function ThreadSection({
                 >
 
                     <div style={{display: "flex", flexDirection: "column"}}>
-                        <span style={{fontWeight: 400}}>
+                        <span style={{fontWeight: 600}}>
                             {thread.title}
                         </span>
                         <span className={"x-time"}>

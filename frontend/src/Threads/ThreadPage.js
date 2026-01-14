@@ -196,71 +196,74 @@ export default function ThreadPage() {
     /* ===================== RENDER ===================== */
 
     return (
-        <div className="page-row">
-            <aside className="thread-sidebar">
-                <ThreadSection
-                    title="Threads"
-                    threads={threads}
-                    showAddButton={isAdmin}
-                />
-            </aside>
+        <div className={"page"}>
+            <div className={"container"}>
+                <div className="table-wrap">
+                    <div className={"table-top"}>
+                        <h2 className={"title"}>Thread</h2>
+                        <div>
+                            <a href="#/home" className={"back-link"}>← Back</a>
+                        </div>
+                    </div>
+                    <div className={"page-row"}>
+                        <aside className="thread-sidebar">
+                            <ThreadSection
+                                threads={threads}
+                                showAddButton={isAdmin}
+                            />
+                        </aside>
 
-            <main className="content-col">
-                <div className="post-nav">
-                    <button
-                        className="back-btn"
-                        onClick={() => window.history.back()}
-                    >
-                        ← Back
-                    </button>
-                </div>
+                        <main className="content-col">
 
-                {loading && <p>Loading…</p>}
-                {err && <p style={{ color: "red" }}>{err}</p>}
+                            {loading && <p>Loading…</p>}
+                            {err && <p style={{color: "red"}}>{err}</p>}
 
-                {thread && (
-                    <div className="thread-card">
-                        <h2 className="thread-title">{thread.title}</h2>
+                            {thread && (
+                                <div className="thread-card">
+                                    <h2 className="thread-title">{thread.title}</h2>
 
-                        <div className="thread-meta">
+                                    <div className="thread-meta">
                             <span>
                                 Posted by <strong>{thread.author}</strong>
                             </span>
-                            <span className="thread-meta-sep">•</span>
-                            <span>
+                                        <span className="thread-meta-sep">•</span>
+                                        <span>
                                 {thread.published &&
                                     new Date(
                                         thread.published
                                     ).toLocaleString()}
                             </span>
-                        </div>
+                                    </div>
 
-                        <div className="thread-content">
-                            {thread.content}
-                        </div>
+                                    <div className="thread-content">
+                                        {thread.content}
+                                    </div>
+                                </div>
+                            )}
+
+                            <CommentSection
+                                comments={comments}
+                                user={user}
+                                newComment={newComment}
+                                setNewComment={setNewComment}
+                                onSubmit={postComment}
+                                onDelete={requestDeleteComment}
+                                refreshComments={fetchComments}
+                            />
+                        </main>
                     </div>
-                )}
 
-                <CommentSection
-                    comments={comments}
-                    user={user}
-                    newComment={newComment}
-                    setNewComment={setNewComment}
-                    onSubmit={postComment}
-                    onDelete={requestDeleteComment}
-                    refreshComments={fetchComments}
-                />
-            </main>
+                    {/* ===================== CONFIRM DIALOG ===================== */}
 
-            {/* ===================== CONFIRM DIALOG ===================== */}
-
-            <ConfirmDialog
-                open={confirmState.open}
-                title="Delete Comment"
-                message="Are you sure you want to delete this comment? This action cannot be undone."
-                onConfirm={handleConfirm}
-                onCancel={handleCancel}
-            />
+                    <ConfirmDialog
+                        open={confirmState.open}
+                        title="Delete Comment"
+                        message="Are you sure you want to delete this comment? This action cannot be undone."
+                        onConfirm={handleConfirm}
+                        onCancel={handleCancel}
+                    />
+                </div>
+            </div>
         </div>
     );
 }

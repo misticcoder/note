@@ -104,7 +104,7 @@ export default function ThreadList() {
             <div className={"container"}>
                 <div className={"table-wrap"}>
                     <div className={"table-top"}>
-                        <h2>Threads</h2>
+                        <h2 className={"title"}>Threads</h2>
                         <div>
                             <input
                                 placeholder="Search by title/content/ID…"
@@ -112,7 +112,7 @@ export default function ThreadList() {
                                 onChange={(e) => setQ(e.target.value)}
                                 className={"search"}
                             />
-                            <a href="#/" className={"back-link"}>← Back</a>
+                            <a href="#/home" className={"back-link"}>← Back</a>
                         </div>
                     </div>
 
@@ -132,7 +132,7 @@ export default function ThreadList() {
                                 <div key={th.id} className={"table-row"}>
                                     <div>{th.id}</div>
                                     <div >
-                                        <a href={`#/thread/${th.id}`} style={{textDecoration: "none"}}>{th.title}</a>
+                                        <a href={`#/threads/${th.id}`} style={{textDecoration: "none"}}>{th.title}</a>
                                     </div>
                                     <div>
                                         {th.content}
