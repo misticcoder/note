@@ -12,6 +12,7 @@ public class UserProfileDto {
 
     public int eventsJoined;
     public int eventsAttended;
+    public int eventsMissed;
     public int participationScore;
 
     public UserProfileDto() {}
@@ -85,4 +86,5 @@ public class UserProfileDto {
     public void setParticipationScore(int participationScore) {
         this.participationScore = participationScore;
     }
+
 }

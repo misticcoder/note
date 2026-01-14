@@ -144,7 +144,7 @@ export default function Clubs() {
     return (
         <div className={"page"}>
             <div className={"container"}>
-                <div style={styles.wrap}>
+                <div className={"table-wrap"}>
                     <div className={"events-top"}>
                         <h2 >Clubs</h2>
                         <div>

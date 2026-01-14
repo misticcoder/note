@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext, useMemo } from "react";
+import {useEffect, useState, useContext, useMemo, useRef} from "react";
 import { AuthContext } from "./AuthContext";
 import EventHeader from "./EventHeader";
 import PostFeed from "./Post/PostFeed";
@@ -7,6 +7,7 @@ import StarRating from "./components/StarRating";
 import "./styles/events.css";
 import "./styles/index.css";
 import EventCommentSection from "./Events/EventCommentSection";
+import EventAttendanceQR from "./components/EventAttendanceQR";
 
 export default function EventPage() {
     const { user } = useContext(AuthContext);
@@ -35,11 +36,21 @@ export default function EventPage() {
     ===================== */
     const [goingAttendees, setGoingAttendees] = useState([]);
     const [maybeAttendees, setMaybeAttendees] = useState([]);
+    const [attendedAttendees, setAttendedAttendees] = useState([]);
+
+
+
     const [attendeesLoading, setAttendeesLoading] = useState(false);
     const [attendeeQuery, setAttendeeQuery] = useState("");
 
     const [hash, setHash] = useState(window.location.hash);
 
+    const [attendanceCode, setAttendanceCode] = useState(null);
+
+    const [manualCode, setManualCode] = useState("");
+    const [checkingIn, setCheckingIn] = useState(false);
+
+    const [attendanceStatus, setAttendanceStatus] = useState(null);
 
 
     useEffect(() => {
@@ -115,7 +126,10 @@ export default function EventPage() {
             )}`
         )
             .then((r) => r.json())
-            .then((d) => setRsvp(d.status || null))
+            .then((d) => {
+                setRsvp(d.status || null);
+                setAttendanceStatus(d.status || null);
+            })
             .catch(() => {});
 
         fetch(`/api/events/${eventId}/attendance`)
@@ -123,6 +137,7 @@ export default function EventPage() {
             .then(setCounts)
             .catch(() => {});
     }, [eventId, user]);
+
 
     /* =====================
        ⭐ FETCH RATING
@@ -141,6 +156,28 @@ export default function EventPage() {
             .then(setRating)
             .catch(() => {});
     }, [eventId, user]);
+
+    const checkedInRef = useRef(false);
+
+
+    useEffect(() => {
+        if (activeTab !== "check-in" || !eventId || !user) return;
+
+        if (checkedInRef.current) return;
+        checkedInRef.current = true;
+
+        const queryString = window.location.hash.split("?")[1] || "";
+        const params = new URLSearchParams(queryString);
+        const code = params.get("code");
+
+        if (!code) {
+            setError("Invalid QR code");
+            return;
+        }
+
+        submitAttendanceCode(code);
+
+    }, [activeTab, eventId, user]);
 
 
     /* =====================
@@ -202,17 +239,16 @@ export default function EventPage() {
         setAttendeesLoading(true);
 
         Promise.all([
-            fetch(`/api/events/${eventId}/attendees?status=GOING`).then((r) =>
-                r.json()
-            ),
-            fetch(`/api/events/${eventId}/attendees?status=MAYBE`).then((r) =>
-                r.json()
-            ),
+            fetch(`/api/events/${eventId}/attendees?status=ATTENDED`).then(r => r.json()),
+            fetch(`/api/events/${eventId}/attendees?status=GOING`).then(r => r.json()),
+            fetch(`/api/events/${eventId}/attendees?status=MAYBE`).then(r => r.json()),
         ])
-            .then(([going, maybe]) => {
+            .then(([attended, going, maybe]) => {
+                setAttendedAttendees(Array.isArray(attended) ? attended : []);
                 setGoingAttendees(Array.isArray(going) ? going : []);
                 setMaybeAttendees(Array.isArray(maybe) ? maybe : []);
             })
+
             .finally(() => setAttendeesLoading(false));
     }, [activeTab, eventId]);
 
@@ -231,6 +267,15 @@ export default function EventPage() {
             ),
         [maybeAttendees, attendeeQuery]
     );
+
+    const filteredAttended = useMemo(
+        () =>
+            attendedAttendees.filter((a) =>
+                a.username.toLowerCase().includes(attendeeQuery.toLowerCase())
+            ),
+        [attendedAttendees, attendeeQuery]
+    );
+
 
     /* =====================
        ⭐ SUBMIT RATING
@@ -311,6 +356,40 @@ export default function EventPage() {
     };
 
     /* =====================
+       Attendance
+    ===================== */
+    const [hasCheckedIn, setHasCheckedIn] = useState(false);
+
+    const submitAttendanceCode = async (code) => {
+        if (!user || !eventId || !code) return;
+
+        try {
+            setCheckingIn(true);
+
+            const res = await fetch(
+                `/api/events/${eventId}/check-in?requesterEmail=${encodeURIComponent(
+                    user.email
+                )}&code=${encodeURIComponent(code.trim())}`,
+                { method: "POST" }
+            );
+
+            if (!res.ok) {
+                throw new Error("Invalid code");
+            }
+            setHasCheckedIn(true);
+
+            alert(" Attendance recorded");
+            window.location.hash = `#/events/${eventId}`;
+        } catch {
+            alert(" Invalid or expired attendance code");
+        } finally {
+            setCheckingIn(false);
+        }
+    };
+
+
+
+    /* =====================
        STATES (AFTER ALL HOOKS)
     ===================== */
     if (loading) return <div className="event-page">Loading…</div>;
@@ -338,7 +417,95 @@ export default function EventPage() {
                 <section className="event-content">
                     {activeTab === "overview" && (
                         <div className="event-overview">
+
+                            {attendanceStatus === "ATTENDED" && (
+                                <div className="attendance-confirmed">
+                                    ✅ You are checked in
+                                </div>
+                            )}
+
+
+                            {user &&
+                                !isAdmin &&
+                                eventStatus === "LIVE" &&
+                                attendanceStatus !== "ATTENDED" && (
+
+
+                                    <div className="attendance-manual">
+                                    <h3>Attendance</h3>
+
+                                    <input
+                                        type="text"
+                                        placeholder="Enter attendance code"
+                                        value={manualCode}
+                                        onChange={(e) => setManualCode(e.target.value.toUpperCase())}
+                                        disabled={checkingIn}
+                                    />
+
+                                    <button
+                                        onClick={() => submitAttendanceCode(manualCode)}
+                                        disabled={!manualCode || checkingIn}
+                                    >
+                                        {checkingIn ? "Checking in…" : "Check in"}
+                                    </button>
+
+                                    <div className="muted">
+                                        You can also scan the QR code shown by the organiser
+                                    </div>
+                                </div>
+                            )}
+
+
                             <div className="event-rating">
+
+                                {isAdmin && (
+                                    <button
+                                        onClick={async () => {
+                                            if (attendanceCode) return;
+
+                                            const res = await fetch(
+                                                `/api/events/${event.id}/attendance-code/rotate?requesterEmail=${encodeURIComponent(
+                                                    user.email
+                                                )}`,
+                                                { method: "POST" }
+                                            );
+                                            const data = await res.json();
+                                            setAttendanceCode(data.attendanceCode);
+                                        }}
+
+                                    >
+                                        Show Attendance QR
+                                    </button>
+                                )}
+
+
+                                {isAdmin && attendanceCode && (
+                                    <EventAttendanceQR
+                                        eventId={event.id}
+                                        attendanceCode={attendanceCode}
+                                    />
+                                )}
+
+                                {isAdmin && attendanceCode && (
+                                    <div className="attendance-code-box">
+                                        <div className="attendance-code-label">Attendance Code</div>
+
+                                        <div className="attendance-code">
+                                            {attendanceCode}
+                                        </div>
+
+                                        <button
+                                            onClick={() => navigator.clipboard.writeText(attendanceCode)}
+                                        >
+                                            Copy code
+                                        </button>
+
+                                        <div className="muted">
+                                            Students can enter this code manually if they can’t scan the QR
+                                        </div>
+                                    </div>
+                                )}
+
                                 <StarRating
                                     value={
                                         rating.myRating !== null
@@ -473,6 +640,36 @@ export default function EventPage() {
                                             ))
                                         )}
                                     </div>
+
+                                    {/* ATTENDED */}
+                                    <div className="attendee-column attended">
+                                        <h3 className="attendee-heading">
+                                            Checked in ({filteredAttended.length})
+                                        </h3>
+
+                                        {filteredAttended.length === 0 ? (
+                                            <div className="muted">No one has checked in yet.</div>
+                                        ) : (
+                                            filteredAttended.map((a) => (
+                                                <div
+                                                    key={a.id}
+                                                    className={`attendee-row ${
+                                                        user && a.username === user.username ? "is-me" : ""
+                                                    }`}
+                                                >
+                                                    <div className="avatar">✓</div>
+                                                    <div className="name">
+                                                        {a.username}
+                                                        {user && a.username === user.username && (
+                                                            <span className="you-badge">You</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+
+
                                 </div>
                             )}
                         </div>

@@ -24,9 +24,7 @@ export default function ProfilePage() {
 
     const [activeTab, setActiveTab] = useState("overview")
 
-    const [eventsView, setEventsView] = useState("upcoming")
-
-
+    const [eventsView, setEventsView] = useState("attended");
 
     useEffect(() => {
         if (!user?.email) return;
@@ -34,11 +32,21 @@ export default function ProfilePage() {
         setLoading(true);
 
         Promise.all([
-            fetch(`/api/me/profile?email=${encodeURIComponent(user.email)}`).then(r => r.json()),
-            fetch(`/api/me/events?email=${encodeURIComponent(user.email)}`).then(r => r.json()),
-            fetch(`/api/me/clubs?email=${encodeURIComponent(user.email)}`).then(r => r.json()),
+            fetch(`/api/me/profile`, {
+                headers: { "X-User-Email": user.email }
+            }).then(r => r.json()),
+
+            fetch(`/api/me/events`, {
+                headers: { "X-User-Email": user.email }
+            }).then(r => r.json()),
+
+            fetch(`/api/me/clubs`, {
+                headers: { "X-User-Email": user.email }
+            }).then(r => r.json()),
+
             fetch(`/api/events`).then(r => r.json())
         ])
+
             .then(([profileData, eventsData, clubsData, allEventsData]) => {
                 setProfile(profileData);
                 setEvents(eventsData);
@@ -74,14 +82,14 @@ export default function ProfilePage() {
     }
 
     const saveProfile = async (updates) => {
-        const res = await fetch(
-            `/api/me/profile?email=${encodeURIComponent(user.email)}`,
-            {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(updates)
-            }
-        );
+        const res = await fetch(`/api/me/profile`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "X-User-Email": user.email
+            },
+            body: JSON.stringify(updates)
+        });
 
         if (!res.ok) throw new Error();
 
@@ -178,12 +186,13 @@ export default function ProfilePage() {
                                 onAvatarUpdated={(updated) => {
                                     setProfile(updated);
 
-                                    setUser(prev => ({
+                                    saveUser(prev => ({
                                         ...prev,
                                         avatarUrl: updated.avatarUrl,
                                         displayName: updated.displayName,
                                     }));
                                 }}
+
 
                             />
                         )}
@@ -382,44 +391,58 @@ function TabButton({ label, active, onClick }) {
 }
 
 function EventsTab({ events, eventsView, setEventsView }) {
-    const now = new Date();
+    const attended = events.filter(e => e.status === "ATTENDED");
+    const going = events.filter(e => e.status === "GOING");
+    const maybe = events.filter(e => e.status === "MAYBE");
+    const missed = events.filter(e => e.status === "MISSED");
 
-    const upcoming = events
-        .filter(e => {
-            if (!e?.startAt) return true; // treat missing date as upcoming
-            return new Date(e.startAt) >= now;
-        })
-        .sort((a, b) => {
-            const aa = a?.startAt ? new Date(a.startAt).getTime() : Number.MAX_SAFE_INTEGER;
-            const bb = b?.startAt ? new Date(b.startAt).getTime() : Number.MAX_SAFE_INTEGER;
-            return aa - bb;
-        });
-
-    const past = events
-        .filter(e => e?.startAt && new Date(e.startAt) < now)
-        .sort((a, b) => {
-            const aa = a?.startAt ? new Date(a.startAt).getTime() : 0;
-            const bb = b?.startAt ? new Date(b.startAt).getTime() : 0;
-            return bb - aa; // most recent first
-        });
-
-    const list = eventsView === "upcoming" ? upcoming : past;
+    let list;
+    switch (eventsView) {
+        case "attended":
+            list = attended;
+            break;
+        case "going":
+            list = going;
+            break;
+        case "maybe":
+            list = maybe;
+            break;
+        case "missed":
+            list = missed;
+            break;
+        default:
+            list = attended;
+    }
 
     return (
         <div>
             <div className="events-subtabs">
                 <button
-                    className={`events-subtab ${eventsView === "upcoming" ? "active" : ""}`}
-                    onClick={() => setEventsView("upcoming")}
+                    className={`events-subtab ${eventsView === "attended" ? "active" : ""}`}
+                    onClick={() => setEventsView("attended")}
                 >
-                    Upcoming ({upcoming.length})
+                    Attended ({attended.length})
                 </button>
 
                 <button
-                    className={`events-subtab ${eventsView === "past" ? "active" : ""}`}
-                    onClick={() => setEventsView("past")}
+                    className={`events-subtab ${eventsView === "going" ? "active" : ""}`}
+                    onClick={() => setEventsView("going")}
                 >
-                    Past ({past.length})
+                    Going ({going.length})
+                </button>
+
+                <button
+                    className={`events-subtab ${eventsView === "maybe" ? "active" : ""}`}
+                    onClick={() => setEventsView("maybe")}
+                >
+                    Maybe ({maybe.length})
+                </button>
+
+                <button
+                    className={`events-subtab missed ${eventsView === "missed" ? "active" : ""}`}
+                    onClick={() => setEventsView("missed")}
+                >
+                    Missed ({missed.length})
                 </button>
             </div>
 
@@ -427,12 +450,14 @@ function EventsTab({ events, eventsView, setEventsView }) {
                 <EventTable events={list} showClub />
             ) : (
                 <div className="muted" style={{ marginTop: 12 }}>
-                    No {eventsView === "upcoming" ? "upcoming" : "past"} events.
+                    No events in this category.
                 </div>
             )}
         </div>
     );
 }
+
+
 
 function EditProfileTab({ profile, email, onSave, onAvatarUpdated }) {
     const [form, setForm] = useState({
@@ -490,10 +515,14 @@ function EditProfileTab({ profile, email, onSave, onAvatarUpdated }) {
                         const formData = new FormData();
                         formData.append("file", file);
 
-                        const res = await fetch(
-                            `/api/me/avatar?email=${encodeURIComponent(email)}`,
-                            { method: "POST", body: formData }
-                        );
+                        const res = await fetch(`/api/me/avatar`, {
+                            method: "POST",
+                            headers: {
+                                "X-User-Email": email
+                            },
+                            body: formData
+                        });
+
 
                         if (!res.ok) {
                             alert("Avatar upload failed");

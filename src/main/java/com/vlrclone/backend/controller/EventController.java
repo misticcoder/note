@@ -136,6 +136,10 @@ public class EventController {
         ev.setLocation(dto.location);
         ev.setStartAt(dto.startAt);
         ev.setEndAt(dto.endAt);
+        ev.setCreatedBy(me);
+
+        String code = service.generateCode(8);
+        ev.setAttendanceCodeHash(service.sha256Hex(code));
 
         if (dto.clubId != null) {
             ev.setClub(
@@ -150,11 +154,17 @@ public class EventController {
 
         Event saved = events.save(ev);
 
-        return ResponseEntity.ok(
-                new EventUpdateDto(
-                        events.findWithClubAndTagsById(saved.getId()).orElse(saved)
-                )
+        EventUpdateDto out = new EventUpdateDto(
+                events.findWithClubAndTagsById(saved.getId()).orElse(saved)
         );
+
+// IMPORTANT: only returned here
+        Map<String, Object> response = new HashMap<>();
+        response.put("event", out);
+        response.put("attendanceCode", code);
+
+        return ResponseEntity.ok(response);
+
     }
 
     /* =====================
@@ -339,4 +349,33 @@ public class EventController {
                 service.findByClub(clubId, normalizeStatus(status))
         );
     }
+
+    @PostMapping("/{id}/attendance-code/rotate")
+    public ResponseEntity<?> rotateAttendanceCode(
+            @PathVariable Long id,
+            @RequestParam String requesterEmail
+    ) {
+        User me = byEmail(requesterEmail);
+        if (me == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
+        }
+
+        Event ev = events.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        boolean isOwner = ev.getCreatedBy() != null
+                && ev.getCreatedBy().getId().equals(me.getId());
+
+        if (!isAdmin(me) && !isOwner) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "Forbidden"));
+        }
+
+        String newCode = service.generateCode(8);
+        ev.setAttendanceCodeHash(service.sha256Hex(newCode));
+        events.save(ev);
+
+        return ResponseEntity.ok(Map.of("attendanceCode", newCode));
+    }
+
 }

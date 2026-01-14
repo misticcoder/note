@@ -358,26 +358,30 @@ function Home() {
                             {ongoingEvents.length > 0 ? (
                                 ongoingEvents.map(renderEventRow)
                             ) : (
-                                <div className={"empty-text"}>No ongoing events</div>
+                                <div className={"empty-text"}> ~ No ongoing events ~ </div>
                             )}
 
                         </div>
 
                         <div>
                             <h3 className={"column-title"}>UPCOMING Events</h3>
-                            {upcomingEvents.length > 0 && (
+                            {upcomingEvents.length > 0 ? (
                                 <>
                                     {upcomingEvents.slice(0, 5).map(renderEventRow)}
                                 </>
-                            )}
+                            ) :
+                                (<div className={"empty-text"}> ~ No Upcoming events ~ </div>)
+                            }
                         </div>
 
                         <div>
                             <h3 className={"column-title"}>COMPLETED Events</h3>
-                            {completedEvents.length > 0 && (
+                            {completedEvents.length > 0 ? (
                                 <>
                                     {completedEvents.slice(0, 3).map(renderEventRow)}
                                 </>
+                            ) : (
+                                <div className={"muted"}> ~ No Completed events ~ </div>
                             )}
                         </div>
 

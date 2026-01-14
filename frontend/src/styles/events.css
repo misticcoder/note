@@ -841,3 +841,25 @@
     color: #0f172a;
 }
 
+
+.attendance-code-box {
+    color: #1e293b;
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px dashed #ccc;
+    border-radius: 6px;
+    background: #fafafa;
+}
+
+.attendance-code {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    margin: 8px 0;
+}
+
+.attendee-column.attended .avatar {
+    background: #2ecc71;
+    color: white;
+    font-weight: bold;
+}

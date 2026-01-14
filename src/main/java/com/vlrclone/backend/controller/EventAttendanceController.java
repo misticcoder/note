@@ -7,6 +7,7 @@ import com.vlrclone.backend.model.User;
 import com.vlrclone.backend.repository.EventAttendanceRepository;
 import com.vlrclone.backend.repository.EventRepository;
 import com.vlrclone.backend.repository.UserRepository;
+import com.vlrclone.backend.service.EventService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,15 +23,17 @@ public class EventAttendanceController {
     private final EventRepository eventRepo;
     private final UserRepository userRepo;
     private final EventAttendanceRepository attendanceRepo;
+    private final EventService eventService;
 
     public EventAttendanceController(
             EventRepository eventRepo,
             UserRepository userRepo,
-            EventAttendanceRepository attendanceRepo
+            EventAttendanceRepository attendanceRepo, EventService eventService
     ) {
         this.eventRepo = eventRepo;
         this.userRepo = userRepo;
         this.attendanceRepo = attendanceRepo;
+        this.eventService = eventService;
     }
 
     @PostMapping("/{eventId}/rsvp")
@@ -63,8 +66,10 @@ public class EventAttendanceController {
         Map<String, Object> res = new HashMap<>();
         res.put("going", attendanceRepo.countByEventIdAndStatus(eventId, Status.GOING));
         res.put("maybe", attendanceRepo.countByEventIdAndStatus(eventId, Status.MAYBE));
+        res.put("attended", attendanceRepo.countByEventIdAndStatus(eventId, Status.ATTENDED));
         return res;
     }
+
 
     @DeleteMapping("/{eventId}/rsvp")
     public void cancelRsvp(
@@ -99,9 +104,10 @@ public class EventAttendanceController {
             @PathVariable Long eventId,
             @RequestParam Status status
     ) {
-        if (!List.of(Status.GOING, Status.MAYBE).contains(status)) {
+        if (!List.of(Status.GOING, Status.MAYBE, Status.ATTENDED).contains(status)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status");
         }
+
 
         return attendanceRepo.findByEventIdAndStatus(eventId, status)
                 .stream()
@@ -114,4 +120,72 @@ public class EventAttendanceController {
                 })
                 .toList();
     }
+
+    @PostMapping("/{eventId}/check-in")
+    public Map<String, Object> checkIn(
+            @PathVariable Long eventId,
+            @RequestParam String requesterEmail,
+            @RequestParam String code
+    ) {
+        User user = userRepo.findByEmail(requesterEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+
+        Event event = eventRepo.findById(eventId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        if (event.getAttendanceCodeHash() == null || event.getAttendanceCodeHash().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Attendance code not configured");
+        }
+
+        // hash provided code and compare
+        String providedHash = eventService.sha256Hex(code.trim().toUpperCase());
+        if (!providedHash.equals(event.getAttendanceCodeHash())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid code");
+        }
+
+        if (event.getStatus() != Event.EventStatus.LIVE) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Attendance only allowed during live events"
+            );
+        }
+
+
+        EventAttendance attendance = attendanceRepo
+                .findByEventIdAndUserId(eventId, user.getId())
+                .orElseGet(() -> {
+                    EventAttendance a = new EventAttendance();
+                    a.setEvent(event);
+                    a.setUser(user);
+                    return a;
+                });
+
+        // Prevent re-awarding / re-counting
+        boolean wasAlreadyAttended = attendance.getStatus() == Status.ATTENDED;
+
+        attendance.setStatus(Status.ATTENDED);
+        attendanceRepo.save(attendance);
+
+        if (!wasAlreadyAttended) {
+            user.setParticipationScore(user.getParticipationScore() + 1);
+            userRepo.save(user);
+        }
+
+        return Map.of(
+                "status", "ok",
+                "attended", true,
+                "participationScore", user.getParticipationScore()
+        );
+    }
+
+    @GetMapping("/{eventId}/check-in")
+    public Map<String, Object> checkInViaQr(
+            @PathVariable Long eventId,
+            @RequestParam String requesterEmail,
+            @RequestParam String code
+    ) {
+        return checkIn(eventId, requesterEmail, code);
+    }
+
+
 }

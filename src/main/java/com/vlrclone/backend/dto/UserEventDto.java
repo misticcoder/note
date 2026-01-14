@@ -9,8 +9,9 @@ public class UserEventDto {
     public String location;
     public LocalDateTime startAt;
     public LocalDateTime endAt;
-    public String status; // GOING | MAYBE
+    public String status; // ATTENDED | GOING | MAYBE
     public String clubName;
+
 
     public UserEventDto() {}
 }

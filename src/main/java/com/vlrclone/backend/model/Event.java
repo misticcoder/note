@@ -79,6 +79,20 @@ public class Event {
         ENDED
     }
 
+    @Column(length = 64)
+    private String attendanceCodeHash;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id")
+    private User createdBy;
+
+    public String getAttendanceCodeHash() { return attendanceCodeHash; }
+    public void setAttendanceCodeHash(String attendanceCodeHash) { this.attendanceCodeHash = attendanceCodeHash; }
+
+    public User getCreatedBy() { return createdBy; }
+    public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
+
+
     @Transient
     public EventStatus getStatus() {
         if (startAt == null) return EventStatus.UPCOMING;

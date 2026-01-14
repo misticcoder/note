@@ -8,6 +8,7 @@ import com.vlrclone.backend.model.User;
 import com.vlrclone.backend.repository.UserRepository;
 import com.vlrclone.backend.service.CurrentUserService;
 import com.vlrclone.backend.service.UserProfileService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -44,29 +45,32 @@ public class ProfileController {
     ───────────────────────────── */
 
     @GetMapping("/profile")
-    public UserProfileDto myProfile(@RequestParam String email) {
-        User user = currentUser.requireUserByEmail(email);
+    public UserProfileDto myProfile(HttpServletRequest request) {
+        User user = currentUser.requireUser(request);
         return profileService.getProfile(user.getId());
     }
 
     @PatchMapping("/profile")
     public UserProfileDto updateProfile(
-            @RequestParam String email,
+            HttpServletRequest request,
             @RequestBody UpdateProfileDto body
     ) {
-        User user = currentUser.requireUserByEmail(email);
+        User user = currentUser.requireUser(request);
         return profileService.updateProfile(user.getId(), body);
     }
+
+
 
     /* ─────────────────────────────
        EVENTS
     ───────────────────────────── */
 
     @GetMapping("/events")
-    public List<UserEventDto> myEvents(@RequestParam String email) {
-        User user = currentUser.requireUserByEmail(email);
+    public List<UserEventDto> myEvents(HttpServletRequest request) {
+        User user = currentUser.requireUser(request);
         return profileService.getUserEvents(user.getId());
     }
+
 
     /* ─────────────────────────────
        AVATAR UPLOAD  ✅ FIXED
@@ -74,10 +78,10 @@ public class ProfileController {
 
     @PostMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public UserProfileDto uploadAvatar(
-            @RequestParam String email,
+            HttpServletRequest request,
             @RequestParam("file") MultipartFile file
     ) {
-        User user = currentUser.requireUserByEmail(email);
+        User user = currentUser.requireUser(request);
 
         if (file == null || file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty file");
@@ -119,9 +123,12 @@ public class ProfileController {
     }
 
     @GetMapping("/clubs")
-    public List<UserClubDto> myClubs(@RequestParam String email) {
-        User user = currentUser.requireUserByEmail(email);
+    public List<UserClubDto> myClubs(HttpServletRequest request) {
+        User user = currentUser.requireUser(request);
         return profileService.getUserClubs(user.getId());
     }
+
+
+
 
 }

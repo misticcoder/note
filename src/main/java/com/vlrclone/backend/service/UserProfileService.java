@@ -16,6 +16,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -39,15 +40,30 @@ public class UserProfileService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
+        int attended = (int) attendanceRepository
+                .countByUserIdAndStatus(userId, Status.ATTENDED);
+
         int going = (int) attendanceRepository
                 .countByUserIdAndStatus(userId, Status.GOING);
 
         int maybe = (int) attendanceRepository
                 .countByUserIdAndStatus(userId, Status.MAYBE);
 
-        int joined = going + maybe;
+        int joined = attended + going + maybe;
 
-        int score = computeScore(joined, going);
+        int missed = attendanceRepository
+                .findByUserIdAndStatusIn(userId, List.of(Status.GOING, Status.MAYBE))
+                .stream()
+                .filter(a ->
+                        a.getEvent().getEndAt() != null &&
+                                a.getEvent().getEndAt().isBefore(LocalDateTime.now())
+                )
+                .toList()
+                .size();
+
+
+
+        int score = computeScore(joined, going, attended);
 
         UserProfileDto dto = new UserProfileDto();
         dto.id = user.getId();
@@ -57,14 +73,15 @@ public class UserProfileService {
         dto.bio = user.getBio();
         dto.avatarUrl = user.getAvatarUrl();
         dto.eventsJoined = joined;
-        dto.eventsAttended = going; // “Going” is closest to actual attendance
+        dto.eventsAttended = attended;
+        dto.eventsMissed = missed;
         dto.participationScore = score;
 
         return dto;
     }
 
-    private int computeScore(int joined, int going) {
-        return (joined * 5) + (going * 10);
+    private int computeScore(int joined, int going, int attended) {
+        return (joined * 2) + (going * 5) + (attended * 10);
     }
 
     private String resolveDisplayName(User user) {
@@ -79,12 +96,25 @@ public class UserProfileService {
         List<EventAttendance> attendances =
                 attendanceRepository.findByUserIdAndStatusIn(
                         userId,
-                        List.of(Status.GOING, Status.MAYBE)
+                        List.of(Status.ATTENDED, Status.GOING, Status.MAYBE)
                 );
+
+        var now = java.time.LocalDateTime.now();
 
         return attendances.stream()
                 .map(a -> {
                     Event e = a.getEvent();
+
+                    String finalStatus = a.getStatus().name();
+
+                    // 🔑 MISSED logic
+                    if (
+                            (a.getStatus() == Status.GOING || a.getStatus() == Status.MAYBE)
+                                    && e.getEndAt() != null
+                                    && e.getEndAt().isBefore(now)
+                    ) {
+                        finalStatus = Status.MISSED.name();
+                    }
 
                     UserEventDto dto = new UserEventDto();
                     dto.id = e.getId();
@@ -92,7 +122,7 @@ public class UserProfileService {
                     dto.location = e.getLocation();
                     dto.startAt = e.getStartAt();
                     dto.endAt = e.getEndAt();
-                    dto.status = a.getStatus().name();
+                    dto.status = finalStatus;
                     dto.clubName = e.getClub() != null
                             ? e.getClub().getName()
                             : null;
@@ -106,6 +136,7 @@ public class UserProfileService {
                 })
                 .toList();
     }
+
 
     @Transactional
     public UserProfileDto updateProfile(Long userId, UpdateProfileDto dto) {
