@@ -1,7 +1,9 @@
 // src/main/java/com/vlrclone/backend/controller/EventController.java
 package com.vlrclone.backend.controller;
 
+import com.vlrclone.backend.Enums.EventVisibility;
 import com.vlrclone.backend.dto.EventUpdateDto;
+import com.vlrclone.backend.model.Club;
 import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.model.EventRating;
 import com.vlrclone.backend.model.User;
@@ -71,10 +73,12 @@ public class EventController {
 
     @GetMapping
     public ResponseEntity<List<EventUpdateDto>> list(
+            @RequestParam(required = false) String requesterEmail,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String tags,
             @RequestParam(defaultValue = "all") String status
-    ) {
+    )
+ {
         List<String> tagList = (tags == null || tags.isBlank())
                 ? null
                 : Arrays.stream(tags.split(","))
@@ -82,9 +86,24 @@ public class EventController {
                 .filter(s -> !s.isBlank())
                 .toList();
 
-        return ResponseEntity.ok(
-                service.searchEvents(q, tagList, normalizeStatus(status))
-        );
+     User user = byEmail(requesterEmail);
+
+     List<EventUpdateDto> visible = service
+             .searchEvents(q, tagList, normalizeStatus(status))
+             .stream()
+             .filter(dto -> {
+                 if (dto.visibility == EventVisibility.PUBLIC) return true;
+                 if (user == null) return false;
+
+                 return dto.clubId != null &&
+                         clubs.findById(dto.clubId)
+                                 .map(c -> c.getMembers().stream()
+                                         .anyMatch(m -> m.getUserId().equals(user.getId())))
+                                 .orElse(false);
+             })
+             .toList();
+
+     return ResponseEntity.ok(visible);
     }
 
     /* =====================
@@ -100,6 +119,12 @@ public class EventController {
 
         return events.findWithClubAndTagsById(id)
                 .map(e -> {
+
+                    if (!canViewEvent(e, user)) {
+                        return ResponseEntity.status(403)
+                                .body(Map.of("message", "Members only event"));
+                    }
+
                     EventUpdateDto dto = new EventUpdateDto(e);
                     dto.myRating = service.getMyRating(e, user);
                     return ResponseEntity.ok(dto);
@@ -120,9 +145,9 @@ public class EventController {
             @RequestBody EventUpdateDto dto
     ) {
         User me = byEmail(requesterEmail);
-        if (!isAdmin(me)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of("message", "Admin only"));
+        if (me == null) {
+            return ResponseEntity.status(401)
+                    .body(Map.of("message", "Unauthorized"));
         }
 
         if (dto.title == null || dto.title.isBlank() || dto.startAt == null) {
@@ -138,19 +163,55 @@ public class EventController {
         ev.setEndAt(dto.endAt);
         ev.setCreatedBy(me);
 
-        String code = service.generateCode(8);
-        ev.setAttendanceCodeHash(service.sha256Hex(code));
+    /* =====================
+       CLUB vs GLOBAL EVENT
+    ===================== */
 
         if (dto.clubId != null) {
-            ev.setClub(
-                    clubs.findById(dto.clubId)
-                            .orElseThrow(() -> new IllegalArgumentException("Club not found"))
+            Club club = clubs.findById(dto.clubId)
+                    .orElseThrow(() -> new IllegalArgumentException("Club not found"));
+
+            boolean allowed =
+                    isAdmin(me) || club.isLeaderOrCoLeader(me);
+
+            if (!allowed) {
+                return ResponseEntity.status(403)
+                        .body(Map.of("message", "Not allowed to create events for this club"));
+            }
+
+            ev.setClub(club);
+
+            // Default: members-only for club events
+            ev.setVisibility(
+                    dto.visibility != null
+                            ? dto.visibility
+                            : EventVisibility.CLUB_MEMBERS
+            );
+
+        } else {
+            // Global event → admin only
+            if (!isAdmin(me)) {
+                return ResponseEntity.status(403)
+                        .body(Map.of("message", "Admin only"));
+            }
+
+            ev.setVisibility(
+                    dto.visibility != null
+                            ? dto.visibility
+                            : EventVisibility.PUBLIC
             );
         }
+
+    /* =====================
+       TAGS & ATTENDANCE CODE
+    ===================== */
 
         if (dto.tags != null) {
             ev.setTags(service.resolveTags(dto.tags));
         }
+
+        String code = service.generateCode(8);
+        ev.setAttendanceCodeHash(service.sha256Hex(code));
 
         Event saved = events.save(ev);
 
@@ -158,13 +219,10 @@ public class EventController {
                 events.findWithClubAndTagsById(saved.getId()).orElse(saved)
         );
 
-// IMPORTANT: only returned here
-        Map<String, Object> response = new HashMap<>();
-        response.put("event", out);
-        response.put("attendanceCode", code);
-
-        return ResponseEntity.ok(response);
-
+        return ResponseEntity.ok(Map.of(
+                "event", out,
+                "attendanceCode", code
+        ));
     }
 
     /* =====================
@@ -270,10 +328,16 @@ public class EventController {
                     .orElse(null);
         }
 
+        if (!canViewEvent(event, user)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "Members only event"));
+        }
+
         Map<String, Object> response = new HashMap<>();
         response.put("average", event.getAverageRating());
         response.put("count", event.getRatingCount());
         response.put("myRating", myRating);
+
 
         return ResponseEntity.ok(response);
     }
@@ -303,6 +367,12 @@ public class EventController {
             return ResponseEntity.badRequest()
                     .body(Map.of("message", "Rating must be 1–5"));
         }
+
+        if (!canViewEvent(event, user)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "Members only event"));
+        }
+
 
         service.saveOrUpdateRating(event, user, rating);
         return getRating(id, requesterEmail);
@@ -360,8 +430,15 @@ public class EventController {
             return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
         }
 
+
         Event ev = events.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        if (!canViewEvent(ev, me)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "Members only event"));
+        }
+
 
         boolean isOwner = ev.getCreatedBy() != null
                 && ev.getCreatedBy().getId().equals(me.getId());
@@ -377,5 +454,20 @@ public class EventController {
 
         return ResponseEntity.ok(Map.of("attendanceCode", newCode));
     }
+
+    private boolean canViewEvent(Event event, User user) {
+        if (event.getVisibility() == EventVisibility.PUBLIC) {
+            return true;
+        }
+
+        // CLUB_MEMBERS
+        if (user == null || event.getClub() == null) {
+            return false;
+        }
+
+        return event.getClub().getMembers().stream()
+                .anyMatch(m -> m.getUserId().equals(user.getId()));
+    }
+
 
 }

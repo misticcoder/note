@@ -30,7 +30,8 @@ export default function Events() {
         startAt: "",
         endAt: "",
         tags: "",
-        clubId:""
+        clubId:"",
+        visibility: "PUBLIC"
     });
 
 
@@ -93,6 +94,11 @@ export default function Events() {
     }, [clubFromRoute]);
 
 
+    useEffect(() => {
+        if (!form.clubId) {
+            setForm(f => ({ ...f, visibility: "PUBLIC" }));
+        }
+    }, [form.clubId]);
 
 
     /* =====================
@@ -158,7 +164,13 @@ export default function Events() {
                 }
 
 
-                const res = await fetch(url);
+                const sep = url.includes("?") ? "&" : "?";
+                const finalUrl = user?.email
+                    ? `${url}${sep}requesterEmail=${encodeURIComponent(user.email)}`
+                    : url;
+
+                const res = await fetch(finalUrl);
+
                 if (!res.ok) throw new Error("Failed to load events");
 
                 const data = await res.json();
@@ -357,12 +369,14 @@ export default function Events() {
             content: form.content.trim(),
             location: form.location.trim(),
             startAt: form.startAt,
-            endAt: form.endAt || "",
+            endAt: form.endAt || null,
+            visibility: form.visibility,
             tags: form.tags
                 ? form.tags.split(",").map(t => t.trim()).filter(Boolean)
                 : [],
-            clubId: form.clubId !== "" ? form.clubId : null
+            clubId: form.clubId !== "" ? Number(form.clubId) : null
         };
+
 
 
         console.log("CREATE EVENT PAYLOAD:", payload);
@@ -380,7 +394,8 @@ export default function Events() {
             const body = await res.json();
             if (!res.ok) throw new Error(body.message || "Create failed");
 
-            setEvents(prev => [body, ...prev]);
+            setEvents(prev => [body.event, ...prev]);
+
             setShowAdd(false);
             setForm({ title: "", content: "", location: "", startAt: "", endAt: "", tags: "", clubId: "" });
         } catch (e2) {
@@ -473,11 +488,17 @@ export default function Events() {
                         )}
 
 
-                        {isAdmin && (
-                            <button title={"Create new event"} className={"dbutton"} style={{color:"#ffffe3"}} onClick={() => setShowAdd(true)}>
+                        {user && (
+                            <button
+                                title="Create new event"
+                                className="dbutton"
+                                style={{ color: "#ffffe3" }}
+                                onClick={() => setShowAdd(true)}
+                            >
                                 + Add Event
                             </button>
                         )}
+
 
                         {/* ADD MODAL */}
                         {isAdmin && showAdd && (
@@ -548,6 +569,15 @@ export default function Events() {
                                                 setForm(prev => ({...prev, tags: e.target.value}))
                                             }
                                         />
+                                        <select
+                                            value={form.visibility}
+                                            onChange={e =>
+                                                setForm(f => ({...f, visibility: e.target.value}))
+                                            }
+                                        >
+                                            <option value="PUBLIC">Visible to everyone</option>
+                                            <option value="CLUB_MEMBERS">Club members only</option>
+                                        </select>
 
 
                                         <div style={{display: "flex", justifyContent: "flex-end", gap: 8}}>

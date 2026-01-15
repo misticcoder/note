@@ -5,7 +5,6 @@
 .profile-header {
     width: 100%;
     position: sticky;
-    z-index: 1000;
     color: #ffffe3;
     display: flex;
     align-items: center;

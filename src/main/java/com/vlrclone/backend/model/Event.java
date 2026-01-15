@@ -2,6 +2,7 @@ package com.vlrclone.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.vlrclone.backend.Enums.EventVisibility;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -36,7 +37,6 @@ public class Event {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "club_id")
-
     private Club club;
 
     @JsonManagedReference
@@ -85,6 +85,11 @@ public class Event {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_user_id")
     private User createdBy;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private EventVisibility visibility = EventVisibility.PUBLIC;
+
 
     public String getAttendanceCodeHash() { return attendanceCodeHash; }
     public void setAttendanceCodeHash(String attendanceCodeHash) { this.attendanceCodeHash = attendanceCodeHash; }
@@ -226,6 +231,13 @@ public class Event {
 
     public void setRatingCount(int ratingCount) {
         this.ratingCount = ratingCount;
+    }
+
+    public void setVisibility(EventVisibility visibility) {
+        this.visibility = visibility;
+    }
+    public EventVisibility getVisibility() {
+        return visibility;
     }
 
 }

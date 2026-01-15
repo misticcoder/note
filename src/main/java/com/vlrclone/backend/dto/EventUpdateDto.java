@@ -1,6 +1,7 @@
 // src/main/java/com/vlrclone/backend/dto/EventUpdateDto.java
 package com.vlrclone.backend.dto;
 
+import com.vlrclone.backend.Enums.EventVisibility;
 import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.model.Tag;
 
@@ -29,6 +30,8 @@ public class EventUpdateDto {
 
     public Set<String> tags;
 
+    public EventVisibility visibility;
+
     public EventUpdateDto() {
     }
 
@@ -53,5 +56,8 @@ public class EventUpdateDto {
                 .stream()
                 .map(Tag::getName)
                 .collect(Collectors.toSet());
+
+        this.visibility = e.getVisibility();
     }
+
 }

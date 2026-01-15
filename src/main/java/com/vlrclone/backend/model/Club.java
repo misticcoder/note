@@ -55,4 +55,14 @@ public class Club {
     public List<ClubMember> getMembers() { return members; }
     public void setMembers(List<ClubMember> members) { this.members = members; }
 
+    public boolean isLeaderOrCoLeader(User user) {
+        if (user == null || members == null) return false;
+
+        return members.stream().anyMatch(m ->
+                m.getUserId().equals(user.getId()) &&
+                        (m.getRole() == ClubMember.Role.LEADER ||
+                                m.getRole() == ClubMember.Role.CO_LEADER)
+        );
+    }
+
 }

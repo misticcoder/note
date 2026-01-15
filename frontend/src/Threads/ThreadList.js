@@ -135,7 +135,7 @@ export default function ThreadList() {
 
                             {filtered.map((th, i) => (
                                 <div
-                                    key={th.id}
+                                    key={th.id}c
                                     className={`table-row ${isAdmin ? "admin" : "user"}`}
                                     onClick={() =>
                                         (window.location.hash = `#/threads/${th.id}`)

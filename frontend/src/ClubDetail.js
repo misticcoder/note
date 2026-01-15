@@ -55,6 +55,10 @@ export default function ClubDetail() {
     const isMemberFromList = !!user && members.some((m) => m.userId === user.id);
     const effectiveIsMember = myStatus.isMember || isMemberFromList;
 
+    const canCreateEvent = isAdmin || isLeader || isCoLeader;
+    const [showCreateEvent, setShowCreateEvent] = useState(false);
+
+
     const requestJoinClub = async () => {
         if (!user) {
             alert("Please log in to request to join.");
@@ -192,11 +196,28 @@ export default function ClubDetail() {
     }, [clubId, user?.email, canApproveRequests]);
 
     useEffect(() => {
-        fetch(`/api/clubs/${clubId}/events`)
-            .then(r => r.ok ? r.json() : [])
-            .then(data => setEvents(Array.isArray(data) ? data : []))
-            .catch(() => setEvents([]));
-    }, [clubId]);
+        if (!clubId) return;
+
+        const load = async () => {
+            try {
+                const base = `/api/events/club/${clubId}?status=all`;
+                const url = user?.email
+                    ? `${base}&requesterEmail=${encodeURIComponent(user.email)}`
+                    : base;
+
+                const res = await fetch(url);
+                if (!res.ok) throw new Error();
+
+                const data = await res.json();
+                setEvents(Array.isArray(data) ? data : []);
+            } catch {
+                setEvents([]);
+            }
+        };
+
+        load();
+    }, [clubId, user?.email]);
+
 
 
 
@@ -666,11 +687,123 @@ export default function ClubDetail() {
                 )}
 
                 {activeTab === "events" && (
-                    <EventTable
-                        events={events}
-                        showClub={false}
-                    />
+                    <div>
+                        {canCreateEvent && (
+                            <div style={{ display: "flex", justifyContent: "flex-end", padding:"10px"}}>
+                                <button
+                                    style={{color:"#ffffe3"}}
+                                    className="dbutton"
+                                    onClick={() => setShowCreateEvent(true)}
+                                >
+                                    + Create Event
+                                </button>
+                            </div>
+                        )}
+
+                        <EventTable
+                            events={events}
+                            showClub={false}
+                        />
+                    </div>
                 )}
+
+                {showCreateEvent && (
+                    <div className="events-controls">
+                        <div>
+                            <h3>Create Event for {club.name}</h3>
+
+                            <form
+                                onSubmit={async (e) => {
+                                    e.preventDefault();
+
+                                    const payload = {
+                                        title: e.target.title.value.trim(),
+                                        content: e.target.content.value.trim(),
+                                        location: e.target.location.value.trim(),
+                                        startAt: e.target.startAt.value,
+                                        endAt: e.target.endAt.value || null,
+                                        clubId: clubId,
+                                        visibility: "CLUB_MEMBERS",
+                                        tags: e.target.tags.value
+                                            ? e.target.tags.value.split(",").map(t => t.trim()).filter(Boolean)
+                                            : []
+                                    };
+
+                                    try {
+                                        const res = await fetch(
+                                            `/api/events?requesterEmail=${encodeURIComponent(user.email)}`,
+                                            {
+                                                method: "POST",
+                                                headers: { "Content-Type": "application/json" },
+                                                body: JSON.stringify(payload),
+                                            }
+                                        );
+
+                                        const body = await res.json();
+                                        if (!res.ok) {
+                                            alert(body.message || "Create failed");
+                                            return;
+                                        }
+
+                                        // prepend newly created event
+                                        setEvents(prev => [body.event, ...prev]);
+                                        setShowCreateEvent(false);
+                                    } catch {
+                                        alert("Create failed");
+                                    }
+                                }}
+                                style={{ display: "grid", gap: 10 }}
+                            >
+                                <input
+                                    name="title"
+                                    placeholder="Event title"
+                                    required
+                                />
+
+                                <textarea
+                                    name="content"
+                                    placeholder="Description"
+                                    rows={4}
+                                />
+
+                                <input
+                                    name="location"
+                                    placeholder="Location"
+                                />
+
+                                <input
+                                    type="datetime-local"
+                                    name="startAt"
+                                    required
+                                />
+
+                                <input
+                                    type="datetime-local"
+                                    name="endAt"
+                                />
+
+                                <input
+                                    name="tags"
+                                    placeholder="Tags (comma separated)"
+                                />
+
+                                <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+                                    <button
+                                        type="button"
+                                        className="cancel-btn"
+                                        onClick={() => setShowCreateEvent(false)}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button type="submit" className="btn-primary">
+                                        Create
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
 
 
                 {activeTab === "members" && (
