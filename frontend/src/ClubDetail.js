@@ -197,13 +197,22 @@ export default function ClubDetail() {
 
     useEffect(() => {
         if (!clubId) return;
+        if (!user) return;
+
+        // Wait until role / membership is known
+        const roleResolved =
+            isAdmin ||
+            isLeader ||
+            isCoLeader ||
+            myStatus.isMember;
+
+        if (!roleResolved) return;
 
         const load = async () => {
             try {
-                const base = `/api/events/club/${clubId}?status=all`;
-                const url = user?.email
-                    ? `${base}&requesterEmail=${encodeURIComponent(user.email)}`
-                    : base;
+                const url =
+                    `/api/events/club/${clubId}?status=all` +
+                    `&requesterEmail=${encodeURIComponent(user.email)}`;
 
                 const res = await fetch(url);
                 if (!res.ok) throw new Error();
@@ -216,7 +225,15 @@ export default function ClubDetail() {
         };
 
         load();
-    }, [clubId, user?.email]);
+    }, [
+        clubId,
+        user?.email,
+        isAdmin,
+        isLeader,
+        isCoLeader,
+        myStatus.isMember
+    ]);
+
 
 
 
@@ -703,6 +720,7 @@ export default function ClubDetail() {
                         <EventTable
                             events={events}
                             showClub={false}
+                            isPrivileged={isAdmin || isLeader}
                         />
                     </div>
                 )}

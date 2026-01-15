@@ -9,4 +9,10 @@ import java.util.Optional;
 public interface JoinRequestRepository extends JpaRepository<JoinRequest, Long> {
     List<JoinRequest> findByClubIdAndStatus(Long clubId, JoinRequest.Status status);
     Optional<JoinRequest> findByClubIdAndUserId(Long clubId, Long userId);
+
+    Optional<JoinRequest> findByClubIdAndUserIdAndStatus(
+            Long clubId,
+            Long userId,
+            JoinRequest.Status status
+    );
 }

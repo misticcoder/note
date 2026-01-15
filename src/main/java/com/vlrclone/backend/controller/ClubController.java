@@ -30,8 +30,9 @@ public class ClubController {
     private final UserRepository users;
     private final ClubService clubService;
     private final EventRepository events;
+    private final JoinRequestRepository joinRequestRepository;
 
-    public ClubController(ClubRepository c, ClubMemberRepository m, JoinRequestRepository r, ClubNewsRepository n, UserRepository u, ClubService clubService, EventRepository events) {
+    public ClubController(ClubRepository c, ClubMemberRepository m, JoinRequestRepository r, ClubNewsRepository n, UserRepository u, ClubService clubService, EventRepository events, JoinRequestRepository joinRequestRepository) {
         this.clubs = c;
         this.members = m;
         this.requests = r;
@@ -39,6 +40,7 @@ public class ClubController {
         this.users = u;
         this.clubService = clubService;
         this.events = events;
+        this.joinRequestRepository = joinRequestRepository;
     }
 
     /* Utility */
@@ -262,25 +264,40 @@ public class ClubController {
 
     // GET /api/clubs/{clubId}/status?requesterEmail=me@example.com
     @GetMapping("/{clubId}/status")
-    public ResponseEntity<?> myStatus(@PathVariable Long clubId,
-                                      @RequestParam String requesterEmail) {
-        var uOpt = users.findByEmail(requesterEmail);
-        if (uOpt.isEmpty()) return ResponseEntity.status(403).body(Map.of("message", "Login required"));
-        var u = uOpt.get();
-        if (!clubs.existsById(clubId)) return ResponseEntity.status(404).body(Map.of("message", "Club not found"));
+    public Map<String, Object> myStatus(
+            @PathVariable Long clubId,
+            @RequestParam String requesterEmail
+    ) {
+        User user = users.findByEmail(requesterEmail).orElse(null);
 
-        boolean isMember = members.existsByClubIdAndUserId(clubId, u.getId());
+        boolean isMember = false;
+        boolean hasPending = false;
+        Long requestId = null;
 
-        var jrOpt = requests.findByClubIdAndUserId(clubId, u.getId());
-        boolean hasPending = jrOpt.isPresent() && jrOpt.get().getStatus() == JoinRequest.Status.PENDING;
-        Long requestId = hasPending ? jrOpt.get().getId() : null;
+        if (user != null) {
+            isMember = members.existsByClubIdAndUserId(clubId, user.getId());
 
-        return ResponseEntity.ok(Map.of(
-                "isMember", isMember,
-                "hasPending", hasPending,
-                "requestId", requestId
-        ));
+            JoinRequest req =
+                    joinRequestRepository.findByClubIdAndUserIdAndStatus(
+                            clubId,
+                            user.getId(),
+                            JoinRequest.Status.PENDING
+                    ).orElse(null);
+
+            if (req != null) {
+                hasPending = true;
+                requestId = req.getId();
+            }
+        }
+
+        Map<String, Object> res = new HashMap<>();
+        res.put("isMember", isMember);
+        res.put("hasPending", hasPending);
+        res.put("requestId", requestId); // null is OK
+
+        return res;
     }
+
 
     // DELETE /api/clubs/{clubId}/join-requests/{requestId}?requesterEmail=me@example.com
     @DeleteMapping("/{clubId}/join-requests/{requestId}")
