@@ -67,6 +67,52 @@ public class EventController {
         };
     }
 
+    /**
+     * Enhanced permission check with club admin support
+     */
+    private boolean canViewEvent(Event event, User user) {
+        if (event == null) {
+            return false;
+        }
+
+        // Global admin can see everything
+        if (isAdmin(user)) {
+            return true;
+        }
+
+        // Event creator can always see their own events
+        if (user != null && event.getCreatedBy() != null
+                && event.getCreatedBy().getId().equals(user.getId())) {
+            return true;
+        }
+
+        // Public events are visible to everyone
+        if (event.getVisibility() == EventVisibility.PUBLIC) {
+            return true;
+        }
+
+        // Members-only events require authentication and club membership
+        if (event.getVisibility() == EventVisibility.CLUB_MEMBERS) {
+            if (user == null || event.getClub() == null) {
+                return false;
+            }
+
+            Club club = event.getClub();
+
+            // Check if user is club leader/co-leader
+            if (club.isLeaderOrCoLeader(user)) {
+                return true;
+            }
+
+            // Check if user is a club member
+            return club.getMembers().stream()
+                    .anyMatch(m -> m.getUserId().equals(user.getId()));
+        }
+
+        // Default: deny access
+        return false;
+    }
+
     /* =====================
        LIST / SEARCH
     ===================== */
@@ -77,8 +123,7 @@ public class EventController {
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String tags,
             @RequestParam(defaultValue = "all") String status
-    )
- {
+    ) {
         List<String> tagList = (tags == null || tags.isBlank())
                 ? null
                 : Arrays.stream(tags.split(","))
@@ -86,28 +131,22 @@ public class EventController {
                 .filter(s -> !s.isBlank())
                 .toList();
 
-     User user = byEmail(requesterEmail);
+        User user = byEmail(requesterEmail);
 
-     List<EventUpdateDto> visible = service
-             .searchEvents(q, tagList, normalizeStatus(status))
-             .stream()
-             .filter(dto -> {
-                 if (dto.visibility == EventVisibility.PUBLIC) return true;
-                 if (user == null) return false;
+        List<EventUpdateDto> visible = service
+                .searchEvents(q, tagList, normalizeStatus(status))
+                .stream()
+                .filter(dto -> {
+                    Event e = events.findById(dto.id).orElse(null);
+                    return e != null && canViewEvent(e, user);
+                })
+                .toList();
 
-                 return dto.clubId != null &&
-                         clubs.findById(dto.clubId)
-                                 .map(c -> c.getMembers().stream()
-                                         .anyMatch(m -> m.getUserId().equals(user.getId())))
-                                 .orElse(false);
-             })
-             .toList();
-
-     return ResponseEntity.ok(visible);
+        return ResponseEntity.ok(visible);
     }
 
     /* =====================
-       GET SINGLE EVENT
+       GET SINGLE EVENT (FIXED)
     ===================== */
 
     @GetMapping("/{id}")
@@ -117,26 +156,26 @@ public class EventController {
     ) {
         User user = byEmail(requesterEmail);
 
-        return events.findWithClubAndTagsById(id)
-                .map(e -> {
+        Event event = events.findWithClubAndTagsById(id).orElse(null);
 
-                    if (!canViewEvent(e, user)) {
-                        return ResponseEntity.status(403)
-                                .body(Map.of("message", "Members only event"));
-                    }
+        if (event == null) {
+            return ResponseEntity.status(404)
+                    .body(Map.of("message", "Event not found"));
+        }
 
-                    EventUpdateDto dto = new EventUpdateDto(e);
-                    dto.myRating = service.getMyRating(e, user);
-                    return ResponseEntity.ok(dto);
-                })
-                .orElseGet(() ->
-                        ResponseEntity.status(404)
-                                .body((EventUpdateDto) Map.of("message", "Event not found"))
-                );
+        if (!canViewEvent(event, user)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "Members only event"));
+        }
+
+        EventUpdateDto dto = new EventUpdateDto(event);
+        dto.myRating = service.getMyRating(event, user);
+
+        return ResponseEntity.ok(dto);
     }
 
     /* =====================
-       CREATE (ADMIN)
+       CREATE (ADMIN OR CLUB LEADER)
     ===================== */
 
     @PostMapping
@@ -163,16 +202,15 @@ public class EventController {
         ev.setEndAt(dto.endAt);
         ev.setCreatedBy(me);
 
-    /* =====================
-       CLUB vs GLOBAL EVENT
-    ===================== */
+        /* =====================
+           CLUB vs GLOBAL EVENT
+        ===================== */
 
         if (dto.clubId != null) {
             Club club = clubs.findById(dto.clubId)
                     .orElseThrow(() -> new IllegalArgumentException("Club not found"));
 
-            boolean allowed =
-                    isAdmin(me) || club.isLeaderOrCoLeader(me);
+            boolean allowed = isAdmin(me) || club.isLeaderOrCoLeader(me);
 
             if (!allowed) {
                 return ResponseEntity.status(403)
@@ -202,9 +240,9 @@ public class EventController {
             );
         }
 
-    /* =====================
-       TAGS & ATTENDANCE CODE
-    ===================== */
+        /* =====================
+           TAGS & ATTENDANCE CODE
+        ===================== */
 
         if (dto.tags != null) {
             ev.setTags(service.resolveTags(dto.tags));
@@ -226,7 +264,7 @@ public class EventController {
     }
 
     /* =====================
-       UPDATE (ADMIN)
+       UPDATE (ADMIN OR CLUB LEADER)
     ===================== */
 
     @PatchMapping("/{id}")
@@ -236,13 +274,18 @@ public class EventController {
             @RequestBody EventUpdateDto dto
     ) {
         User me = byEmail(requesterEmail);
-        if (!isAdmin(me)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of("message", "Admin only"));
-        }
 
         Event ev = events.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        // Check permissions: global admin OR club leader/co-leader
+        boolean canEdit = isAdmin(me) ||
+                (ev.getClub() != null && ev.getClub().isLeaderOrCoLeader(me));
+
+        if (!canEdit) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "Not authorized to edit this event"));
+        }
 
         if (ev.getStatus() == Event.EventStatus.ENDED) {
             return ResponseEntity.status(409)
@@ -255,11 +298,17 @@ public class EventController {
         if (dto.startAt != null) ev.setStartAt(dto.startAt);
         if (dto.endAt != null) ev.setEndAt(dto.endAt);
 
-        if (dto.clubId != null) {
+        // Only global admin can change club association
+        if (dto.clubId != null && isAdmin(me)) {
             ev.setClub(
                     clubs.findById(dto.clubId)
                             .orElseThrow(() -> new IllegalArgumentException("Club not found"))
             );
+        }
+
+        // Allow visibility change only if appropriate
+        if (dto.visibility != null) {
+            ev.setVisibility(dto.visibility);
         }
 
         if (dto.tags != null) {
@@ -280,7 +329,7 @@ public class EventController {
     }
 
     /* =====================
-       DELETE (ADMIN)
+       DELETE (ADMIN OR CLUB LEADER)
     ===================== */
 
     @DeleteMapping("/{id}")
@@ -290,13 +339,18 @@ public class EventController {
             @RequestParam String requesterEmail
     ) {
         User me = byEmail(requesterEmail);
-        if (!isAdmin(me)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of("message", "Admin only"));
-        }
 
         Event event = events.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        // Check permissions: global admin OR club leader/co-leader
+        boolean canDelete = isAdmin(me) ||
+                (event.getClub() != null && event.getClub().isLeaderOrCoLeader(me));
+
+        if (!canDelete) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "Not authorized to delete this event"));
+        }
 
         event.getTags().clear();
         event.setClub(null);
@@ -320,6 +374,11 @@ public class EventController {
 
         User user = byEmail(requesterEmail);
 
+        if (!canViewEvent(event, user)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "Members only event"));
+        }
+
         Integer myRating = null;
         if (user != null) {
             myRating = ratings
@@ -328,16 +387,10 @@ public class EventController {
                     .orElse(null);
         }
 
-        if (!canViewEvent(event, user)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of("message", "Members only event"));
-        }
-
         Map<String, Object> response = new HashMap<>();
         response.put("average", event.getAverageRating());
         response.put("count", event.getRatingCount());
         response.put("myRating", myRating);
-
 
         return ResponseEntity.ok(response);
     }
@@ -357,6 +410,11 @@ public class EventController {
         Event event = events.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
+        if (!canViewEvent(event, user)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "Members only event"));
+        }
+
         if (event.getStatus() != Event.EventStatus.ENDED) {
             return ResponseEntity.status(409)
                     .body(Map.of("message", "Event not ended"));
@@ -367,12 +425,6 @@ public class EventController {
             return ResponseEntity.badRequest()
                     .body(Map.of("message", "Rating must be 1–5"));
         }
-
-        if (!canViewEvent(event, user)) {
-            return ResponseEntity.status(403)
-                    .body(Map.of("message", "Members only event"));
-        }
-
 
         service.saveOrUpdateRating(event, user, rating);
         return getRating(id, requesterEmail);
@@ -403,21 +455,43 @@ public class EventController {
     @GetMapping("/tag/{tagName}")
     public ResponseEntity<?> byTag(
             @PathVariable String tagName,
+            @RequestParam(required = false) String requesterEmail,
             @RequestParam(defaultValue = "all") String status
     ) {
-        return ResponseEntity.ok(
-                service.findByTag(tagName, normalizeStatus(status))
-        );
+        User user = byEmail(requesterEmail);
+
+        List<EventUpdateDto> allEvents = service.findByTag(tagName, normalizeStatus(status));
+
+        // Filter based on visibility
+        List<EventUpdateDto> visible = allEvents.stream()
+                .filter(dto -> {
+                    Event e = events.findById(dto.id).orElse(null);
+                    return e != null && canViewEvent(e, user);
+                })
+                .toList();
+
+        return ResponseEntity.ok(visible);
     }
 
     @GetMapping("/club/{clubId}")
     public ResponseEntity<?> byClub(
             @PathVariable Long clubId,
+            @RequestParam(required = false) String requesterEmail,
             @RequestParam(defaultValue = "all") String status
     ) {
-        return ResponseEntity.ok(
-                service.findByClub(clubId, normalizeStatus(status))
-        );
+        User user = byEmail(requesterEmail);
+
+        List<EventUpdateDto> allEvents = service.findByClub(clubId, normalizeStatus(status));
+
+        // Filter based on visibility
+        List<EventUpdateDto> visible = allEvents.stream()
+                .filter(dto -> {
+                    Event e = events.findById(dto.id).orElse(null);
+                    return e != null && canViewEvent(e, user);
+                })
+                .toList();
+
+        return ResponseEntity.ok(visible);
     }
 
     @PostMapping("/{id}/attendance-code/rotate")
@@ -427,9 +501,9 @@ public class EventController {
     ) {
         User me = byEmail(requesterEmail);
         if (me == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
+            return ResponseEntity.status(401)
+                    .body(Map.of("message", "Unauthorized"));
         }
-
 
         Event ev = events.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
@@ -439,11 +513,13 @@ public class EventController {
                     .body(Map.of("message", "Members only event"));
         }
 
-
         boolean isOwner = ev.getCreatedBy() != null
                 && ev.getCreatedBy().getId().equals(me.getId());
 
-        if (!isAdmin(me) && !isOwner) {
+        boolean isClubLeader = ev.getClub() != null
+                && ev.getClub().isLeaderOrCoLeader(me);
+
+        if (!isAdmin(me) && !isOwner && !isClubLeader) {
             return ResponseEntity.status(403)
                     .body(Map.of("message", "Forbidden"));
         }
@@ -454,20 +530,4 @@ public class EventController {
 
         return ResponseEntity.ok(Map.of("attendanceCode", newCode));
     }
-
-    private boolean canViewEvent(Event event, User user) {
-        if (event.getVisibility() == EventVisibility.PUBLIC) {
-            return true;
-        }
-
-        // CLUB_MEMBERS
-        if (user == null || event.getClub() == null) {
-            return false;
-        }
-
-        return event.getClub().getMembers().stream()
-                .anyMatch(m -> m.getUserId().equals(user.getId()));
-    }
-
-
 }

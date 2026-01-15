@@ -48,6 +48,7 @@ export default function EventTable({
                 {showClub && <div className="club-col">Club</div>}
                 <div>Status</div>
                 <div>Avg. Rating</div>
+                {isPrivileged && <div >Visibility</div>}
                 {isPrivileged && <div className="actions-col">Actions</div>}
             </div>
 
@@ -121,6 +122,22 @@ export default function EventTable({
                                 <span className="muted">No ratings</span>
                             )}
                         </div>
+
+                        {isPrivileged && (
+                            <td>
+                                <span
+                                    className={`visibility-badge ${
+                                        ev.visibility === "PUBLIC"
+                                ? "public"
+                                : "restricted"
+                        }`}
+                    >
+                        {ev.visibility === "PUBLIC"
+                            ? "Public"
+                            : "Club Members"}
+                    </span>
+                            </td>
+                        )}
 
                         {isPrivileged && (
                             <div className="actions">

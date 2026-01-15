@@ -45,7 +45,7 @@ export default function EventHeader({
                     />
 
                     <div className="event-meta">
-                        <h1 className="event-title">
+                        <h1 className="event-page-title">
                             {event.title}
                             {status === "LIVE" && (
                                 <span className="event-live-pill">

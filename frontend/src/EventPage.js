@@ -1,4 +1,4 @@
-import {useEffect, useState, useContext, useMemo, useRef} from "react";
+import {useEffect, useState, useContext, useMemo, useRef, useCallback} from "react";
 import { AuthContext } from "./AuthContext";
 import EventHeader from "./EventHeader";
 import PostFeed from "./Post/PostFeed";
@@ -37,21 +37,15 @@ export default function EventPage() {
     const [goingAttendees, setGoingAttendees] = useState([]);
     const [maybeAttendees, setMaybeAttendees] = useState([]);
     const [attendedAttendees, setAttendedAttendees] = useState([]);
-
-
-
     const [attendeesLoading, setAttendeesLoading] = useState(false);
     const [attendeeQuery, setAttendeeQuery] = useState("");
 
     const [hash, setHash] = useState(window.location.hash);
 
     const [attendanceCode, setAttendanceCode] = useState(null);
-
     const [manualCode, setManualCode] = useState("");
     const [checkingIn, setCheckingIn] = useState(false);
-
     const [attendanceStatus, setAttendanceStatus] = useState(null);
-
 
     useEffect(() => {
         const onHashChange = () => setHash(window.location.hash);
@@ -79,7 +73,6 @@ export default function EventPage() {
         };
     }, [hash]);
 
-
     /* =====================
        EVENT STATUS (JS)
     ===================== */
@@ -103,22 +96,43 @@ export default function EventPage() {
     useEffect(() => {
         if (!eventId) return;
 
+        // IMPORTANT: wait until auth is resolved
+        if (user === undefined) return;
+
         setLoading(true);
-        fetch(`/api/events/${eventId}`)
-            .then((r) => {
-                if (!r.ok) throw new Error("Event not found");
-                return r.json();
+        setError("");
+
+        const url = user?.email
+            ? `/api/events/${eventId}?requesterEmail=${encodeURIComponent(user.email)}`
+            : `/api/events/${eventId}`;
+
+        fetch(url)
+            .then(async (r) => {
+                const body = await r.json().catch(() => ({}));
+
+                if (r.status === 403) {
+                    throw new Error(body.message || "Members only event");
+                }
+                if (r.status === 404) {
+                    throw new Error(body.message || "Event not found");
+                }
+                if (!r.ok) {
+                    throw new Error("Failed to load event");
+                }
+
+                return body;
             })
             .then(setEvent)
             .catch((e) => setError(e.message))
             .finally(() => setLoading(false));
-    }, [eventId]);
+    }, [eventId, user]);
 
     /* =====================
        RSVP + COUNTS
     ===================== */
     useEffect(() => {
-        if (!eventId || !user) return;
+        if (!eventId || user === undefined) return;
+        if (!user) return; // guest
 
         fetch(
             `/api/events/${eventId}/rsvp?requesterEmail=${encodeURIComponent(
@@ -138,7 +152,6 @@ export default function EventPage() {
             .catch(() => {});
     }, [eventId, user]);
 
-
     /* =====================
        ⭐ FETCH RATING
        - Always fetch average/count
@@ -157,8 +170,40 @@ export default function EventPage() {
             .catch(() => {});
     }, [eventId, user]);
 
-    const checkedInRef = useRef(false);
+    /* =====================
+       ATTENDANCE CODE SUBMISSION
+    ===================== */
+    const submitAttendanceCode = useCallback(async (code) => {
+        if (!user || !eventId || !code) return;
 
+        try {
+            setCheckingIn(true);
+
+            const res = await fetch(
+                `/api/events/${eventId}/check-in?requesterEmail=${encodeURIComponent(
+                    user.email
+                )}&code=${encodeURIComponent(code.trim())}`,
+                { method: "POST" }
+            );
+
+            if (!res.ok) {
+                throw new Error("Invalid code");
+            }
+
+            setAttendanceStatus("ATTENDED");
+            alert("✓ Attendance recorded");
+            window.location.hash = `#/events/${eventId}`;
+        } catch {
+            alert("✗ Invalid or expired attendance code");
+        } finally {
+            setCheckingIn(false);
+        }
+    }, [user, eventId]);
+
+    /* =====================
+       QR CODE CHECK-IN
+    ===================== */
+    const checkedInRef = useRef(false);
 
     useEffect(() => {
         if (activeTab !== "check-in" || !eventId || !user) return;
@@ -176,9 +221,7 @@ export default function EventPage() {
         }
 
         submitAttendanceCode(code);
-
-    }, [activeTab, eventId, user]);
-
+    }, [activeTab, eventId, user, submitAttendanceCode]);
 
     /* =====================
        RSVP ACTIONS
@@ -198,9 +241,13 @@ export default function EventPage() {
         }
 
         setRsvp(status);
-        setCounts(
-            await fetch(`/api/events/${eventId}/attendance`).then((r) => r.json())
-        );
+
+        try {
+            const updatedCounts = await fetch(`/api/events/${eventId}/attendance`).then((r) => r.json());
+            setCounts(updatedCounts);
+        } catch {
+            // Silently fail if count update fails
+        }
     };
 
     const cancelRSVP = async () => {
@@ -219,22 +266,26 @@ export default function EventPage() {
         }
 
         setRsvp(null);
-        setCounts(
-            await fetch(`/api/events/${eventId}/attendance`).then((r) => r.json())
-        );
+
+        try {
+            const updatedCounts = await fetch(`/api/events/${eventId}/attendance`).then((r) => r.json());
+            setCounts(updatedCounts);
+        } catch {
+            // Silently fail if count update fails
+        }
     };
 
     /* =====================
        ATTENDEES
     ===================== */
-    useEffect(() => {
-        if (
-            activeTab !== "attendees" ||
-            !eventId ||
-            goingAttendees.length ||
-            maybeAttendees.length
-        ) return;
+    const attendeesFetchedRef = useRef(false);
 
+    useEffect(() => {
+        if (activeTab !== "attendees" || !eventId) return;
+
+        // Only fetch once per event
+        if (attendeesFetchedRef.current) return;
+        attendeesFetchedRef.current = true;
 
         setAttendeesLoading(true);
 
@@ -248,9 +299,19 @@ export default function EventPage() {
                 setGoingAttendees(Array.isArray(going) ? going : []);
                 setMaybeAttendees(Array.isArray(maybe) ? maybe : []);
             })
-
+            .catch(() => {
+                // Silently fail - attendees will remain empty
+            })
             .finally(() => setAttendeesLoading(false));
     }, [activeTab, eventId]);
+
+    // Reset attendees when eventId changes
+    useEffect(() => {
+        attendeesFetchedRef.current = false;
+        setGoingAttendees([]);
+        setMaybeAttendees([]);
+        setAttendedAttendees([]);
+    }, [eventId]);
 
     const filteredGoing = useMemo(
         () =>
@@ -276,7 +337,6 @@ export default function EventPage() {
         [attendedAttendees, attendeeQuery]
     );
 
-
     /* =====================
        ⭐ SUBMIT RATING
     ===================== */
@@ -300,12 +360,15 @@ export default function EventPage() {
         }
 
         // Refresh rating summary + my rating
-        const url = `/api/events/${event.id}/rating?requesterEmail=${encodeURIComponent(
-            user.email
-        )}`;
-
-        const updated = await fetch(url).then((r) => r.json());
-        setRating(updated);
+        try {
+            const url = `/api/events/${event.id}/rating?requesterEmail=${encodeURIComponent(
+                user.email
+            )}`;
+            const updated = await fetch(url).then((r) => r.json());
+            setRating(updated);
+        } catch {
+            // Silently fail if refresh fails
+        }
     };
 
     /* =====================
@@ -356,51 +419,54 @@ export default function EventPage() {
     };
 
     /* =====================
-       Attendance
+       ROTATE ATTENDANCE CODE
     ===================== */
-    const [hasCheckedIn, setHasCheckedIn] = useState(false);
-
-    const submitAttendanceCode = async (code) => {
-        if (!user || !eventId || !code) return;
+    const rotateAttendanceCode = async () => {
+        if (!user || !event || attendanceCode) return;
 
         try {
-            setCheckingIn(true);
-
             const res = await fetch(
-                `/api/events/${eventId}/check-in?requesterEmail=${encodeURIComponent(
+                `/api/events/${event.id}/attendance-code/rotate?requesterEmail=${encodeURIComponent(
                     user.email
-                )}&code=${encodeURIComponent(code.trim())}`,
+                )}`,
                 { method: "POST" }
             );
 
             if (!res.ok) {
-                throw new Error("Invalid code");
+                throw new Error("Failed to generate code");
             }
-            setHasCheckedIn(true);
 
-            alert(" Attendance recorded");
-            window.location.hash = `#/events/${eventId}`;
+            const data = await res.json();
+            setAttendanceCode(data.attendanceCode);
         } catch {
-            alert(" Invalid or expired attendance code");
-        } finally {
-            setCheckingIn(false);
+            alert("Unable to generate attendance code");
         }
     };
-
-
 
     /* =====================
        STATES (AFTER ALL HOOKS)
     ===================== */
-    if (loading) return <div className="event-page">Loading…</div>;
-    if (error || !event) return <div className="event-page">Event not found</div>;
+    // Auth still restoring → never show terminal state
+    if (user === undefined || loading) {
+        return <div className="event-page">Loading…</div>;
+    }
+
+    // Real error from backend
+    if (error) {
+        return <div className="event-page">{error}</div>;
+    }
+
+    // Auth resolved, no error, but no event
+    if (!event) {
+        return <div className="event-page">Event not found</div>;
+    }
 
     /* =====================
        RENDER
     ===================== */
     return (
         <div className="page">
-            <div className={"container"}>
+            <div className="container">
                 {/* Pass computed status into header so pills/tags are consistent */}
                 <EventHeader
                     event={{ ...event, status: eventStatus }}
@@ -417,67 +483,46 @@ export default function EventPage() {
                 <section className="event-content">
                     {activeTab === "overview" && (
                         <div className="event-overview">
-
                             {attendanceStatus === "ATTENDED" && (
                                 <div className="attendance-confirmed">
                                     ✅ You are checked in
                                 </div>
                             )}
 
-
                             {user &&
                                 !isAdmin &&
                                 eventStatus === "LIVE" &&
                                 attendanceStatus !== "ATTENDED" && (
-
-
                                     <div className="attendance-manual">
-                                    <h3>Attendance</h3>
+                                        <h3>Attendance</h3>
 
-                                    <input
-                                        type="text"
-                                        placeholder="Enter attendance code"
-                                        value={manualCode}
-                                        onChange={(e) => setManualCode(e.target.value.toUpperCase())}
-                                        disabled={checkingIn}
-                                    />
+                                        <input
+                                            type="text"
+                                            placeholder="Enter attendance code"
+                                            value={manualCode}
+                                            onChange={(e) => setManualCode(e.target.value.toUpperCase())}
+                                            disabled={checkingIn}
+                                        />
 
-                                    <button
-                                        onClick={() => submitAttendanceCode(manualCode)}
-                                        disabled={!manualCode || checkingIn}
-                                    >
-                                        {checkingIn ? "Checking in…" : "Check in"}
-                                    </button>
+                                        <button
+                                            onClick={() => submitAttendanceCode(manualCode)}
+                                            disabled={!manualCode || checkingIn}
+                                        >
+                                            {checkingIn ? "Checking in…" : "Check in"}
+                                        </button>
 
-                                    <div className="muted">
-                                        You can also scan the QR code shown by the organiser
+                                        <div className="muted">
+                                            You can also scan the QR code shown by the organiser
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-
+                                )}
 
                             <div className="event-rating">
-
                                 {isAdmin && (
-                                    <button
-                                        onClick={async () => {
-                                            if (attendanceCode) return;
-
-                                            const res = await fetch(
-                                                `/api/events/${event.id}/attendance-code/rotate?requesterEmail=${encodeURIComponent(
-                                                    user.email
-                                                )}`,
-                                                { method: "POST" }
-                                            );
-                                            const data = await res.json();
-                                            setAttendanceCode(data.attendanceCode);
-                                        }}
-
-                                    >
+                                    <button onClick={rotateAttendanceCode}>
                                         Show Attendance QR
                                     </button>
                                 )}
-
 
                                 {isAdmin && attendanceCode && (
                                     <EventAttendanceQR
@@ -501,7 +546,7 @@ export default function EventPage() {
                                         </button>
 
                                         <div className="muted">
-                                            Students can enter this code manually if they can’t scan the QR
+                                            Students can enter this code manually if they can't scan the QR
                                         </div>
                                     </div>
                                 )}
@@ -545,7 +590,6 @@ export default function EventPage() {
                                 )}
                             </div>
 
-
                             <h3>Description</h3>
                             <p style={{margin:"10px"}}>{event.content || "No description provided."}</p>
                             <div>
@@ -557,7 +601,6 @@ export default function EventPage() {
                                 />
                             </div>
                         </div>
-
                     )}
 
                     {activeTab === "posts" && <PostFeed eventId={event.id} />}
@@ -668,8 +711,6 @@ export default function EventPage() {
                                             ))
                                         )}
                                     </div>
-
-
                                 </div>
                             )}
                         </div>
@@ -687,18 +728,3 @@ export default function EventPage() {
         </div>
     );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

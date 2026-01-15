@@ -12,6 +12,11 @@
     gap: 20px;
 }
 
+.event-page-title{
+    color: #ffffe3;
+}
+
+
 /* ===============================
    EVENT HEADER
 ================================ */
@@ -598,6 +603,7 @@
         minmax(120px, 1fr)  /* club */
         minmax(90px, 1fr)   /* status */
         minmax(110px, 1fr)  /* rating */
+        minmax(110px, 1fr)  /* rating */
         minmax(120px, 1fr); /* actions */
     align-items: center;
     padding: 12px 14px;
@@ -896,4 +902,22 @@
     background: #2ecc71;
     color: white;
     font-weight: bold;
+}
+
+.visibility-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.visibility-badge.public {
+    background: #e6f4ea;
+    color: #1e7e34;
+}
+
+.visibility-badge.restricted {
+    background: #fff3cd;
+    color: #856404;
 }

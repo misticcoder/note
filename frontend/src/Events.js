@@ -140,6 +140,8 @@ export default function Events() {
        LOAD EVENTS
     ===================== */
     useEffect(() => {
+        if (!user) return;
+
         document.title = "Events | InfCom";
 
         (async () => {
@@ -147,45 +149,41 @@ export default function Events() {
                 setLoading(true);
 
                 let url;
-
                 if (clubFromRoute) {
-                    url = `/api/events/club/${clubFromRoute}?status=${status}`;
-                }
-                else if (tagFromRoute) {
-                    url = `/api/events/tag/${encodeURIComponent(tagFromRoute)}?status=${status}`;
-                }
-                else {
+                    url = `/api/events/club/${clubFromRoute}`;
+                } else if (tagFromRoute) {
+                    url = `/api/events/tag/${encodeURIComponent(tagFromRoute)}`;
+                } else {
                     const params = new URLSearchParams();
                     if (q.trim()) params.set("q", q.trim());
-                    if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
-                    if (status) params.set("status", status);
-
+                    if (selectedTags.length) params.set("tags", selectedTags.join(","));
+                    params.set("status", status);
                     url = `/api/events?${params.toString()}`;
                 }
 
-
                 const sep = url.includes("?") ? "&" : "?";
-                const finalUrl = user?.email
-                    ? `${url}${sep}requesterEmail=${encodeURIComponent(user.email)}`
-                    : url;
+                const finalUrl = `${url}${sep}requesterEmail=${encodeURIComponent(user.email)}`;
 
                 const res = await fetch(finalUrl);
-
                 if (!res.ok) throw new Error("Failed to load events");
 
                 const data = await res.json();
                 setEvents(Array.isArray(data) ? data : []);
                 setErr("");
-                setRatings({});
             } catch (e) {
                 setErr(e.message);
             } finally {
                 setLoading(false);
             }
         })();
-    }, [q, selectedTags, status, tagFromRoute, clubFromRoute]);
-
-
+    }, [
+        q,
+        selectedTags,
+        status,
+        tagFromRoute,
+        clubFromRoute,
+        user?.email
+    ]);
 
 
     /* =====================
