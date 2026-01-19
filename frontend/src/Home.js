@@ -227,6 +227,19 @@ function Home() {
         return `${minutes}m`;
     };
 
+    const EVENT_STATUSES = [
+        { key: "LIVE", label: "Ongoing Events", limit: null },
+        { key: "UPCOMING", label: "Upcoming Events", limit: 5 },
+        { key: "ENDED", label: "Completed Events", limit: 3 }
+    ];
+
+    const EMPTY_MESSAGES = {
+        LIVE: "No events happening right now",
+        UPCOMING: "No upcoming events scheduled",
+        ENDED: "No completed events yet"
+    };
+
+
 
     return (
         <main className={"page"}>
@@ -373,31 +386,40 @@ function Home() {
                             </button>
                         )}
 
-                        {Object.entries(eventsByStatus).map(([status, list]) => (
-                            <div key={status}>
-                                <h4 className={"column-title"}>
-                                    {status}
-                                </h4>
+                        {EVENT_STATUSES.map(({ key, label, limit }) => {
+                            const list = eventsByStatus[key] || [];
 
-                                {list.slice(0, 5).map(event => (
-                                    <div
-                                        key={event.id}
-                                        className="card event-row"
-                                        onClick={() => {
-                                            window.location.hash = `#/events/${event.id}`;
-                                        }}
-                                    >
-                                        <div className="truncate">
-                                            {event.title}
-                                        </div>
+                            return (
+                                <div key={key}>
+                                    <h4 className="column-title">{label}</h4>
 
-                                        <span className={`event-pill ${event.status.toLowerCase()}`}>
-                                            {getEventTimeLabel(event)}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        ))}
+                                    {list.length === 0 ? (
+                                        <div className="muted">{EMPTY_MESSAGES[key]}</div>
+                                    ) : (
+                                        list
+                                            .slice(0, limit ?? list.length)
+                                            .map(event => (
+                                                <div
+                                                    key={event.id}
+                                                    className="card event-row"
+                                                    onClick={() => {
+                                                        window.location.hash = `#/events/${event.id}`;
+                                                    }}
+                                                >
+                                                    <div className="truncate">
+                                                        {event.title}
+                                                    </div>
+
+                                                    <span className={`event-pill ${event.status.toLowerCase()}`}>
+                                                        {getEventTimeLabel(event)}
+                                                    </span>
+                                                </div>
+                                            ))
+                                    )}
+                                </div>
+                            );
+                        })}
+
 
 
                     </aside>
