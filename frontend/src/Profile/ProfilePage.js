@@ -262,7 +262,7 @@ function ProfileHeader({profile}) {
                         </div>
                     </div>
                     <div>
-                        <span className="badge">{profile.role}</span>
+                        <span className="user-badge">{profile.role}</span>
                     </div>
                 </div>
             </div>

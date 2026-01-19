@@ -4,6 +4,7 @@ import EditEventModal from "./Events/EditEventModal";
 import "./styles/events.css";
 import EventTable from "./Events/EventTable";
 import "./styles/index.css"
+import "./styles/modal.css";
 
 export default function Events() {
     const { user } = useContext(AuthContext);
@@ -500,14 +501,17 @@ export default function Events() {
 
                         {/* ADD MODAL */}
                         {isAdmin && showAdd && (
-                            <div className={"events-controls"}>
-                                <div>
+                            <div className="modal-backdrop" onClick={() => setShowAdd(false)}>
+                                <div
+                                    className="modal-card"
+                                    onClick={(e) => e.stopPropagation()} // prevent close when clicking inside
+                                >
                                     <h3>Add Event</h3>
-                                    <form onSubmit={createEvent} style={{display: "grid", gap: 10}}>
 
+                                    <form onSubmit={createEvent} className="modal-form">
                                         <select
                                             value={form.clubId || ""}
-                                            onChange={e => setForm(f => ({...f, clubId: e.target.value}))}
+                                            onChange={e => setForm(f => ({ ...f, clubId: e.target.value }))}
                                         >
                                             <option value="">No Club (Independent)</option>
                                             {clubs.map(c => (
@@ -515,14 +519,12 @@ export default function Events() {
                                             ))}
                                         </select>
 
-
                                         <input
                                             name="title"
                                             placeholder="Event Name"
                                             value={form.title}
                                             onChange={handleChange}
                                             required
-                                            className={"input"}
                                         />
 
                                         <textarea
@@ -531,7 +533,6 @@ export default function Events() {
                                             value={form.content}
                                             onChange={handleChange}
                                             rows={4}
-                                            className={"textarea"}
                                         />
 
                                         <input
@@ -539,9 +540,7 @@ export default function Events() {
                                             placeholder="Location"
                                             value={form.location}
                                             onChange={handleChange}
-                                            className={"input"}
                                         />
-
 
                                         <input
                                             type="datetime-local"
@@ -549,7 +548,6 @@ export default function Events() {
                                             value={form.startAt}
                                             onChange={handleChange}
                                             required
-
                                         />
 
                                         <input
@@ -557,33 +555,35 @@ export default function Events() {
                                             name="endAt"
                                             value={form.endAt}
                                             onChange={handleChange}
-
                                         />
 
                                         <input
                                             placeholder="Tags (comma separated)"
                                             value={form.tags || ""}
                                             onChange={e =>
-                                                setForm(prev => ({...prev, tags: e.target.value}))
+                                                setForm(prev => ({ ...prev, tags: e.target.value }))
                                             }
                                         />
+
                                         <select
                                             value={form.visibility}
                                             onChange={e =>
-                                                setForm(f => ({...f, visibility: e.target.value}))
+                                                setForm(f => ({ ...f, visibility: e.target.value }))
                                             }
                                         >
                                             <option value="PUBLIC">Visible to everyone</option>
                                             <option value="CLUB_MEMBERS">Club members only</option>
                                         </select>
 
-
-                                        <div style={{display: "flex", justifyContent: "flex-end", gap: 8}}>
-                                            <button type="button" onClick={() => setShowAdd(false)}
-                                                    className={"cancel-btn"}>
+                                        <div className="modal-actions">
+                                            <button
+                                                type="button"
+                                                className="cancelBtn"
+                                                onClick={() => setShowAdd(false)}
+                                            >
                                                 Cancel
                                             </button>
-                                            <button type="submit" className={"btn-primary"}>
+                                            <button type="submit" className="saveBtn">
                                                 Create
                                             </button>
                                         </div>
@@ -591,6 +591,7 @@ export default function Events() {
                                 </div>
                             </div>
                         )}
+
                     </div>
 
                     {loading && <p className="muted">Loading…</p>}

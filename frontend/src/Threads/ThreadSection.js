@@ -2,6 +2,8 @@ import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../AuthContext";
 import "../styles/Threads.css";
 import {timeAgo} from "../components/timeAgo";
+import "../styles/Home.css";
+import "../styles/modal.css"
 
 export default function ThreadSection({
                                           title = "Threads",
@@ -101,18 +103,17 @@ export default function ThreadSection({
 
             {/* Thread Modal */}
             {showModal && (
-                <div className="thread-window">
-                    <div className="thread-content">
+                <div className="modal-backdrop">
+                    <div className="modal-card">
                         <h3>Add New Thread</h3>
 
-                        <form onSubmit={handleSubmit}>
+                        <form onSubmit={handleSubmit} className={"modal-form"}>
                             <input
                                 name="title"
                                 placeholder="Thread Title"
                                 value={newThread.title}
                                 onChange={handleChange}
                                 required
-                                className="input"
                             />
 
                             <textarea
@@ -121,18 +122,17 @@ export default function ThreadSection({
                                 value={newThread.content}
                                 onChange={handleChange}
                                 required
-                                className="textarea"
                             />
 
-                            <div style={{display: "flex", gap: 10, justifyContent: "flex-end"}}>
+                            <div className={"modal-actions"}>
                                 <button
                                     type="button"
-                                    className="cancel-btn"
+                                    className="cancelBtn"
                                     onClick={() => setShowModal(false)}
                                 >
                                     Cancel
                                 </button>
-                                <button type="submit" className="submit-btn">
+                                <button type="submit" className="saveBtn">
                                     Save Thread
                                 </button>
                             </div>

@@ -1,24 +1,36 @@
 /* Layout */
+:root {
+    --bg: #0f1115;
+    --surface: #151821;
+    --surface-hover: #1b2030;
+    --border: rgba(255,255,255,0.06);
+    --text: #ffffe3;
+    --muted: #9aa0a6;
+    --accent: #ff3b3b;
+}
 
 
 /* Columns */
 .column {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
 }
+
+.column-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+}
+
 
 .feed {
     display: flex;
     flex-direction: column;
     gap: 16px;
-}
-
-.column-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #e0e0e0;
-    margin-bottom: 12px;
 }
 
 .sub-title {
@@ -28,24 +40,32 @@
     color: #444;
 }
 
-/* Cards */
 .card {
-    height: 50px;
-    border-radius: 2px;
-    box-sizing: border-box;
-    padding: 10px 15px;
-    background-color: #ffffff;
-    box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
-    position: relative;
-    overflow: hidden;
+    min-height: 44px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: none;
+    color: var(--text);
+
     display: flex;
     align-items: center;
     justify-content: space-between;
+
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.card:hover {
+    background-color: var(--surface-hover);
+    transform: translateY(-1px);
 }
 
 .threads-column .card {
     font-size: 13px;
+    color: var(--text);
 }
+
 .column .card {
     height: 50px;
 }
@@ -59,11 +79,6 @@
     justify-content: space-between;
 }
 
-
-.card:hover {
-    background: #ec540e;
-}
-
 .truncate {
     white-space: nowrap;
     overflow: hidden;
@@ -73,42 +88,40 @@
 /* Event pills */
 .event-pill {
     font-size: 11px;
-    padding: 2px 6px;
+    padding: 3px 8px;
     border-radius: 999px;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .event-pill.live {
-    background: red;
+    background: var(--accent);
     color: #fff;
-    font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 2px;
 }
 
-
 .event-pill.upcoming {
-    background: #e0e0e0;
-    color: #333;
+    background: rgba(255,255,255,0.08);
+    color: var(--text);
 }
 
 .event-pill.ended {
-    background: #bdbdbd;
-    color: #333;
+    background: transparent;
+    color: var(--muted);
 }
 
 /* Text */
 .muted {
     font-size: 12px;
-    color: #888;
+    color: var(--muted);
 }
+
 
 /* Responsive */
 /* Desktop */
 .home-grid {
-    padding:30px ;
+    padding: 32px;
     display: grid;
-    grid-template-columns: 220px minmax(0, 1fr) 220px 220px;
+    grid-template-columns: 220px 1fr 220px 220px;
     gap: 32px;
 }
 
@@ -153,33 +166,27 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
 }
+
 
 /* From Uiverse.io by Randdose */
-.addBtn {
-    all: unset;
-    display: flex;
-    align-items: center;
-    position: relative;
-    padding: 0.6em 2em;
-    border: mediumspringgreen solid 0.15em;
-    border-radius: 0.25em;
-    color: mediumspringgreen;
-    font-size: 1.5em;
+.add-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    overflow: hidden;
-    transition: border 300ms, color 300ms;
-    user-select: none;
 }
 
-.addBtn p {
-    z-index: 1;
+.add-btn:hover {
+    background: var(--accent);
+    color: #fff;
 }
 
-.addBtn:hover {
-    color: #212121;
-}
 
 .addBtn:active {
     border-color: teal;
@@ -217,4 +224,11 @@
 .addBtn:active:before,
 .addBtn:active:after {
     background: teal;
+}
+
+
+.event-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }

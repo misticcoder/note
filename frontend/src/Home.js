@@ -4,6 +4,7 @@ import ThreadSection from "./Threads/ThreadSection";
 import "./styles/index.css";
 import PostFeed from "./Post/PostFeed";
 import "./styles/Home.css";
+import "./styles/modal.css"
 
 
 function Home() {
@@ -13,7 +14,6 @@ function Home() {
     const [clubs, setClubs] = useState([]);
     const [users, setUsers] = useState([]); // for leader dropdown
 
-    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
     const { user } = useContext(AuthContext);
 
     // Thread modal state
@@ -38,7 +38,7 @@ function Home() {
     const isAdmin = String(user?.role || "").toUpperCase() === "ADMIN";
 
     // Hover state
-    const [hoveredId, setHoveredId] = useState(null);
+
 
 
     useEffect(() => {
@@ -89,6 +89,9 @@ function Home() {
 
         return map;
     }, [clubs]);
+
+
+
 
     // Club modal handlers
     const openClubModal = () => {
@@ -188,103 +191,49 @@ function Home() {
         }
     };
 
-    const boxHover = {
-        transform: "translateY(-2px)",
-        boxShadow: "0 6px 16px rgba(0,0,0,0.25)",
-        backgroundColor: "#cac7c7"
-    };
+    const eventsByStatus = useMemo(() => {
+        const map = {
+            LIVE: [],
+            UPCOMING: [],
+            ENDED: []
+        };
 
-    const now = new Date();
+        events.forEach(ev => {
+            map[ev.status]?.push(ev);
+        });
 
-    const classifiedEvents = events.map(ev => {
-        const start = ev.startAt ? new Date(ev.startAt) : null;
-        const end = ev.endAt ? new Date(ev.endAt) : null;
+        return map;
+    }, [events]);
 
-        const fallbackEnd = start
-            ? new Date(start.getTime() + 2 * 60 * 60 * 1000)
-            : null;
+    const getEventTimeLabel = (event) => {
+        if (event.status === "LIVE") return "LIVE";
+        if (event.status === "ENDED") return "Ended";
 
-        const effectiveEnd = end || fallbackEnd;
+        if (!event.startAt) return "";
 
-        let status = "UPCOMING";
-        if (start && now >= start && effectiveEnd && now <= effectiveEnd) {
-            status = "LIVE";
-        } else if (effectiveEnd && now > effectiveEnd) {
-            status = "ENDED";
-        }
-
-        return { ...ev, _status: status };
-    });
-
-    const togglePin = async (newsId, pinned) => {
-        try {
-            const res = await fetch(
-                `/api/news/${newsId}/pin?pinned=${pinned}`,
-                { method: "PATCH" }
-            );
-
-            if (!res.ok) {
-                alert("Failed to update pin");
-                return;
-            }
-
-            const updated = await res.json();
-
-            // Update local state
-            setNews(prev =>
-                prev.map(n =>
-                    n.id === updated.id ? updated : { ...n, pinned: false }
-                )
-            );
-        } catch {
-            alert("Failed to update pin");
-        }
-    };
-
-
-    const ongoingEvents = classifiedEvents.filter(e => e._status === "LIVE");
-    const upcomingEvents = classifiedEvents.filter(e => e._status === "UPCOMING");
-    const completedEvents = classifiedEvents.filter(e => e._status === "ENDED");
-
-    const renderEventRow = (event) => {
         const now = new Date();
-        let label = "";
+        const start = new Date(event.startAt);
+        const diffMs = start - now;
 
-        if (event._status === "LIVE") {
-            label = "LIVE";
-        } else if (event._status === "ENDED") {
-            label = "Ended";
-        } else if (event.startAt) {
-            const diff = new Date(event.startAt) - now;
-            const mins = Math.max(0, Math.floor(diff / 60000));
-            const d = Math.floor(mins / 1440);
-            const h = Math.floor((mins % 1440) / 60);
-            const m = mins % 60;
+        if (diffMs <= 0) return "Starting";
 
-            label = d > 0 ? `${d}d ${h}h` : h > 0 ? `${h}h ${m}m` : `${m}m`;
-        }
+        const mins = Math.floor(diffMs / 60000);
+        const days = Math.floor(mins / 1440);
+        const hours = Math.floor((mins % 1440) / 60);
+        const minutes = mins % 60;
 
-        return (
-            <div
-                key={event.id}
-                className={`card event-row`}
-                onClick={() => (window.location.hash = `#/events/${event.id}`)}
-            >
-                <span className="truncate">{event.title}</span>
-                <span className={`event-pill ${event._status.toLowerCase()}`}>
-                    {label}
-                </span>
-            </div>
-        );
+        if (days > 0) return `${days}d ${hours}h`;
+        if (hours > 0) return `${hours}h ${minutes}m`;
+        return `${minutes}m`;
     };
+
 
     return (
         <main className={"page"}>
             <div className={"container"}>
                 <div className={"home-grid"}>
                     {/* Thread */}
-                    <aside className={"threads-column"}>
-
+                    <aside className={"column threads-column"}>
                         <ThreadSection
                             showAddButton={isAdmin}
                             onAddThread={() => setShowThreadModal(true)}
@@ -292,17 +241,88 @@ function Home() {
                     </aside>
 
                     {/* Daily News */}
-                    <aside className={"column"}>
+                    <aside className="column news-column">
                         <h3 className={"column-title"}>Feed</h3>
                         <PostFeed/>
                     </aside>
 
                     {/* Clubs */}
-                    <aside className={"column"}>
+                    <aside className={"column clubs-column"}>
                         {isAdmin && (
                             <button className={"add-btn"} onClick={openClubModal}>
                                 Add Club
                             </button>
+                        )}
+
+                        {/* Club Modal (ADMIN) */}
+                        {showClubModal && (
+                            <div className="modal-backdrop">
+                                <div className="modal-card">
+                                    <h3>Create Club</h3>
+                                    <form onSubmit={handleClubSubmit} className={"modal-form"}>
+                                        <select
+                                            value={newClub.category}
+                                            onChange={e => setNewClub(c => ({...c, category: e.target.value}))}
+                                            required
+                                        >
+                                            <option value="">Select category</option>
+                                            <option value="SPORTS">Sports</option>
+                                            <option value="ACADEMIC">Academic</option>
+                                            <option value="SOCIETY">Society</option>
+                                            <option value="FAMILY">Family Initiative</option>
+                                            <option value="SOCIAL">Social</option>
+                                        </select>
+
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={e => setNewClub(prev => ({
+                                                ...prev,
+                                                logo: e.target.files[0]
+                                            }))}
+                                        />
+
+                                        <input
+                                            name="name"
+                                            placeholder="Club Name"
+                                            value={newClub.name}
+                                            onChange={handleClubChange}
+                                            required
+
+                                        />
+                                        <textarea
+                                            name="description"
+                                            placeholder="Description"
+                                            value={newClub.description}
+                                            onChange={handleClubChange}
+                                            required
+
+                                        />
+                                        <select
+                                            name="leaderUserId"
+                                            value={newClub.leaderUserId}
+                                            onChange={handleClubChange}
+
+                                        >
+                                            <option value="">(Optional) Select Leader</option>
+                                            {users.map(u => (
+                                                <option key={u.id} value={u.id}>
+                                                    {u.username} — {u.email}
+                                                </option>
+                                            ))}
+                                        </select>
+
+                                        <div className={"modal-actions"}>
+                                            <button className={"cancelBtn"} type="button"
+                                                    onClick={() => setShowClubModal(false)}
+                                            > Cancel
+                                            </button>
+
+                                            <button type="submit" className={"saveBtn"}>Create</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         )}
 
                         {clubs.length === 0 && (
@@ -318,9 +338,7 @@ function Home() {
                                 {list.slice(0, 5).map(club => (
                                     <div
                                         key={club.id}
-                                        className={`card ${hoveredId === club.id ? "hover" : ""}`}
-                                        onMouseEnter={() => setHoveredId(`club-${club.id}`)}
-                                        onMouseLeave={() => setHoveredId(null)}
+                                        className={"card"}
                                         onClick={() => {
                                             window.location.hash = `#/clubs/${club.id}`;
                                         }}
@@ -344,46 +362,43 @@ function Home() {
 
                     {/* Events */}
 
-                    <aside className={"events-column"}>
+                    <aside className="column events-column">
 
                         {isAdmin && (
-                            <button className={"add-btn"} onClick={() => {
-                                window.location.hash = "#/events";
-                            }}>Add Event</button>
+                            <button
+                                className="add-btn"
+                                onClick={() => (window.location.hash = "#/events")}
+                            >
+                                Add Event
+                            </button>
                         )}
-                        <h3 className={"column-title"}>ONGOING Events</h3>
 
-                        <div>
+                        {Object.entries(eventsByStatus).map(([status, list]) => (
+                            <div key={status}>
+                                <h4 className={"column-title"}>
+                                    {status}
+                                </h4>
 
-                            {ongoingEvents.length > 0 ? (
-                                ongoingEvents.map(renderEventRow)
-                            ) : (
-                                <div className={"empty-text"}> ~ No ongoing events ~ </div>
-                            )}
+                                {list.slice(0, 5).map(event => (
+                                    <div
+                                        key={event.id}
+                                        className="card event-row"
+                                        onClick={() => {
+                                            window.location.hash = `#/events/${event.id}`;
+                                        }}
+                                    >
+                                        <div className="truncate">
+                                            {event.title}
+                                        </div>
 
-                        </div>
+                                        <span className={`event-pill ${event.status.toLowerCase()}`}>
+                                            {getEventTimeLabel(event)}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        ))}
 
-                        <div>
-                            <h3 className={"column-title"}>UPCOMING Events</h3>
-                            {upcomingEvents.length > 0 ? (
-                                <>
-                                    {upcomingEvents.slice(0, 5).map(renderEventRow)}
-                                </>
-                            ) :
-                                (<div className={"empty-text"}> ~ No Upcoming events ~ </div>)
-                            }
-                        </div>
-
-                        <div>
-                            <h3 className={"column-title"}>COMPLETED Events</h3>
-                            {completedEvents.length > 0 ? (
-                                <>
-                                    {completedEvents.slice(0, 3).map(renderEventRow)}
-                                </>
-                            ) : (
-                                <div className={"muted"}> ~ No Completed events ~ </div>
-                            )}
-                        </div>
 
                     </aside>
 
@@ -391,10 +406,11 @@ function Home() {
                 </div>
             </div>
 
+
             {/* News Modal */}
             {showNewsModal && (
-                <div style={styles.ThreadWindow}>
-                    <div style={styles.ThreadContent}>
+                <div className={"modal-backdrop"}>
+                    <div className={"modal-card"}>
                         <h3>Add New News</h3>
                         <form onSubmit={handleNewsSubmit}>
                             <input
@@ -403,7 +419,6 @@ function Home() {
                                 value={newNews.title}
                                 onChange={handleNewsChange}
                                 required
-                                style={styles.input}
                             />
                             <textarea
                                 name="content"
@@ -411,160 +426,18 @@ function Home() {
                                 value={newNews.content}
                                 onChange={handleNewsChange}
                                 required
-                                style={styles.textarea}
                             />
-                            <button type="submit" style={styles.submitBtn}>Save News</button>
-                            <button type="button" onClick={() => setShowNewsModal(false)} style={styles.cancelBtn}>Cancel</button>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Club Modal (ADMIN) */}
-            {showClubModal && (
-                <div style={styles.ThreadWindow}>
-                    <div style={styles.ThreadContent}>
-                        <h3>Create Club</h3>
-                        <form onSubmit={handleClubSubmit}>
-                            <select
-                                value={newClub.category}
-                                onChange={e => setNewClub(c => ({...c, category: e.target.value}))}
-                                required
-                            >
-                                <option value="">Select category</option>
-                                <option value="SPORTS">Sports</option>
-                                <option value="ACADEMIC">Academic</option>
-                                <option value="SOCIETY">Society</option>
-                                <option value="FAMILY">Family Initiative</option>
-                                <option value="SOCIAL">Social</option>
-                            </select>
-
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={e => setNewClub(prev => ({
-                                    ...prev,
-                                    logo: e.target.files[0]
-                                }))}
-                            />
-
-                            <input
-                                name="name"
-                                placeholder="Club Name"
-                                value={newClub.name}
-                                onChange={handleClubChange}
-                                required
-                                style={styles.input}
-                            />
-                            <textarea
-                                name="description"
-                                placeholder="Description"
-                                value={newClub.description}
-                                onChange={handleClubChange}
-                                required
-                                style={styles.textarea}
-                            />
-                            <select
-                                name="leaderUserId"
-                                value={newClub.leaderUserId}
-                                onChange={handleClubChange}
-                                style={styles.input}
-                            >
-                                <option value="">(Optional) Select Leader</option>
-                                {users.map(u => (
-                                    <option key={u.id} value={u.id}>
-                                        {u.username} — {u.email}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <div style={{display: "flex", gap: 10, justifyContent: "flex-end"}}>
-                                <button type="button" onClick={() => setShowClubModal(false)}
-                                        style={styles.cancelBtn}>Cancel
-                                </button>
-                                <button type="submit" style={styles.submitBtn}>Create</button>
-                            </div>
+                            <button type="submit" className={"add-btn"}>Save News</button>
+                            <button type="button" className={"add-btn"} onClick={() => setShowNewsModal(false)} >Cancel</button>
                         </form>
                     </div>
                 </div>
             )}
 
         </main>
+
     );
 }
 
-
-const styles = {
-    Dashboard: {
-        minHeight: "100vh",
-        backgroundColor: "#2f2f2f",
-        display: "flex",
-        justifyContent: "center"
-    },
-
-    container: {
-        width: "100%",
-        maxWidth: "1200px",
-        padding: "60px 24px 24px",
-        boxSizing: "border-box",
-        backgroundColor:"#4a4a4a"
-    },
-    flexRow: {
-        display: "flex",
-        gap: "24px",
-        alignItems: "flex-start",
-        width: "100%"
-    },
-
-
-
-
-    HeadNews: { position: "relative", width: "100%", height: "150px", marginBottom: "15px", borderRadius: "6px", overflow: "hidden", boxShadow: "0 4px 10px rgba(0,0,0,0.2)", cursor: "pointer" },
-    HeadNewsImage: { width: "100%", height: "100%", objectFit: "cover" },
-    HeadNewsOverlay: { position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.6)", color: "#fff", padding: "8px 10px", fontSize: "1rem" },
-
-    addBtn: { margin: "10px 0px", padding: "5px 8px", fontSize: "0.8rem", borderRadius: "4px", backgroundColor: "#041E42", color: "#D50032", border: "1px solid #D50032", cursor: "pointer", fontWeight: "Bold", textDecoration: "none", display: "inline-block" },
-    smallBtn: { padding: "4px 8px", fontSize: "0.75rem", background: "#0b57d0", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" },
-
-    ThreadWindow: { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 },
-    ThreadContent: { backgroundColor: "#fff", padding: "20px", borderRadius: "6px", width: "420px", maxWidth: "90%" },
-
-    input: { width: "100%", padding: "8px", marginBottom: "10px", borderRadius: "4px", border: "1px solid #ccc" },
-    textarea: { width: "100%", padding: "8px", minHeight: "80px", borderRadius: "4px", border: "1px solid #ccc", marginBottom: "10px", resize: "vertical" },
-
-    submitBtn: { padding: "8px 12px", backgroundColor: "#D50032", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" },
-    cancelBtn: { padding: "8px 12px", backgroundColor: "#ccc", color: "#000", border: "none", borderRadius: "4px", cursor: "pointer" },
-
-    col_title:{ textTransform: "uppercase",
-        fontWeight: 700,
-        fontSize: "15px",
-        color: "#FFFFE3",
-        paddingLeft: "10px",
-        paddingRight: "15px",
-        display: "inline-block"},
-
-
-    eventTitle: {
-        flex: 1,
-        minWidth: 0,
-        overflow: "hidden",
-        whiteSpace: "nowrap",
-        textOverflow: "ellipsis",
-        color: "#FFFFE3"
-    },
-    eventTime: {
-        flexShrink: 0,
-        fontWeight: 600
-    },
-    livePill: {
-        background: "#d50032",
-        color: "#fff",
-        padding: "2px 8px",
-        borderRadius: 999
-    },
-    endedText: {
-        color: "#9aa0a6"
-    }
-};
 
 export default Home;

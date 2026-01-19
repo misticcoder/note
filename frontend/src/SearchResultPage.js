@@ -40,62 +40,66 @@ export default function SearchResultsPage() {
     if (!results) return <div className="search-page">No search query.</div>;
 
     return (
-        <div className="search-page">
-            <div className="search-page-title">
-                Search results for “{q}”
-            </div>
+        <div className={"page"}>
+            <div className={"container"}>
+                <div className="search-page">
+                    <div className="search-page-title">
+                        Search results for “{q}”
+                    </div>
 
-            {/* Filters */}
-            <div className="search-filters">
-                {Object.keys(filters).map(key => (
-                    <label key={key} className="search-filter">
-                        <input
-                            type="checkbox"
-                            checked={filters[key]}
-                            onChange={() =>
-                                setFilters(prev => ({
-                                    ...prev,
-                                    [key]: !prev[key],
-                                }))
-                            }
-                        />
-                        <span>{key.charAt(0).toUpperCase() + key.slice(1)}</span>
-                    </label>
-                ))}
-            </div>
+                    {/* Filters */}
+                    <div className="search-filters">
+                        {Object.keys(filters).map(key => (
+                            <label key={key} className="search-filter">
+                                <input
+                                    type="checkbox"
+                                    checked={filters[key]}
+                                    onChange={() =>
+                                        setFilters(prev => ({
+                                            ...prev,
+                                            [key]: !prev[key],
+                                        }))
+                                    }
+                                />
+                                <span>{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                            </label>
+                        ))}
+                    </div>
 
-            {/* Sort */}
-            <div className="search-toolbar">
-                <div className="search-sort">
-                    <label>Sort by:</label>
-                    <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
-                        <option value="relevance">Relevance</option>
-                        <option value="az">Alphabetical (A–Z)</option>
-                        <option value="rating">Rating</option>
-                        <option value="participants">Participation</option>
-                        <option value="time">Time / Newest</option>
-                    </select>
+                    {/* Sort */}
+                    <div className="search-toolbar">
+                        <div className="search-sort">
+                            <label>Sort by:</label>
+                            <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                                <option value="relevance">Relevance</option>
+                                <option value="az">Alphabetical (A–Z)</option>
+                                <option value="rating">Rating</option>
+                                <option value="participants">Participation</option>
+                                <option value="time">Time / Newest</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {filters.events && (
+                        <Section title="Events" items={results.events} sortBy={sortBy}/>
+                    )}
+                    {filters.clubs && (
+                        <Section title="Clubs" items={results.clubs} sortBy={sortBy}/>
+                    )}
+                    {filters.threads && (
+                        <Section title="Threads" items={results.threads} sortBy={sortBy}/>
+                    )}
+                    {filters.posts && (
+                        <Section title="Posts" items={results.posts} sortBy={sortBy}/>
+                    )}
+
                 </div>
             </div>
-
-            {filters.events && (
-                <Section title="Events" items={results.events} sortBy={sortBy} />
-            )}
-            {filters.clubs && (
-                <Section title="Clubs" items={results.clubs} sortBy={sortBy} />
-            )}
-            {filters.threads && (
-                <Section title="Threads" items={results.threads} sortBy={sortBy} />
-            )}
-            {filters.posts && (
-                <Section title="Posts" items={results.posts} sortBy={sortBy} />
-            )}
-
         </div>
     );
 }
 
-function Section({ title, items, sortBy }) {
+function Section({title, items, sortBy}) {
     if (!items || items.length === 0) return null;
 
     const sortedItems = sortItems(items, sortBy, title);
