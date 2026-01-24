@@ -519,3 +519,30 @@
 .inspired:hover {
     color: rgba(255, 255, 255, 0.8);
 }
+
+
+.tag-editor {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.tag-chip {
+    background: #eee;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.9em;
+}
+
+.tag-chip button {
+    margin-left: 6px;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.tag-input-row {
+    display: flex;
+    gap: 8px;
+}

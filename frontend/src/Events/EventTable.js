@@ -77,14 +77,16 @@ export default function EventTable({
                                 {ev.location && ` · ${ev.location}`}
                             </div>
 
-                            {ev.tags?.map((t) => (
-                                <span
-                                    key={typeof t === "string" ? t : t.name}
-                                    className="event-tag"
-                                >
+                            <div>
+                                {ev.tags?.map((t) => (
+                                    <span
+                                        key={typeof t === "string" ? t : t.name}
+                                        className="event-tag"
+                                    >
                                     {typeof t === "string" ? t : t.name}
                                 </span>
-                            ))}
+                                ))}
+                            </div>
                         </div>
 
                         {showClub && (

@@ -20,6 +20,8 @@ public interface EventRepository
        SIMPLE SEARCHES
     ===================== */
 
+    List<Event> findByStartAtAfter(LocalDateTime now);
+
     List<Event> findTop10ByTitleContainingIgnoreCase(String name);
 
     List<Event> findByStartAtAfterOrderByStartAtAsc(

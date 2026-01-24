@@ -128,6 +128,30 @@ public class ProfileController {
         return profileService.getUserClubs(user.getId());
     }
 
+    /* ─────────────────────────────
+   INTEREST TAGS
+───────────────────────────── */
+
+    @GetMapping("/tags")
+    public List<String> myTags(HttpServletRequest request) {
+        User user = currentUser.requireUser(request);
+
+        return user.getTags()
+                .stream()
+                .map(tag -> tag.getName())
+                .toList();
+    }
+
+    @PutMapping("/tags")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateMyTags(
+            HttpServletRequest request,
+            @RequestBody List<String> tags
+    ) {
+        User user = currentUser.requireUser(request);
+        profileService.updateUserTags(user.getId(), tags);
+    }
+
 
 
 

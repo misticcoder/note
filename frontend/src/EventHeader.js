@@ -90,7 +90,7 @@ export default function EventHeader({
                                             key={label}
                                             className="event-tag clickable"
                                             onClick={() => {
-                                                window.location.hash = `#/events/tag/${encodeURIComponent(label)}`;
+                                                window.location.hash = `#/search?q=${encodeURIComponent(label)}`;
 
                                             }}
                                         >

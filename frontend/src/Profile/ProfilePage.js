@@ -4,7 +4,7 @@ import EventTable from "../Events/EventTable";
 import "../styles/profile.css";
 import ProfileClubsTable from "../Clubs/ProfileClubsTable";
 import "../styles/events.css";
-
+import "../styles/badges.css";
 import "../styles/buttons.css"
 import DashboardSection from "../components/DashboardSection";
 
@@ -22,10 +22,14 @@ export default function ProfilePage() {
     const [allEvents, setAllEvents] = useState([]);
 
 
-
     const [activeTab, setActiveTab] = useState("overview")
 
     const [eventsView, setEventsView] = useState("attended");
+
+    const tags = profile?.tags || [];
+    const setTags = (newTags) =>
+        setProfile(prev => (prev ? { ...prev, tags: newTags } : { tags: newTags }));
+
 
     useEffect(() => {
         if (!user?.email) return;
@@ -53,6 +57,7 @@ export default function ProfilePage() {
                 setEvents(eventsData);
                 setClubs(clubsData);
                 setAllEvents(allEventsData);
+
             })
             .catch(() => {
                 setError("Failed to load profile");
@@ -183,6 +188,8 @@ export default function ProfilePage() {
                             <EditProfileTab
                                 profile={profile}
                                 email={user.email}
+                                tags={tags}
+                                setTags={setTags}
                                 onSave={saveProfile}
                                 onAvatarUpdated={(updated) => {
                                     setProfile(updated);
@@ -260,6 +267,18 @@ function ProfileHeader({profile}) {
                                 <span>Score</span>
                             </div>
                         </div>
+                        <br></br>
+                        <div>
+                            {profile.tags?.length > 0 && (
+                                <div className="tag-editor">
+                                    Interests:
+                                    {profile.tags.map(t => (
+                                        <span key={t} className="badge post-reference badge--gray" >{t}</span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
                     </div>
                     <div>
                         <span className="user-badge">{profile.role}</span>
@@ -463,7 +482,10 @@ function EventsTab({ events, eventsView, setEventsView }) {
 
 
 
-function EditProfileTab({ profile, email, onSave, onAvatarUpdated }) {
+function EditProfileTab({ profile, email, onSave, onAvatarUpdated, tags, setTags }) {
+
+    const [tagInput, setTagInput] = useState("");
+
     const [form, setForm] = useState({
         displayName: profile.displayName || "",
         bio: profile.bio || "",
@@ -479,12 +501,43 @@ function EditProfileTab({ profile, email, onSave, onAvatarUpdated }) {
 
         try {
             await onSave(form);
+
+            const res = await fetch(`/api/me/tags`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-User-Email": email
+                },
+                body: JSON.stringify(tags)
+            });
+
+            if (!res.ok) throw new Error();
+
         } catch {
             setError("Failed to save profile");
         } finally {
             setSaving(false);
         }
     };
+
+
+    const addTag = () => {
+        const value = tagInput.trim();
+        if (!value) return;
+
+        const normalised = value.toLowerCase();
+
+        if (tags.map(t => t.toLowerCase()).includes(normalised)) return;
+
+        setTags([...tags, value]);
+        setTagInput("");
+    };
+
+
+    const removeTag = (tag) => {
+        setTags(tags.filter(t => t !== tag));
+    };
+
 
     return (
         <form className="edit-profile-form" onSubmit={submit}>
@@ -494,7 +547,7 @@ function EditProfileTab({ profile, email, onSave, onAvatarUpdated }) {
                 <h3 className={"title"}>Display Name</h3>
                 <input
                     value={form.displayName}
-                    onChange={e => setForm({ ...form, displayName: e.target.value })}
+                    onChange={e => setForm({...form, displayName: e.target.value})}
                 />
             </label>
 
@@ -503,9 +556,37 @@ function EditProfileTab({ profile, email, onSave, onAvatarUpdated }) {
                 <textarea
                     rows={4}
                     value={form.bio}
-                    onChange={e => setForm({ ...form, bio: e.target.value })}
+                    onChange={e => setForm({...form, bio: e.target.value})}
                 />
             </label>
+
+            <label>
+                <h3 className="title">Interests</h3>
+
+                <div className="tag-editor">
+                    {tags.map(t => (
+                        <span key={t} className="tag-chip">
+                {t}
+                            <button type="button" onClick={() => removeTag(t)}>×</button>
+            </span>
+                    ))}
+                </div>
+
+                <div className="tag-input-row">
+                    <input
+                        value={tagInput}
+                        placeholder="Add interest (e.g. Football)"
+                        onChange={e => setTagInput(e.target.value)}
+                        onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addTag())}
+                    />
+                    <button type="button" onClick={addTag}>Add</button>
+                </div>
+
+                <div className="muted">
+                    Used to personalise your event recommendations
+                </div>
+            </label>
+
 
             <label>
                 <h3 className={"title"}>Change Avatar</h3>
@@ -546,7 +627,7 @@ function EditProfileTab({ profile, email, onSave, onAvatarUpdated }) {
     );
 }
 
-function ClubsTab({ clubs }) {
+function ClubsTab({clubs}) {
     if (!clubs.length) {
         return <div className="muted">You are not a member of any clubs yet.</div>;
     }

@@ -2,6 +2,10 @@ package com.vlrclone.backend.model;
 
 import jakarta.persistence.*;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 @Entity
 @Table(name = "users")
 public class User {
@@ -37,6 +41,14 @@ public class User {
 
     @Column(nullable = false)
     private int participationScore = 0;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_tags",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private Set<Tag> tags = new HashSet<>();
 
 
     public enum Role {
@@ -99,4 +111,10 @@ public class User {
         this.participationScore = participationScore;
     }
 
+    public Set<Tag> getTags() {
+        return tags;
+    }
+    public void setTags(Set<Tag> tags) {
+        this.tags = tags;
+    }
 }

@@ -1,6 +1,9 @@
 package com.vlrclone.backend.dto;
 
+import com.vlrclone.backend.model.Tag;
 import com.vlrclone.backend.model.User;
+
+import java.util.List;
 
 public class UserProfileDto {
     public Long id;
@@ -14,6 +17,9 @@ public class UserProfileDto {
     public int eventsAttended;
     public int eventsMissed;
     public int participationScore;
+
+    public List<String> tags;
+
 
     public UserProfileDto() {}
 

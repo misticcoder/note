@@ -8,16 +8,19 @@ import com.vlrclone.backend.dto.UserEventDto;
 import com.vlrclone.backend.dto.UserProfileDto;
 import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.model.EventAttendance;
+import com.vlrclone.backend.model.Tag;
 import com.vlrclone.backend.model.User;
-import com.vlrclone.backend.repository.ClubMemberRepository;
-import com.vlrclone.backend.repository.EventAttendanceRepository;
-import com.vlrclone.backend.repository.UserRepository;
+import com.vlrclone.backend.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.AbstractMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -27,13 +30,17 @@ public class UserProfileService {
     private final EventAttendanceRepository attendanceRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final ClubService clubService;
+    private final EventRepository eventRepository;
+    private final TagRepository tagRepository;
 
     public UserProfileService(UserRepository userRepository,
-                              EventAttendanceRepository attendanceRepository, ClubMemberRepository clubMemberRepository, ClubService clubService) {
+                              EventAttendanceRepository attendanceRepository, ClubMemberRepository clubMemberRepository, ClubService clubService, EventRepository eventRepository, TagRepository tagRepository) {
         this.userRepository = userRepository;
         this.attendanceRepository = attendanceRepository;
         this.clubMemberRepository = clubMemberRepository;
         this.clubService = clubService;
+        this.eventRepository = eventRepository;
+        this.tagRepository = tagRepository;
     }
 
     public UserProfileDto getProfile(Long userId) {
@@ -76,6 +83,10 @@ public class UserProfileService {
         dto.eventsAttended = attended;
         dto.eventsMissed = missed;
         dto.participationScore = score;
+        dto.tags = user.getTags()
+                .stream()
+                .map(Tag::getName)
+                .toList();
 
         return dto;
     }
@@ -198,6 +209,53 @@ public class UserProfileService {
                     return dto;
                 })
                 .toList();
+    }
+
+    public List<Event> getRecommendedEvents(User user) {
+
+        Set<Tag> userTags = user.getTags();
+
+        // fallback
+        if (userTags.isEmpty()) {
+            return eventRepository.findByStartAtAfter(LocalDateTime.now());
+        }
+
+        return eventRepository.findByStartAtAfter(LocalDateTime.now())
+                .stream()
+                .map(event -> {
+                    long score = event.getTags().stream()
+                            .filter(userTags::contains)
+                            .count();
+                    return new AbstractMap.SimpleEntry<>(event, score);
+                })
+                .filter(e -> e.getValue() > 0)
+                .sorted((a, b) -> {
+                    int byScore = Long.compare(b.getValue(), a.getValue());
+                    if (byScore != 0) return byScore;
+                    return a.getKey().getStartAt().compareTo(b.getKey().getStartAt());
+                })
+                .map(Map.Entry::getKey)
+                .toList();
+    }
+
+    @Transactional
+    public void updateUserTags(Long userId, List<String> tagNames) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Set<Tag> tags = tagNames.stream()
+                .map(name ->
+                        tagRepository.findByNameIgnoreCase(name.trim())
+                                .orElseGet(() -> {
+                                    Tag t = new Tag();
+                                    t.setName(name.trim());
+                                    return tagRepository.save(t);
+                                })
+                )
+                .collect(Collectors.toSet());
+
+        user.setTags(tags);
+        userRepository.save(user);
     }
 
 
