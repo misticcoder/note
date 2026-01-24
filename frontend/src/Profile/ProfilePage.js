@@ -19,7 +19,8 @@ export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [clubs, setClubs] = useState([]);
-    const [allEvents, setAllEvents] = useState([]);
+    const [recommendedEvents, setRecommendedEvents] = useState([]);
+
 
 
     const [activeTab, setActiveTab] = useState("overview")
@@ -37,28 +38,16 @@ export default function ProfilePage() {
         setLoading(true);
 
         Promise.all([
-            fetch(`/api/me/profile`, {
-                headers: { "X-User-Email": user.email }
-            }).then(r => r.json()),
-
-            fetch(`/api/me/events`, {
-                headers: { "X-User-Email": user.email }
-            }).then(r => r.json()),
-
-            fetch(`/api/me/clubs`, {
-                headers: { "X-User-Email": user.email }
-            }).then(r => r.json()),
-
-            fetch(`/api/events`).then(r => r.json())
-        ])
-
-            .then(([profileData, eventsData, clubsData, allEventsData]) => {
-                setProfile(profileData);
-                setEvents(eventsData);
-                setClubs(clubsData);
-                setAllEvents(allEventsData);
-
-            })
+            fetch(`/api/me/profile`, { headers: { "X-User-Email": user.email } }).then(r => r.json()),
+            fetch(`/api/me/events`, { headers: { "X-User-Email": user.email } }).then(r => r.json()),
+            fetch(`/api/me/clubs`, { headers: { "X-User-Email": user.email } }).then(r => r.json()),
+            fetch(`/api/me/recommendations`, { headers: { "X-User-Email": user.email } }).then(r => r.json())
+        ]).then(([profileData, eventsData, clubsData, recommended]) => {
+            setProfile(profileData);
+            setEvents(eventsData);
+            setClubs(clubsData);
+            setRecommendedEvents(recommended);
+        })
             .catch(() => {
                 setError("Failed to load profile");
             })
@@ -157,12 +146,12 @@ export default function ProfilePage() {
                                 profile={profile}
                                 events={events}
                                 clubs={clubs}
-                                allEvents={allEvents}
-                                joinedEventIds={joinedEventIds}
+                                recommendedEvents={recommendedEvents}
                                 onGoToEvents={() => setActiveTab("events")}
                                 onGoToClubs={() => setActiveTab("clubs")}
                                 onEditProfile={() => setActiveTab("edit")}
                             />
+
 
                         )}
 
@@ -194,7 +183,7 @@ export default function ProfilePage() {
                                 onAvatarUpdated={(updated) => {
                                     setProfile(updated);
 
-                                    saveUser(prev => ({
+                                    setUser(prev => ({
                                         ...prev,
                                         avatarUrl: updated.avatarUrl,
                                         displayName: updated.displayName,
@@ -294,12 +283,12 @@ function OverviewTab({
                          profile,
                          events,
                          clubs,
-                         allEvents,
-                         joinedEventIds,
+                         recommendedEvents,
                          onGoToEvents,
                          onGoToClubs,
                          onEditProfile
                      }) {
+
 
     const now = new Date();
 
@@ -360,17 +349,20 @@ function OverviewTab({
             </DashboardSection>
 
             <DashboardSection
-                title="RcommendedEvents"
+                title="Recommended Events"
                 actionLabel="View all"
-                onAction={onGoToClubs}>
-                <RecommendedEvents
-                    allEvents={allEvents}
-                    joinedEventIds={joinedEventIds}
-                    clubs={clubs}
-                    profile={profile}
-                    onViewEvents={onGoToEvents}
-                />
+                onAction={onGoToEvents}
+            >
+                {recommendedEvents.length ? (
+                    <EventTable
+                        events={recommendedEvents.slice(0, 3)}
+                        showClub={true}
+                    />
+                ) : (
+                    <div className="muted">No recommendations yet</div>
+                )}
             </DashboardSection>
+
 
             {/* ───── Clubs ───── */}
             <DashboardSection
@@ -736,50 +728,6 @@ function DashboardCard({ title, description, actions }) {
     );
 }
 
-function RecommendedEvents({
-                               allEvents,
-                               joinedEventIds,
-                               clubs,
-                               profile,
-                               onViewEvents
-                           }) {
-    const now = new Date();
-    const userClubIds = new Set(clubs.map(c => c.id));
-
-    const recommended = allEvents
-        .filter(e => e?.startAt && new Date(e.startAt) > now)
-        .filter(e => !joinedEventIds.has(e.id))
-        .map(e => {
-            let score = 50;
-
-            if (e.club && userClubIds.has(e.club.id)) score += 40;
-
-            const daysAway =
-                (new Date(e.startAt) - now) / (1000 * 60 * 60 * 24);
-            if (daysAway <= 7) score += 20;
-
-            if (profile.role === "ADMIN" || profile.role === "LEADER") {
-                score += 10;
-            }
-
-            return { ...e, _score: score };
-        })
-        .sort((a, b) => b._score - a._score)
-        .slice(0, 3);
-
-    if (!recommended.length) return null;
-
-    return (
-        <div className="overview-section">
-            <ul className="overview-event-list">
-                <EventTable
-                    events={recommended}
-                    showClub={true}
-                />
-            </ul>
-        </div>
-    );
-}
 
 
 function getRecommendationReason(event, userClubIds) {

@@ -41,6 +41,9 @@ export default function Events() {
     const [selectedTags, setSelectedTags] = useState([]);  // selected tag names
 
 
+    /* =====================
+      HASH ROUTING
+   ===================== */
     const [hash, setHash] = useState(window.location.hash);
 
     useEffect(() => {
@@ -74,6 +77,9 @@ export default function Events() {
     }, []);
 
 
+    /* =====================
+       SYNC TAG ROUTE
+    ===================== */
     useEffect(() => {
         if (!tagFromRoute) return;
 
@@ -105,26 +111,7 @@ export default function Events() {
     /* =====================
        HELPERS
     ===================== */
-    const STATUS_ORDER = {
-        LIVE: 0,
-        UPCOMING: 1,
-        ENDED: 2,
-    };
 
-    const getEventStatus = (ev) => {
-        if (!ev?.startAt) return "UPCOMING";
-
-        const now = new Date();
-        const start = new Date(ev.startAt);
-
-        const end = ev.endAt
-            ? new Date(ev.endAt)
-            : new Date(start.getTime() + 2 * 60 * 60 * 1000); // fallback 2h
-
-        if (now >= start && now <= end) return "LIVE";
-        if (now > end) return "ENDED";
-        return "UPCOMING";
-    };
 
     async function fetchRating(eventId) {
         try {
@@ -150,20 +137,20 @@ export default function Events() {
                 setLoading(true);
 
                 let url;
+
                 if (clubFromRoute) {
                     url = `/api/events/club/${clubFromRoute}`;
-                } else if (tagFromRoute) {
-                    url = `/api/events/tag/${encodeURIComponent(tagFromRoute)}`;
                 } else {
                     const params = new URLSearchParams();
                     if (q.trim()) params.set("q", q.trim());
                     if (selectedTags.length) params.set("tags", selectedTags.join(","));
                     params.set("status", status);
+
                     url = `/api/events?${params.toString()}`;
                 }
 
-                const sep = url.includes("?") ? "&" : "?";
-                const finalUrl = `${url}${sep}requesterEmail=${encodeURIComponent(user.email)}`;
+                const finalUrl =
+                    `${url}${url.includes("?") ? "&" : "?"}requesterEmail=${encodeURIComponent(user.email)}`;
 
                 const res = await fetch(finalUrl);
                 if (!res.ok) throw new Error("Failed to load events");
@@ -183,14 +170,13 @@ export default function Events() {
         status,
         tagFromRoute,
         clubFromRoute,
-        user?.email
+        user?.email,
     ]);
 
 
     /* =====================
-       LOAD TAGS
-    ===================== */
-
+      LOAD TAGS
+   ===================== */
     useEffect(() => {
         (async () => {
             try {
@@ -198,12 +184,9 @@ export default function Events() {
                 if (!res.ok) return;
                 const data = await res.json();
                 setAllTags(Array.isArray(data) ? data : []);
-            } catch {
-                // ignore for MVP
-            }
+            } catch {}
         })();
     }, []);
-
 
     /* =====================
        LOAD RATINGS (per event)
@@ -253,29 +236,34 @@ export default function Events() {
        - Default grouping: LIVE -> UPCOMING -> ENDED
        - Then applies selected sort within each group
     ===================== */
+    /* =====================
+      SORT
+   ===================== */
     const visibleEvents = useMemo(() => {
         if (status === "all") return events;
 
-        return events.filter(ev => {
-            const s = getEventStatus(ev);
+        const map = {
+            upcoming: "UPCOMING",
+            ongoing: "LIVE",
+            past: "ENDED",
+        };
 
-            if (status === "upcoming") return s === "UPCOMING";
-            if (status === "ongoing") return s === "LIVE";
-            if (status === "past") return s === "ENDED";
-
-            return true;
-        });
+        return events.filter(ev => ev.status === map[status]);
     }, [events, status]);
+
 
     const sorted = useMemo(() => {
         const arr = [...visibleEvents];
 
-        arr.sort((a, b) => {
-            const statusA = getEventStatus(a);
-            const statusB = getEventStatus(b);
+        const STATUS_ORDER = {
+            LIVE: 0,
+            UPCOMING: 1,
+            ENDED: 2,
+        };
 
-            const sa = STATUS_ORDER[statusA] ?? 1;
-            const sb = STATUS_ORDER[statusB] ?? 1;
+        arr.sort((a, b) => {
+            const sa = STATUS_ORDER[a.status] ?? 1;
+            const sb = STATUS_ORDER[b.status] ?? 1;
 
             if (sa !== sb) return sa - sb;
 
@@ -460,12 +448,17 @@ export default function Events() {
                                             className={`tag-chip ${active ? "active" : ""}`}
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                window.location.hash = `#/events/tag/${encodeURIComponent(tagName)}`;
-                                            }}
 
+                                                setSelectedTags([tagName]);   // 🔑 THIS WAS MISSING
+                                                setStatus("all");
+                                                setQ("");
+
+                                                window.location.hash = "#/events"; // optional: keep URL clean
+                                            }}
                                         >
-                                    {tagName}
-                                </span>
+                                            {tagName}
+                                        </span>
+
                                     );
                                 })}
 
@@ -475,16 +468,15 @@ export default function Events() {
                                     disabled={selectedTags.length === 0}
                                     onClick={() => {
                                         setSelectedTags([]);
-                                        setStatus("upcoming");
+                                        setStatus("all");
                                         window.location.hash = "#/events";
                                     }}
                                 >
                                     Clear
                                 </button>
-
-
                             </div>
                         )}
+
 
 
                         {user && (

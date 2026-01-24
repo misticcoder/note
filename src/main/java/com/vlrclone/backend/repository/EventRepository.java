@@ -49,6 +49,11 @@ public interface EventRepository
             String name, Pageable pageable
     );
 
+    List<Event> findByTags_NameIgnoreCaseAndStartAtAfter(
+            String tag,
+            LocalDateTime time
+    );
+
     @EntityGraph(attributePaths = {"club", "tags"})
     List<Event> findDistinctByTitleContainingIgnoreCaseOrTags_NameIgnoreCaseOrderByStartAtDesc(
             String title,

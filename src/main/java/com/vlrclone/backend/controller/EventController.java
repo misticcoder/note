@@ -452,27 +452,6 @@ public class EventController {
        FILTERS
     ===================== */
 
-    @GetMapping("/tag/{tagName}")
-    public ResponseEntity<?> byTag(
-            @PathVariable String tagName,
-            @RequestParam(required = false) String requesterEmail,
-            @RequestParam(defaultValue = "all") String status
-    ) {
-        User user = byEmail(requesterEmail);
-
-        List<EventUpdateDto> allEvents = service.findByTag(tagName, normalizeStatus(status));
-
-        // Filter based on visibility
-        List<EventUpdateDto> visible = allEvents.stream()
-                .filter(dto -> {
-                    Event e = events.findById(dto.id).orElse(null);
-                    return e != null && canViewEvent(e, user);
-                })
-                .toList();
-
-        return ResponseEntity.ok(visible);
-    }
-
     @GetMapping("/club/{clubId}")
     public ResponseEntity<?> byClub(
             @PathVariable Long clubId,
@@ -529,5 +508,29 @@ public class EventController {
         events.save(ev);
 
         return ResponseEntity.ok(Map.of("attendanceCode", newCode));
+    }
+
+    @GetMapping("/recommended")
+    public ResponseEntity<?> recommended(
+            @RequestParam String requesterEmail
+    ) {
+        User user = byEmail(requesterEmail);
+        if (user == null) {
+            return ResponseEntity.status(401)
+                    .body(Map.of("message", "Unauthorized"));
+        }
+
+        List<EventUpdateDto> recommended =
+                service.getRecommendedEventsForUser(user);
+
+        // Apply visibility rules (important!)
+        List<EventUpdateDto> visible = recommended.stream()
+                .filter(dto -> {
+                    Event e = events.findById(dto.id).orElse(null);
+                    return e != null && canViewEvent(e, user);
+                })
+                .toList();
+
+        return ResponseEntity.ok(visible);
     }
 }

@@ -1,16 +1,17 @@
 package com.vlrclone.backend.controller;
 
-import com.vlrclone.backend.dto.UpdateProfileDto;
-import com.vlrclone.backend.dto.UserClubDto;
-import com.vlrclone.backend.dto.UserEventDto;
-import com.vlrclone.backend.dto.UserProfileDto;
+import com.vlrclone.backend.dto.*;
+import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.model.User;
+import com.vlrclone.backend.repository.EventRepository;
 import com.vlrclone.backend.repository.UserRepository;
 import com.vlrclone.backend.service.CurrentUserService;
+import com.vlrclone.backend.service.EventService;
 import com.vlrclone.backend.service.UserProfileService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -20,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @RestController
@@ -29,15 +31,25 @@ public class ProfileController {
     private final UserProfileService profileService;
     private final CurrentUserService currentUser;
     private final UserRepository userRepository;
+    private final EventRepository eventRepository;
+    private final EventService eventService;
 
     public ProfileController(
             UserProfileService profileService,
             CurrentUserService currentUser,
-            UserRepository userRepository
-    ) {
+            UserRepository userRepository,
+            EventRepository eventRepository, EventService eventService) {
         this.profileService = profileService;
         this.currentUser = currentUser;
         this.userRepository = userRepository;
+        this.eventRepository = eventRepository;
+        this.eventService = eventService;
+    }
+
+    private User byEmail(String email) {
+        return (email == null || email.isBlank())
+                ? null
+                : userRepository.findByEmail(email).orElse(null);
     }
 
     /* ─────────────────────────────
@@ -152,7 +164,11 @@ public class ProfileController {
         profileService.updateUserTags(user.getId(), tags);
     }
 
-
+    @GetMapping("/recommendations")
+    public List<EventUpdateDto> recommendations(HttpServletRequest request) {
+        User user = currentUser.requireUser(request);
+        return eventService.getRecommendedEventsForUser(user);
+    }
 
 
 }

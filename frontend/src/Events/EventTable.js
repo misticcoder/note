@@ -1,5 +1,6 @@
 import "../styles/events.css";
 import Dropdown from "../components/Dropdown";
+import "../styles/badges.css";
 
 export default function EventTable({
                                        events = [],
@@ -10,23 +11,6 @@ export default function EventTable({
                                        onEdit,
                                        onDelete
                                    }) {
-
-    /* =====================
-       EVENT STATUS
-    ===================== */
-    const getEventStatus = (ev) => {
-        if (!ev?.startAt) return "UPCOMING";
-
-        const now = new Date();
-        const start = new Date(ev.startAt);
-        const end = ev.endAt
-            ? new Date(ev.endAt)
-            : new Date(start.getTime() + 2 * 60 * 60 * 1000);
-
-        if (now >= start && now <= end) return "LIVE";
-        if (now > end) return "ENDED";
-        return "UPCOMING";
-    };
 
     if (loading) return <p className="muted">Loading…</p>;
     if (error) return <p className="error">{error}</p>;
@@ -53,7 +37,7 @@ export default function EventTable({
             </div>
 
             {events.map((ev, i) => {
-                const status = getEventStatus(ev);
+                const status = ev.status;
 
                 return (
                     <div

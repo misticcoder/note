@@ -10,7 +10,9 @@ import com.vlrclone.backend.repository.EventRatingRepository;
 import com.vlrclone.backend.repository.EventRepository;
 import com.vlrclone.backend.repository.TagRepository;
 import com.vlrclone.backend.repository.spec.EventSpecifications;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -44,7 +46,7 @@ public class EventService {
        (used by GET /api/events)
     ========================= */
 
-    @Transactional(Transactional.TxType.SUPPORTS)
+    @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
     public List<EventUpdateDto> searchEvents(
             String q,
             List<String> tags,
@@ -98,7 +100,7 @@ public class EventService {
        (GET /api/events/tag/{tag})
     ========================= */
 
-    @Transactional(Transactional.TxType.SUPPORTS)
+    @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
     public List<EventUpdateDto> findByTag(String tagName, String status) {
         Tag tag = tagRepo.findByNameIgnoreCase(tagName)
                 .orElseThrow(() -> new RuntimeException("Tag not found"));
@@ -112,7 +114,7 @@ public class EventService {
        (GET /api/events/club/{id})
     ========================= */
 
-    @Transactional(Transactional.TxType.SUPPORTS)
+    @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
     public List<EventUpdateDto> findByClub(Long clubId, String status) {
         List<Event> events = eventRepo.findByClubId(clubId);
         return filterByStatus(events, status);
@@ -209,7 +211,8 @@ public class EventService {
        (used by controller GET /{id})
     ========================= */
 
-    @Transactional(Transactional.TxType.SUPPORTS)
+    @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+
     public Integer getMyRating(Event event, User user) {
         if (user == null) return null;
 
@@ -239,5 +242,49 @@ public class EventService {
             throw new RuntimeException("Hashing failed", e);
         }
     }
+
+    public List<Event> getEventsByTag(String tag) {
+        if (tag == null || tag.isBlank()) {
+            return eventRepo.findByStartAtAfter(LocalDateTime.now());
+        }
+
+        return eventRepo.findByTags_NameIgnoreCaseAndStartAtAfter(
+                tag.trim(),
+                LocalDateTime.now()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<EventUpdateDto> getRecommendedEventsForUser(User user) {
+
+        if (user == null || user.getTags().isEmpty()) {
+            return List.of();
+        }
+
+        Set<String> userTagNames = user.getTags().stream()
+                .map(t -> t.getName().toLowerCase())
+                .collect(Collectors.toSet());
+
+        LocalDateTime now = LocalDateTime.now();
+
+        return eventRepo.findByStartAtAfter(now)
+                .stream()
+                .map(e -> {
+                    long matches = e.getTags().stream()
+                            .map(t -> t.getName().toLowerCase())
+                            .filter(userTagNames::contains)
+                            .count();
+                    return new AbstractMap.SimpleEntry<>(e, matches);
+                })
+                .filter(entry -> entry.getValue() > 0)
+                .sorted((a, b) -> {
+                    int byMatches = Long.compare(b.getValue(), a.getValue());
+                    if (byMatches != 0) return byMatches;
+                    return a.getKey().getStartAt().compareTo(b.getKey().getStartAt());
+                })
+                .map(entry -> new EventUpdateDto(entry.getKey()))
+                .toList();
+    }
+
 
 }

@@ -100,19 +100,24 @@ public class Event {
 
     @Transient
     public EventStatus getStatus() {
-        if (startAt == null) return EventStatus.UPCOMING;
+        if (startAt == null) {
+            return EventStatus.UPCOMING;
+        }
 
         LocalDateTime now = LocalDateTime.now();
+
         LocalDateTime effectiveEnd =
                 endAt != null ? endAt : startAt.plusHours(2);
 
-        if (!now.isBefore(startAt) && now.isBefore(effectiveEnd)) {
-            return EventStatus.LIVE;
+        if (now.isBefore(startAt)) {
+            return EventStatus.UPCOMING;
         }
+
         if (now.isAfter(effectiveEnd)) {
             return EventStatus.ENDED;
         }
-        return EventStatus.UPCOMING;
+
+        return EventStatus.LIVE;
     }
 
     /* =====================
@@ -239,5 +244,7 @@ public class Event {
     public EventVisibility getVisibility() {
         return visibility;
     }
+
+
 
 }

@@ -32,6 +32,7 @@ public class EventUpdateDto {
 
     public EventVisibility visibility;
 
+
     public EventUpdateDto() {
     }
 
@@ -58,6 +59,7 @@ public class EventUpdateDto {
                 .collect(Collectors.toSet());
 
         this.visibility = e.getVisibility();
+
     }
 
 }
