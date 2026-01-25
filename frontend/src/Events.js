@@ -128,8 +128,6 @@ export default function Events() {
        LOAD EVENTS
     ===================== */
     useEffect(() => {
-        if (!user) return;
-
         document.title = "Events | InfCom";
 
         (async () => {
@@ -149,8 +147,10 @@ export default function Events() {
                     url = `/api/events?${params.toString()}`;
                 }
 
-                const finalUrl =
-                    `${url}${url.includes("?") ? "&" : "?"}requesterEmail=${encodeURIComponent(user.email)}`;
+                const finalUrl = user
+                    ? `${url}${url.includes("?") ? "&" : "?"}requesterEmail=${encodeURIComponent(user.email)}`
+                    : url;
+
 
                 const res = await fetch(finalUrl);
                 if (!res.ok) throw new Error("Failed to load events");
@@ -588,6 +588,12 @@ export default function Events() {
 
                     {loading && <p className="muted">Loading…</p>}
                     {err && <p className="error">{err}</p>}
+
+                    {!loading && !err && sorted.length === 0 && (
+                        <p className="muted">
+                            No public events available. Log in to see members-only events.
+                        </p>
+                    )}
 
                     {!loading && !err && (
                         <EventTable

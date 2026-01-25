@@ -39,8 +39,6 @@ function Home() {
 
     // Hover state
 
-
-
     useEffect(() => {
         document.title = "Home | InfCom";
         fetch("/api/threads").then(res => res.json()).then(setThreads).catch(() => setThreads([]));
@@ -363,7 +361,7 @@ function Home() {
                                         </div>
 
                                         <span className={"muted"}>
-                                            {club.members?.length || 0}
+                                            {club.memberCount}
                                         </span>
                                     </div>
                                 ))}
