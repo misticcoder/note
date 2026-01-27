@@ -12,6 +12,7 @@ public class CorsConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins("https://gregarious-crepe-7ed224.netlify.app",
+                       "https://note123-rho.vercel.app/",
                        "https://note-np63.onrender.com/" )
 
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
