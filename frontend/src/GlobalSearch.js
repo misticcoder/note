@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "./styles/GlobalSearch.css";
+import {apiFetch} from "./api";
 
 export default function GlobalSearch() {
     const [query, setQuery] = useState("");
@@ -9,7 +10,7 @@ export default function GlobalSearch() {
 
     // Fetch default results on focus
     const fetchDefault = () => {
-        fetch("/api/search")
+        apiFetch("/api/search")
             .then(r => r.json())
             .then(setResults)
             .catch(() => {});
@@ -24,7 +25,7 @@ export default function GlobalSearch() {
             return;
         }
 
-        fetch(`/api/search?q=${encodeURIComponent(query)}`)
+        apiFetch(`/api/search?q=${encodeURIComponent(query)}`)
             .then(r => r.json())
             .then(setResults)
             .catch(() => {});

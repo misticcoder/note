@@ -4,6 +4,7 @@ import "../styles/Threads.css";
 import {timeAgo} from "../components/timeAgo";
 import "../styles/Home.css";
 import "../styles/modal.css"
+import {apiFetch} from "../api";
 
 export default function ThreadSection({
                                           title = "Threads",
@@ -20,7 +21,7 @@ export default function ThreadSection({
     const [newThread, setNewThread] = useState({ title: "", content: "" });
 
     useEffect(() => {
-        fetch("/api/threads")
+        apiFetch("/api/threads")
             .then(r => r.json())
             .then(setThreads)
             .catch(() => setThreads([]));
@@ -46,7 +47,7 @@ export default function ThreadSection({
         }
 
         try {
-            const res = await fetch(
+            const res = await apiFetch(
                 `/api/threads?requesterEmail=${encodeURIComponent(user.email)}`,
                 {
                     method: "POST",

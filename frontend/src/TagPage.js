@@ -9,7 +9,7 @@ export default function TagPage() {
     useEffect(() => {
         setLoading(true);
 
-        fetch(`/api/tags/${encodeURIComponent(name)}/events`)
+        apiFetch(`/api/tags/${encodeURIComponent(name)}/events`)
             .then(res => res.json())
             .then(data => {
                 setEvents(data);

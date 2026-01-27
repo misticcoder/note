@@ -6,6 +6,8 @@ import ClubMembers from "./ClubMembers";
 import ClubNews from "./ClubNews";
 import ClubHeader from "../ClubHeader";
 
+import { apiFetch } from "../api";
+
 export default function ClubMain({ clubId, activeTab }) {
     const { user } = useContext(AuthContext);
 
@@ -49,10 +51,10 @@ export default function ClubMain({ clubId, activeTab }) {
         if (!clubId) return;
 
         Promise.all([
-            fetch(`/api/clubs/${clubId}`).then(r => r.json()),
-            fetch(`/api/clubs/${clubId}/news`).then(r => r.json()),
-            fetch(`/api/clubs/${clubId}/members`).then(r => r.json()),
-            fetch("/api/users").then(r => r.json()),
+            apiFetch(`/api/clubs/${clubId}`).then(r => r.json()),
+            apiFetch(`/api/clubs/${clubId}/news`).then(r => r.json()),
+            apiFetch(`/api/clubs/${clubId}/members`).then(r => r.json()),
+            apiFetch("/api/users").then(r => r.json()),
             user
                 ? fetch(
                     `/api/clubs/${clubId}/status?requesterEmail=${encodeURIComponent(

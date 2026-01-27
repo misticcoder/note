@@ -7,6 +7,7 @@ import "../styles/events.css";
 import "../styles/badges.css";
 import "../styles/buttons.css"
 import DashboardSection from "../components/DashboardSection";
+import {apiFetch} from "../api";
 
 
 
@@ -38,10 +39,10 @@ export default function ProfilePage() {
         setLoading(true);
 
         Promise.all([
-            fetch(`/api/me/profile`, { headers: { "X-User-Email": user.email } }).then(r => r.json()),
-            fetch(`/api/me/events`, { headers: { "X-User-Email": user.email } }).then(r => r.json()),
-            fetch(`/api/me/clubs`, { headers: { "X-User-Email": user.email } }).then(r => r.json()),
-            fetch(`/api/me/recommendations`, { headers: { "X-User-Email": user.email } }).then(r => r.json())
+            apiFetch(`/api/me/profile`, { headers: { "X-User-Email": user.email } }).then(r => r.json()),
+            apiFetch(`/api/me/events`, { headers: { "X-User-Email": user.email } }).then(r => r.json()),
+            apiFetch(`/api/me/clubs`, { headers: { "X-User-Email": user.email } }).then(r => r.json()),
+            apiFetch(`/api/me/recommendations`, { headers: { "X-User-Email": user.email } }).then(r => r.json())
         ]).then(([profileData, eventsData, clubsData, recommended]) => {
             setProfile(profileData);
             setEvents(eventsData);
@@ -77,7 +78,7 @@ export default function ProfilePage() {
     }
 
     const saveProfile = async (updates) => {
-        const res = await fetch(`/api/me/profile`, {
+        const res = await apiFetch(`/api/me/profile`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
@@ -494,7 +495,7 @@ function EditProfileTab({ profile, email, onSave, onAvatarUpdated, tags, setTags
         try {
             await onSave(form);
 
-            const res = await fetch(`/api/me/tags`, {
+            const res = await apiFetch(`/api/me/tags`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -592,7 +593,7 @@ function EditProfileTab({ profile, email, onSave, onAvatarUpdated, tags, setTags
                         const formData = new FormData();
                         formData.append("file", file);
 
-                        const res = await fetch(`/api/me/avatar`, {
+                        const res = await apiFetch(`/api/me/avatar`, {
                             method: "POST",
                             headers: {
                                 "X-User-Email": email

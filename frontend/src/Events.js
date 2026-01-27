@@ -118,7 +118,7 @@ export default function Events() {
 
     async function fetchRating(eventId) {
         try {
-            const res = await fetch(`/api/events/${eventId}/rating`);
+            const res = await apiFetch(`/api/events/${eventId}/rating`);
             if (!res.ok) return { average: 0, count: 0 };
             return await res.json();
         } catch {

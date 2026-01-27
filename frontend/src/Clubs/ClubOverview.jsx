@@ -3,6 +3,7 @@ import { AuthContext } from "../AuthContext";
 import "../styles/clubs.css";
 import ClubHeader from "../ClubHeader";
 
+import { apiFetch } from "../api";
 
 export default function ClubDetail() {
     const { user } = useContext(AuthContext);
@@ -57,7 +58,7 @@ export default function ClubDetail() {
             alert("Please log in to request to join.");
             return;
         }
-        const res = await fetch(
+        const res = await apiFetch(
             `/api/clubs/${clubId}/join?requesterEmail=${encodeURIComponent(user.email)}`,
             { method: "POST" }
         );
@@ -67,7 +68,7 @@ export default function ClubDetail() {
             return;
         }
 
-        const st = await fetch(
+        const st = await apiFetch(
             `/api/clubs/${clubId}/status?requesterEmail=${encodeURIComponent(user.email)}`
         ).then((r) => r.json());
         setMyStatus(st);
@@ -79,7 +80,7 @@ export default function ClubDetail() {
 
     const cancelJoinRequest = async () => {
         if (!user || !myStatus.requestId) return;
-        const res = await fetch(
+        const res = await apiFetch(
             `/api/clubs/${clubId}/join-requests/${myStatus.requestId}?requesterEmail=${encodeURIComponent(
                 user.email
             )}`,
@@ -102,7 +103,7 @@ export default function ClubDetail() {
         }
         if (!window.confirm("Are you sure you want to leave this club?")) return;
 
-        const res = await fetch(
+        const res = await apiFetch(
             `/api/clubs/${clubId}/leave?requesterEmail=${encodeURIComponent(user.email)}`,
             { method: "POST" }
         );
@@ -138,9 +139,9 @@ export default function ClubDetail() {
         (async () => {
             try {
                 const [c, n, m] = await Promise.all([
-                    fetch(`/api/clubs/${clubId}`).then((r) => r.json()),
-                    fetch(`/api/clubs/${clubId}/news`).then((r) => r.json()),
-                    fetch(`/api/clubs/${clubId}/members`).then((r) => r.json()),
+                    apiFetch(`/api/clubs/${clubId}`).then((r) => r.json()),
+                    apiFetch(`/api/clubs/${clubId}/news`).then((r) => r.json()),
+                    apiFetch(`/api/clubs/${clubId}/members`).then((r) => r.json()),
                 ]).catch(() => [null, [], []]);
 
                 setClub(c);
@@ -148,13 +149,13 @@ export default function ClubDetail() {
                 setMembers(Array.isArray(m) ? m : []);
 
                 // users (for labels)
-                const usersRes = await fetch("/api/users");
+                const usersRes = await apiFetch("/api/users");
                 const usersBody = usersRes.ok ? await usersRes.json() : [];
                 setUsers(Array.isArray(usersBody) ? usersBody : usersBody.content || []);
 
                 if (user) {
                     // status for current user
-                    fetch(
+                    apiFetch(
                         `/api/clubs/${clubId}/status?requesterEmail=${encodeURIComponent(user.email)}`
                     )
                         .then((r) =>
@@ -167,7 +168,7 @@ export default function ClubDetail() {
 
                     // only approvers (admin/leader) can see pending requests
                     if (canApproveRequests) {
-                        fetch(
+                        apiFetch(
                             `/api/clubs/${clubId}/join-requests?requesterEmail=${encodeURIComponent(
                                 user.email
                             )}`
@@ -192,7 +193,7 @@ export default function ClubDetail() {
         const url = `/api/clubs/${clubId}/join-requests/${requestId}/decision?requesterEmail=${encodeURIComponent(
             user.email
         )}&decision=${decision}`;
-        const res = await fetch(url, { method: "POST" });
+        const res = await apiFetch(url, { method: "POST" });
         const body = await res.json().catch(() => ({}));
         if (!res.ok) {
             alert(body.message || "Failed");
@@ -200,8 +201,8 @@ export default function ClubDetail() {
         }
 
         const [m, p] = await Promise.all([
-            fetch(`/api/clubs/${clubId}/members`).then((r) => r.json()),
-            fetch(
+            apiFetch(`/api/clubs/${clubId}/members`).then((r) => r.json()),
+            apiFetch(
                 `/api/clubs/${clubId}/join-requests?requesterEmail=${encodeURIComponent(user.email)}`
             ).then((r) => r.json()),
         ]);
@@ -212,7 +213,7 @@ export default function ClubDetail() {
     const postNews = async (e) => {
         e.preventDefault();
         if (!title.trim() || !content.trim()) return;
-        const res = await fetch(
+        const res = await apiFetch(
             `/api/clubs/${clubId}/news?requesterEmail=${encodeURIComponent(user.email)}`,
             {
                 method: "POST",
@@ -231,7 +232,7 @@ export default function ClubDetail() {
     };
 
     const deleteNews = async (newsId) => {
-        const res = await fetch(
+        const res = await apiFetch(
             `/api/clubs/${clubId}/news/${newsId}?requesterEmail=${encodeURIComponent(user.email)}`,
             { method: "DELETE" }
         );
@@ -249,7 +250,7 @@ export default function ClubDetail() {
     const makeLeader = async (targetUserId) => {
         if (!user) return;
         try {
-            const res = await fetch(
+            const res = await apiFetch(
                 `/api/clubs/${clubId}/members/${targetUserId}/make-leader?requesterEmail=${encodeURIComponent(
                     user.email
                 )}`,
@@ -276,7 +277,7 @@ export default function ClubDetail() {
     const makeCoLeader = async (targetUserId) => {
         if (!user) return;
         try {
-            const res = await fetch(
+            const res = await apiFetch(
                 `/api/clubs/${clubId}/members/${targetUserId}/make-co_leader?requesterEmail=${encodeURIComponent(
                     user.email
                 )}`,
@@ -300,7 +301,7 @@ export default function ClubDetail() {
     const makeMember = async (targetUserId) => {
         if (!user) return;
         try {
-            const res = await fetch(
+            const res = await apiFetch(
                 `/api/clubs/${clubId}/members/${targetUserId}/make-member?requesterEmail=${encodeURIComponent(
                     user.email
                 )}`,
@@ -325,7 +326,7 @@ export default function ClubDetail() {
         if (!user) return;
         if (!window.confirm("Remove this member from the club?")) return;
         try {
-            const res = await fetch(
+            const res = await apiFetch(
                 `/api/clubs/${clubId}/members/${targetUserId}?requesterEmail=${encodeURIComponent(
                     user.email
                 )}`,

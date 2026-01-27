@@ -8,6 +8,7 @@ import "./styles/events.css";
 import "./styles/index.css";
 import EventCommentSection from "./Events/EventCommentSection";
 import EventAttendanceQR from "./components/EventAttendanceQR";
+import {apiFetch} from "./api";
 
 export default function EventPage() {
     const { user } = useContext(AuthContext);
@@ -106,7 +107,7 @@ export default function EventPage() {
             ? `/api/events/${eventId}?requesterEmail=${encodeURIComponent(user.email)}`
             : `/api/events/${eventId}`;
 
-        fetch(url)
+        apiFetch(url)
             .then(async (r) => {
                 const body = await r.json().catch(() => ({}));
 
@@ -134,7 +135,7 @@ export default function EventPage() {
         if (!eventId || user === undefined) return;
         if (!user) return; // guest
 
-        fetch(
+        apiFetch(
             `/api/events/${eventId}/rsvp?requesterEmail=${encodeURIComponent(
                 user.email
             )}`
@@ -146,7 +147,7 @@ export default function EventPage() {
             })
             .catch(() => {});
 
-        fetch(`/api/events/${eventId}/attendance`)
+        apiFetch(`/api/events/${eventId}/attendance`)
             .then((r) => r.json())
             .then(setCounts)
             .catch(() => {});
@@ -164,7 +165,7 @@ export default function EventPage() {
             ? `/api/events/${eventId}/rating?requesterEmail=${encodeURIComponent(user.email)}`
             : `/api/events/${eventId}/rating`;
 
-        fetch(url)
+        apiFetch(url)
             .then(r => r.json())
             .then(setRating)
             .catch(() => {});
@@ -179,7 +180,7 @@ export default function EventPage() {
         try {
             setCheckingIn(true);
 
-            const res = await fetch(
+            const res = await apiFetch(
                 `/api/events/${eventId}/check-in?requesterEmail=${encodeURIComponent(
                     user.email
                 )}&code=${encodeURIComponent(code.trim())}`,
@@ -229,7 +230,7 @@ export default function EventPage() {
     const sendRSVP = async (status) => {
         if (!user) return;
 
-        const res = await fetch(
+        const res = await apiFetch(
             `/api/events/${eventId}/rsvp?requesterEmail=${encodeURIComponent(
                 user.email
             )}&status=${status}`,
@@ -243,7 +244,7 @@ export default function EventPage() {
         setRsvp(status);
 
         try {
-            const updatedCounts = await fetch(`/api/events/${eventId}/attendance`).then((r) => r.json());
+            const updatedCounts = await apiFetch(`/api/events/${eventId}/attendance`).then((r) => r.json());
             setCounts(updatedCounts);
         } catch {
             // Silently fail if count update fails
@@ -253,7 +254,7 @@ export default function EventPage() {
     const cancelRSVP = async () => {
         if (!user) return;
 
-        const res = await fetch(
+        const res = await apiFetch(
             `/api/events/${eventId}/rsvp?requesterEmail=${encodeURIComponent(
                 user.email
             )}`,
@@ -268,7 +269,7 @@ export default function EventPage() {
         setRsvp(null);
 
         try {
-            const updatedCounts = await fetch(`/api/events/${eventId}/attendance`).then((r) => r.json());
+            const updatedCounts = await apiFetch(`/api/events/${eventId}/attendance`).then((r) => r.json());
             setCounts(updatedCounts);
         } catch {
             // Silently fail if count update fails
@@ -290,9 +291,9 @@ export default function EventPage() {
         setAttendeesLoading(true);
 
         Promise.all([
-            fetch(`/api/events/${eventId}/attendees?status=ATTENDED`).then(r => r.json()),
-            fetch(`/api/events/${eventId}/attendees?status=GOING`).then(r => r.json()),
-            fetch(`/api/events/${eventId}/attendees?status=MAYBE`).then(r => r.json()),
+            apiFetch(`/api/events/${eventId}/attendees?status=ATTENDED`).then(r => r.json()),
+            apiFetch(`/api/events/${eventId}/attendees?status=GOING`).then(r => r.json()),
+            apiFetch(`/api/events/${eventId}/attendees?status=MAYBE`).then(r => r.json()),
         ])
             .then(([attended, going, maybe]) => {
                 setAttendedAttendees(Array.isArray(attended) ? attended : []);
@@ -343,7 +344,7 @@ export default function EventPage() {
     const submitRating = async (value) => {
         if (!user || !event) return;
 
-        const res = await fetch(
+        const res = await apiFetch(
             `/api/events/${event.id}/rating?requesterEmail=${encodeURIComponent(
                 user.email
             )}`,
@@ -364,7 +365,7 @@ export default function EventPage() {
             const url = `/api/events/${event.id}/rating?requesterEmail=${encodeURIComponent(
                 user.email
             )}`;
-            const updated = await fetch(url).then((r) => r.json());
+            const updated = await apiFetch(url).then((r) => r.json());
             setRating(updated);
         } catch {
             // Silently fail if refresh fails
@@ -377,7 +378,7 @@ export default function EventPage() {
     const saveEvent = async (updates) => {
         if (!user || !event) return;
 
-        const res = await fetch(
+        const res = await apiFetch(
             `/api/events/${event.id}?requesterEmail=${encodeURIComponent(
                 user.email
             )}`,
@@ -403,7 +404,7 @@ export default function EventPage() {
 
         if (!window.confirm("Delete this event?")) return;
 
-        const res = await fetch(
+        const res = await apiFetch(
             `/api/events/${event.id}?requesterEmail=${encodeURIComponent(
                 user.email
             )}`,
@@ -425,7 +426,7 @@ export default function EventPage() {
         if (!user || !event || attendanceCode) return;
 
         try {
-            const res = await fetch(
+            const res = await apiFetch(
                 `/api/events/${event.id}/attendance-code/rotate?requesterEmail=${encodeURIComponent(
                     user.email
                 )}`,

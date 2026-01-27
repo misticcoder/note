@@ -5,6 +5,8 @@ import "./styles/index.css";
 import "./styles/events.css";
 import Dropdown from "./components/Dropdown";
 
+import { apiFetch } from "./api";
+
 export default function Clubs() {
     const { user } = useContext(AuthContext);
     const isAdmin = String(user?.role || "").toUpperCase() === "ADMIN";
@@ -36,7 +38,7 @@ export default function Clubs() {
                 if (category !== "ALL") params.set("category", category);
                 if (sortBy && sortBy !== "EVENTS_DESC") params.set("sort", sortBy);
 
-                const res = await fetch(`/api/clubs?${params.toString()}`);
+                const res = await apiFetch(`/api/clubs?${params.toString()}`);
                 if (!res.ok) throw new Error(`Failed to load clubs (${res.status})`);
 
                 const baseClubs = await res.json();
@@ -96,7 +98,7 @@ export default function Clubs() {
         if (!isAdmin || !editClub) return;
 
         try {
-            const res = await fetch(`/api/clubs/${editClub.id}`, {
+            const res = await apiFetch(`/api/clubs/${editClub.id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -127,7 +129,7 @@ export default function Clubs() {
         if (!window.confirm(`Delete club "${cl.name}"? This cannot be undone.`)) return;
 
         try {
-            const res = await fetch(`/api/clubs/${cl.id}`, { method: "DELETE" });
+            const res = await apiFetch(`/api/clubs/${cl.id}`, { method: "DELETE" });
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}));
                 throw new Error(body.message || `Delete failed (${res.status})`);

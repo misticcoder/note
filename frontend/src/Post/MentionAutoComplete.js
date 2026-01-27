@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { apiFetch } from "../api";
+
 export default function MentionAutocomplete({
                                                 value,
                                                 cursorPos,
@@ -32,7 +34,7 @@ export default function MentionAutocomplete({
 
         const controller = new AbortController();
 
-        fetch(
+        apiFetch(
             `/api/posts/references/search?q=${encodeURIComponent(query)}`,
             { signal: controller.signal }
         )

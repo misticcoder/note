@@ -5,6 +5,8 @@ import CommentSection from "../CommentSection";
 import ConfirmDialog from "../hooks/ConfirmDialog";
 import { useConfirm } from "../hooks/useConfirm";
 
+import { apiFetch } from "../api";
+
 export default function EventCommentSection({ eventId }) {
     const { user } = useContext(AuthContext);
 
@@ -21,7 +23,7 @@ export default function EventCommentSection({ eventId }) {
             ? `?username=${encodeURIComponent(user.username)}`
             : "";
 
-        const res = await fetch(`/api/events/${eventId}/comments${q}`);
+        const res = await apiFetch(`/api/events/${eventId}/comments${q}`);
         const data = await res.json();
         setComments(Array.isArray(data) ? data : []);
     }, [eventId, user?.username]);
@@ -38,7 +40,7 @@ export default function EventCommentSection({ eventId }) {
         const text = newComment.trim();
         if (!text) return;
 
-        await fetch(`/api/events/${eventId}/comments`, {
+        await apiFetch(`/api/events/${eventId}/comments`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -54,7 +56,7 @@ export default function EventCommentSection({ eventId }) {
 
     /* ===================== DELETE ===================== */
     const deleteComment = async (commentId) => {
-        await fetch(
+        await apiFetch(
             `/api/events/${eventId}/comments/${commentId}?requesterEmail=${encodeURIComponent(
                 user.email
             )}`,

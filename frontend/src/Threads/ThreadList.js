@@ -5,6 +5,7 @@ import "../styles/table.css";
 import "../styles/Threads.css";
 import Dropdown from "../components/Dropdown";
 import {timeAgo} from "../components/timeAgo";
+import {apiFetch} from "../api";
 
 export default function ThreadList() {
     const { user } = useContext(AuthContext);
@@ -24,7 +25,7 @@ export default function ThreadList() {
         (async () => {
             try {
                 setLoading(true);
-                const res = await fetch("/api/threads");
+                const res = await apiFetch("/api/threads");
                 if (!res.ok) throw new Error(`Failed to load threads (${res.status})`);
                 const data = await res.json();
                 const rows = (Array.isArray(data) ? data : (data.content || []))
@@ -66,7 +67,7 @@ export default function ThreadList() {
         e.preventDefault();
         if (!isAdmin || !editThread) return;
         try {
-            const res = await fetch(`/api/threads/${editThread.id}`, {
+            const res = await apiFetch(`/api/threads/${editThread.id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -91,7 +92,7 @@ export default function ThreadList() {
         if (!isAdmin) return;
         if (!window.confirm(`Delete thread "${th.title}"?`)) return;
         try {
-            const res = await fetch(`/api/threads/${th.id}`, { method: "DELETE" });
+            const res = await apiFetch(`/api/threads/${th.id}`, { method: "DELETE" });
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}));
                 throw new Error(body.message || `Delete failed (${res.status})`);

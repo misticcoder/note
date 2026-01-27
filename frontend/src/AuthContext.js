@@ -1,7 +1,6 @@
-import { createContext, useState, useContext, useEffect } from "react";
+import { createContext, useState, useEffect } from "react";
 import { apiFetch } from "./api";
 
-// AuthContext to manage login state
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
@@ -17,11 +16,11 @@ export function AuthProvider({ children }) {
         }
     }, []);
 
-    // Helper to save/clear localStorage
     const saveUser = (u) => {
         setUser(u);
         localStorage.setItem("user", JSON.stringify(u));
     };
+
     const clearUser = () => {
         setUser(null);
         localStorage.removeItem("user");
@@ -29,39 +28,38 @@ export function AuthProvider({ children }) {
 
     const login = async (email, password) => {
         try {
-            const res = await apiFetch("`${API_BASE}/api/login", {
+            const res = await apiFetch("/api/login", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
             });
 
             if (res.ok) {
                 const data = await res.json();
-                // data.user comes from backend (id, email, username)
                 saveUser(data.user);
                 return { success: true };
-            } else if (res.status === 404) {
-                // user doesn't exist → trigger signup flow on UI
-                return { success: false, newUser: true };
-            } else if (res.status === 401) {
-                return { success: false, message: "Invalid credentials" };
-            } else {
-                const data = await res.json().catch(() => ({}));
-                return { success: false, message: data.message || "Login failed" };
             }
+
+            if (res.status === 404) {
+                return { success: false, newUser: true };
+            }
+
+            if (res.status === 401) {
+                return { success: false, message: "Invalid credentials" };
+            }
+
+            const data = await res.json().catch(() => ({}));
+            return { success: false, message: data.message || "Login failed" };
+
         } catch (err) {
             console.error(err);
             return { success: false, message: "Server error" };
         }
     };
 
-    const logout = () => clearUser();
-
     const signup = async (email, password, username) => {
         try {
-            const res = await apiFetch("`${API_BASE}/api/signup", {
+            const res = await apiFetch("/api/signup", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password, username }),
             });
 
@@ -72,21 +70,23 @@ export function AuthProvider({ children }) {
                     success: false,
                     message:
                         data.message ||
-                        (res.status === 409 ? "Email/username already in use" : "Signup failed"),
+                        (res.status === 409
+                            ? "Email/username already in use"
+                            : "Signup failed"),
                 };
             }
 
-            // auto-login after successful signup
             if (data.user) saveUser(data.user);
             return { success: true };
+
         } catch (err) {
             console.error(err);
-            return { success: false, message: err.message || "Signup failed" };
+            return { success: false, message: "Signup failed" };
         }
     };
 
     return (
-        <AuthContext.Provider value={{ user, saveUser, login, logout, signup }}>
+        <AuthContext.Provider value={{ user, saveUser, login, logout: clearUser, signup }}>
             {children}
         </AuthContext.Provider>
     );

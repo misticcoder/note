@@ -3,6 +3,7 @@ import { useState } from "react";
 import CommentItem from "./Comments/CommentItem";
 import "./styles/Threads.css";
 import "./styles/comments.css"
+import {apiFetch} from "./api";
 
 /* ===============================
    Build tree from flat list
@@ -52,7 +53,7 @@ export default function CommentSection({
     async function toggleReaction(comment, type) {
         if (!user) return;
 
-        await fetch(
+        await apiFetch(
             `/api/comments/${comment.id}/reactions?requesterEmail=${encodeURIComponent(
                 user.email
             )}`,

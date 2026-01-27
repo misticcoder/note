@@ -10,6 +10,8 @@ import EditPostModal from "./EditPostModal";
 import "../styles/Posts.css";
 import "../styles/comments.css";
 
+import { apiFetch } from "../api";
+
 export default function PostDetailPage() {
     const { user } = useContext(AuthContext);
 
@@ -51,7 +53,7 @@ export default function PostDetailPage() {
             ? `?username=${encodeURIComponent(user.username)}`
             : "";
 
-        const res = await fetch(`/api/posts${usernameParam}`);
+        const res = await apiFetch(`/api/posts${usernameParam}`);
         const data = await res.json();
 
         const found = Array.isArray(data)
@@ -70,7 +72,7 @@ export default function PostDetailPage() {
             ? `?username=${encodeURIComponent(user.username)}`
             : "";
 
-        const res = await fetch(
+        const res = await apiFetch(
             `/api/posts/${postId}/comments${usernameParam}`
         );
 
@@ -110,7 +112,7 @@ export default function PostDetailPage() {
         if (!text) return;
 
         try {
-            const res = await fetch(`/api/posts/${postId}/comments`, {
+            const res = await apiFetch(`/api/posts/${postId}/comments`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -133,7 +135,7 @@ export default function PostDetailPage() {
 
     const requestDeletePost = () => {
         confirm(null, async () => {
-            await fetch(
+            await apiFetch(
                 `/api/posts/${post.id}?username=${encodeURIComponent(
                     user.username
                 )}&admin=${user.role === "ADMIN"}`,
@@ -148,7 +150,7 @@ export default function PostDetailPage() {
 
     const requestDeleteComment = (commentId) => {
         confirm(commentId, async (id) => {
-            await fetch(
+            await apiFetch(
                 `/api/posts/${postId}/comments/${id}?requesterEmail=${encodeURIComponent(
                     user.email
                 )}`,
@@ -174,7 +176,7 @@ export default function PostDetailPage() {
         }));
 
         try {
-            await fetch(
+            await apiFetch(
                 `/api/posts/${post.id}/like?username=${encodeURIComponent(
                     user.username
                 )}`,
@@ -215,7 +217,7 @@ export default function PostDetailPage() {
             form.append("images", file)
         );
 
-        const res = await fetch(
+        const res = await apiFetch(
             `/api/posts/${post.id}`,
             { method: "PATCH", body: form }
         );
@@ -233,7 +235,7 @@ export default function PostDetailPage() {
     const togglePin = async () => {
         if (!user || !post) return;
 
-        const res = await fetch(
+        const res = await apiFetch(
             `/api/posts/${post.id}/pin?username=${user.username}`,
             { method: "PATCH" }
         );

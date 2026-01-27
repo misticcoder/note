@@ -5,6 +5,9 @@ import { useState, useRef, useEffect } from "react";
 import ShareIcon from "../components/Icons/share.png";
 import { getRefBadgeClass } from "../components/referenceBadges";
 
+
+import { apiFetch } from "../api";
+
 export default function PostCard({
                                      post,
                                      user,
@@ -50,7 +53,7 @@ export default function PostCard({
         const shareUrl = `${window.location.origin}/#/post/${post.id}`;
 
         // fire-and-forget share count
-        fetch(`/api/posts/${post.id}/share`, { method: "POST" })
+        apiFetch(`/api/posts/${post.id}/share`, { method: "POST" })
             .then(res => res.ok && onShare?.())
             .catch(() => {});
 

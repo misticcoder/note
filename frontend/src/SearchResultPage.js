@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./styles/GlobalSearch.css";
+import {apiFetch} from "./api";
 
 export default function SearchResultsPage() {
     const [results, setResults] = useState(null);
@@ -28,7 +29,7 @@ export default function SearchResultsPage() {
 
         setLoading(true);
 
-        fetch(`/api/search?q=${encodeURIComponent(q)}`)
+        apiFetch(`/api/search?q=${encodeURIComponent(q)}`)
             .then(r => r.json())
             .then(data => {
                 setResults(data);

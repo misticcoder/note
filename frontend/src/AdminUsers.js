@@ -2,6 +2,8 @@
 import { useEffect, useState, useContext, useMemo } from "react";
 import { AuthContext } from "./AuthContext";
 
+import { apiFetch } from "./api";
+
 const ADMIN_KEY = "dev-secret-key"; // optional header if your backend checks it
 
 export default function AdminUsers() {
@@ -32,7 +34,7 @@ export default function AdminUsers() {
         (async () => {
             try {
                 setLoading(true);
-                const res = await fetch("/api/users");
+                const res = await apiFetch("/api/users");
                 if (!res.ok) throw new Error(`Failed to load users (${res.status})`);
                 const data = await res.json();
                 setUsers(Array.isArray(data) ? data : []);
@@ -63,7 +65,7 @@ export default function AdminUsers() {
         const role = editedRoles[u.id];
         if (!role || role === u.role) return;
         try {
-            const res = await fetch(`/api/users/${u.id}/role`, {
+            const res = await apiFetch(`/api/users/${u.id}/role`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -87,7 +89,7 @@ export default function AdminUsers() {
     const removeById = async (u) => {
         if (!window.confirm(`Delete user "${u.username}"?`)) return;
         try {
-            const res = await fetch(`/api/users/${u.id}`, {
+            const res = await apiFetch(`/api/users/${u.id}`, {
                 method: "DELETE",
                 headers: { "X-ADMIN-KEY": ADMIN_KEY }
             });
@@ -105,7 +107,7 @@ export default function AdminUsers() {
     const addUser = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch("/api/signup", {
+            const res = await apiFetch("/api/signup", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"

@@ -6,6 +6,7 @@ import ConfirmDialog from "../hooks/ConfirmDialog";
 import { useConfirm } from "../hooks/useConfirm";
 import "../styles/Threads.css";
 import "../styles/buttons.css";
+import {apiFetch} from "../api";
 
 export default function ThreadPage() {
     const { user } = useContext(AuthContext);
@@ -47,7 +48,7 @@ export default function ThreadPage() {
     useEffect(() => {
         const controller = new AbortController();
 
-        fetch("/api/threads", { signal: controller.signal })
+        apiFetch("/api/threads", { signal: controller.signal })
             .then(r => r.json())
             .then(data => setThreads(Array.isArray(data) ? data : []))
             .catch(() => setThreads([]));
@@ -65,7 +66,7 @@ export default function ThreadPage() {
                 ? `?username=${encodeURIComponent(user.username)}`
                 : "";
 
-            const res = await fetch(
+            const res = await apiFetch(
                 `/api/threads/${threadId}/comments${usernameParam}`,
                 { signal }
             );
@@ -91,7 +92,7 @@ export default function ThreadPage() {
             try {
                 setLoading(true);
 
-                const tRes = await fetch(
+                const tRes = await apiFetch(
                     `/api/threads/${threadId}`,
                     { signal: controller.signal }
                 );
@@ -131,7 +132,7 @@ export default function ThreadPage() {
         if (!text) return;
 
         try {
-            const res = await fetch(`/api/threads/${threadId}/comments`, {
+            const res = await apiFetch(`/api/threads/${threadId}/comments`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -164,7 +165,7 @@ export default function ThreadPage() {
         }
 
         confirm(commentId, async (id) => {
-            const res = await fetch(
+            const res = await apiFetch(
                 `/api/threads/${threadId}/comments/${id}?requesterEmail=${encodeURIComponent(
                     user.email
                 )}`,

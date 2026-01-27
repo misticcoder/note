@@ -7,6 +7,8 @@ import EditPostModal from "./EditPostModal";
 import ReferencePicker from "./ReferencePicker";
 import "../styles/Posts.css";
 
+import { apiFetch } from "../api";
+
 export default function PostFeed({eventId}) {
     const { user } = useContext(AuthContext);
 
@@ -67,7 +69,7 @@ export default function PostFeed({eventId}) {
                 params.append("eventId", eventId);
             }
 
-            const res = await fetch(`/api/posts?${params.toString()}`);
+            const res = await apiFetch(`/api/posts?${params.toString()}`);
             const data = await res.json();
             setPosts(sortPosts(Array.isArray(data) ? data : []));
 
@@ -126,7 +128,7 @@ export default function PostFeed({eventId}) {
 
         try {
             setPosting(true);
-            const res = await fetch("/api/posts", {
+            const res = await apiFetch("/api/posts", {
                 method: "POST",
                 body: form,
             });
@@ -166,7 +168,7 @@ export default function PostFeed({eventId}) {
         );
 
         try {
-            await fetch(
+            await apiFetch(
                 `/api/posts/${post.id}/like?username=${encodeURIComponent(user.username)}`,
                 { method: liked ? "DELETE" : "POST" }
             );
@@ -189,7 +191,7 @@ export default function PostFeed({eventId}) {
             setPosts(prev => prev.filter(x => x.id !== p.id));
 
             try {
-                const res = await fetch(
+                const res = await apiFetch(
                     `/api/posts/${p.id}?username=${encodeURIComponent(user.username)}`,
                     { method: "DELETE" }
                 );
@@ -229,7 +231,7 @@ export default function PostFeed({eventId}) {
             form.append("publishAt", publishAt);
         }
 
-        const res = await fetch(`/api/posts/${editingPost.id}`, {
+        const res = await apiFetch(`/api/posts/${editingPost.id}`, {
             method: "PATCH",
             body: form,
         });
@@ -258,7 +260,7 @@ export default function PostFeed({eventId}) {
     /* ===================== PIN ===================== */
 
     const togglePin = async (post) => {
-        const res = await fetch(
+        const res = await apiFetch(
             `/api/posts/${post.id}/pin?username=${user.username}`,
             { method: "PATCH" }
         );

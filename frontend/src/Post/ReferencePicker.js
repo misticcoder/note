@@ -3,6 +3,8 @@ import "../styles/Posts.css";
 import "../styles/badges.css";
 import { getRefBadgeClass } from "../components/referenceBadges";
 
+import { apiFetch } from "../api";
+
 export default function ReferencePicker({ references, setReferences }) {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState([]);
@@ -15,7 +17,7 @@ export default function ReferencePicker({ references, setReferences }) {
 
         const controller = new AbortController();
 
-        fetch(`/api/posts/references/search?q=${encodeURIComponent(query)}`, {
+        apiFetch(`/api/posts/references/search?q=${encodeURIComponent(query)}`, {
             signal: controller.signal
         })
             .then(res => res.json())
