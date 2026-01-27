@@ -6,6 +6,9 @@ import PostFeed from "./Post/PostFeed";
 import "./styles/Home.css";
 import "./styles/modal.css"
 
+import { apiFetch } from "./api";
+
+
 
 function Home() {
     const [threads, setThreads] = useState([]);
@@ -41,9 +44,9 @@ function Home() {
 
     useEffect(() => {
         document.title = "Home | InfCom";
-        fetch("/api/threads").then(res => res.json()).then(setThreads).catch(() => setThreads([]));
-        fetch("/api/news").then(res => res.json()).then(setNews).catch(() => setNews([]));
-        fetch("/api/events?status=all")
+        apiFetch("/api/threads").then(res => res.json()).then(setThreads).catch(() => setThreads([]));
+        apiFetch("/api/news").then(res => res.json()).then(setNews).catch(() => setNews([]));
+        apiFetch("/api/events?status=all")
             .then(res => res.json())
             .then(data => {
                 const list = Array.isArray(data)
@@ -55,13 +58,13 @@ function Home() {
             })
             .catch(() => setEvents([]));
 
-        fetch("/api/clubs").then(res => res.json()).then(data => {
+        apiFetch("/api/clubs").then(res => res.json()).then(data => {
             setClubs(Array.isArray(data) ? data : []);
         }).catch(() => setClubs([]));
 
         // preload users for leader dropdown (admins only)
         if (isAdmin) {
-            fetch("/api/users").then(r => r.json()).then(setUsers).catch(() => setUsers([]));
+            apiFetch("/api/users").then(r => r.json()).then(setUsers).catch(() => setUsers([]));
         }
 
     }, [isAdmin]);
@@ -97,7 +100,7 @@ function Home() {
         setShowClubModal(true);
         // Ensure users list is fresh (in case admin opened later)
         if (isAdmin && users.length === 0) {
-            fetch("/api/users").then(r => r.json()).then(setUsers).catch(() => setUsers([]));
+            apiFetch("/api/users").then(r => r.json()).then(setUsers).catch(() => setUsers([]));
         }
     };
 
@@ -125,7 +128,7 @@ function Home() {
         }
 
         try {
-            const res = await fetch(
+            const res = await apiFetch(
                 `/api/clubs?requesterEmail=${encodeURIComponent(user.email)}`,
                 {
                     method: "POST",
@@ -140,7 +143,7 @@ function Home() {
             }
 
             if (newClub.leaderUserId) {
-                await fetch(
+                await apiFetch(
                     `/api/clubs/${created.id}/leader?requesterEmail=${encodeURIComponent(user.email)}`,
                     {
                         method: "POST",
@@ -169,7 +172,7 @@ function Home() {
     const handleNewsSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch(`/api/news?requesterEmail=${encodeURIComponent(user.email)}`, {
+            const res = await apiFetch(`/api/news?requesterEmail=${encodeURIComponent(user.email)}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(newNews),

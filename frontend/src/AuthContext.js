@@ -1,5 +1,5 @@
 import { createContext, useState, useContext, useEffect } from "react";
-import API_BASE from "./api";
+import { apiFetch } from "./api";
 
 // AuthContext to manage login state
 export const AuthContext = createContext();
@@ -29,7 +29,7 @@ export function AuthProvider({ children }) {
 
     const login = async (email, password) => {
         try {
-            const res = await fetch("`${API_BASE}/api/login", {
+            const res = await apiFetch("`${API_BASE}/api/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
@@ -59,7 +59,7 @@ export function AuthProvider({ children }) {
 
     const signup = async (email, password, username) => {
         try {
-            const res = await fetch("`${API_BASE}/api/signup", {
+            const res = await apiFetch("`${API_BASE}/api/signup", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password, username }),

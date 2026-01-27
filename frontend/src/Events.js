@@ -6,6 +6,9 @@ import EventTable from "./Events/EventTable";
 import "./styles/index.css"
 import "./styles/modal.css";
 
+import { apiFetch } from "./api"; // adjust path
+
+
 export default function Events() {
     const { user } = useContext(AuthContext);
     const isAdmin = String(user?.role || "").toUpperCase() === "ADMIN";
@@ -66,7 +69,7 @@ export default function Events() {
     useEffect(() => {
         (async () => {
             try {
-                const res = await fetch("/api/clubs");
+                const res = await apiFetch("/api/clubs");
                 if (!res.ok) return;
                 const data = await res.json();
                 setClubs(Array.isArray(data) ? data : []);
@@ -152,7 +155,7 @@ export default function Events() {
                     : url;
 
 
-                const res = await fetch(finalUrl);
+                const res = await apiFetch(finalUrl);
                 if (!res.ok) throw new Error("Failed to load events");
 
                 const data = await res.json();
@@ -180,7 +183,7 @@ export default function Events() {
     useEffect(() => {
         (async () => {
             try {
-                const res = await fetch("/api/tags");
+                const res = await apiFetch("/api/tags");
                 if (!res.ok) return;
                 const data = await res.json();
                 setAllTags(Array.isArray(data) ? data : []);
@@ -285,7 +288,7 @@ export default function Events() {
     const saveEvent = async (updates) => {
         if (!editingEvent || !user) return;
 
-        const res = await fetch(
+        const res = await apiFetch(
             `/api/events/${editingEvent.id}?requesterEmail=${encodeURIComponent(
                 user.email
             )}`,
@@ -314,7 +317,7 @@ export default function Events() {
 
         console.log("Deleting event:", ev.id, "as", user?.email, user?.role);
 
-        const res = await fetch(
+        const res = await apiFetch(
             `/api/events/${ev.id}?requesterEmail=${encodeURIComponent(user.email)}`,
             { method: "DELETE" }
         );
@@ -369,7 +372,7 @@ export default function Events() {
         console.log("CREATE EVENT PAYLOAD:", payload);
 
         try {
-            const res = await fetch(
+            const res = await apiFetch(
                 `/api/events?requesterEmail=${encodeURIComponent(user.email)}`,
                 {
                     method: "POST",
