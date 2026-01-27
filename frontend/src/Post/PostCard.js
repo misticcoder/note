@@ -23,6 +23,8 @@ export default function PostCard({
     const [showReportPopup, setShowReportPopup] = useState(false);
     const menuRef = useRef(null);
 
+    const API_BASE = process.env.REACT_APP_API_URL;
+
     /* =====================
        SCHEDULED LOGIC
     ===================== */
@@ -216,9 +218,14 @@ export default function PostCard({
 
                     {post.images?.length > 0 && (
                         <ImageCarousel
-                            images={post.images.map((img) => img.url)}
+                            images={post.images.map((img) =>
+                                img.url.startsWith("http")
+                                    ? img.url
+                                    : `${API_BASE}${img.url}`
+                            )}
                         />
-                    )}
+                    )
+                    }
                 </div>
 
                 {/* ===================== ACTIONS ===================== */}

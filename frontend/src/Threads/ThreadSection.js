@@ -23,9 +23,18 @@ export default function ThreadSection({
     useEffect(() => {
         apiFetch("/api/threads")
             .then(r => r.json())
-            .then(setThreads)
+            .then(data => {
+                const list = Array.isArray(data)
+                    ? data
+                    : Array.isArray(data.content)
+                        ? data.content
+                        : [];
+
+                setThreads(list);
+            })
             .catch(() => setThreads([]));
     }, []);
+
 
     const boxHover = {
         transform: "translateY(-2px)",

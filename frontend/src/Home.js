@@ -44,7 +44,18 @@ function Home() {
 
     useEffect(() => {
         document.title = "Home | InfCom";
-        apiFetch("/api/threads").then(res => res.json()).then(setThreads).catch(() => setThreads([]));
+        apiFetch("/api/threads")
+            .then(res => res.json())
+            .then(data => {
+                const list = Array.isArray(data)
+                    ? data
+                    : Array.isArray(data.content)
+                        ? data.content
+                        : [];
+
+                setThreads(list);
+            })
+            .catch(() => setThreads([]));
         apiFetch("/api/news").then(res => res.json()).then(setNews).catch(() => setNews([]));
         apiFetch("/api/events?status=all")
             .then(res => res.json())
