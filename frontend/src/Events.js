@@ -7,6 +7,7 @@ import "./styles/index.css"
 import "./styles/modal.css";
 
 import { apiFetch } from "./api"; // adjust path
+import { useEventActions } from "./hooks/useEventActions";
 
 
 export default function Events() {
@@ -20,10 +21,18 @@ export default function Events() {
     const [q, setQ] = useState("");
     const [sort, setSort] = useState("date");
 
-    const [editingEvent, setEditingEvent] = useState(null);
+    const {
+        editingEvent,
+        setEditingEvent,
+        saveEvent,
+        deleteEvent
+    } = useEventActions({ user, setEvents });
+
     const [ratings, setRatings] = useState({});
 
     const [clubs, setClubs] = useState([]);
+
+
 
 
     const [showAdd, setShowAdd] = useState(false);
@@ -279,71 +288,6 @@ export default function Events() {
 
         return arr;
     }, [visibleEvents, sort]);
-
-
-
-    /* =====================
-       ADMIN: EDIT
-    ===================== */
-
-    const toIso = (v) => (v ? new Date(v).toISOString() : null);
-
-    const saveEvent = async (updates) => {
-        if (!editingEvent || !user) return;
-
-        const payload = {
-            ...updates,
-            startAt: toIso(updates.startAt),
-            endAt: updates.endAt ? toIso(updates.endAt) : null,
-        };
-
-        const res = await apiFetch(
-            `/api/events/${editingEvent.id}?requesterEmail=${encodeURIComponent(user.email)}`,
-            {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            }
-        );
-
-        const body = await res.json();
-        if (!res.ok) {
-            alert(body.message || "Update failed");
-            return;
-        }
-
-        setEvents((prev) => prev.map((e) => (e.id === body.id ? body : e)));
-        setEditingEvent(null);
-    };
-
-
-    /* =====================
-       ADMIN: DELETE
-    ===================== */
-    const deleteEvent = async (ev) => {
-        if (!window.confirm("Delete this event?")) return;
-
-        console.log("Deleting event:", ev.id, "as", user?.email, user?.role);
-
-        const res = await apiFetch(
-            `/api/events/${ev.id}?requesterEmail=${encodeURIComponent(user.email)}`,
-            { method: "DELETE" }
-        );
-
-        if (!res.ok) {
-            const body = await res.json().catch(() => ({}));
-            alert(body.message || `Delete failed (${res.status})`);
-            return;
-        }
-
-        setEvents((prev) => prev.filter((e) => e.id !== ev.id));
-
-        setRatings((prev) => {
-            const next = { ...prev };
-            delete next[ev.id];
-            return next;
-        });
-    };
 
 
     // FORM HANDLER

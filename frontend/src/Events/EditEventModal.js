@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import "../styles/modal.css";
 
 export default function EditEventModal({
                                            event,
@@ -6,7 +8,6 @@ export default function EditEventModal({
                                            onSave,
                                            onClose
                                        }) {
-    // Defensive guard
     if (!event) return null;
 
     const normalize = (v) => (v ? v.slice(0, 16) : "");
@@ -14,17 +15,36 @@ export default function EditEventModal({
     const [saving, setSaving] = useState(false);
 
     const [form, setForm] = useState({
-        title: event.title || "",
-        content: event.content || "",
-        location: event.location || "",
-        startAt: normalize(event.startAt),
-        endAt: normalize(event.endAt),
-        clubId: event.club?.id ? String(event.club.id) : "",
-        tags: (event.tags || [])
-            .map((t) => (typeof t === "string" ? t : t.name))
-            .join(", "),
-        visibility: event.visibility || "PUBLIC"
+        title: "",
+        content: "",
+        location: "",
+        startAt: "",
+        endAt: "",
+        clubId: "",
+        tags: "",
+        visibility: "PUBLIC"
     });
+
+    /**
+     * Initialise / sync form when event changes
+     * (also handles clubs loading late)
+     */
+    useEffect(() => {
+        if (!event) return;
+
+        setForm({
+            title: event.title || "",
+            content: event.content || "",
+            location: event.location || "",
+            startAt: normalize(event.startAt),
+            endAt: normalize(event.endAt),
+            clubId: event.clubId != null ? String(event.clubId) : "",
+            tags: (event.tags || [])
+                .map((t) => (typeof t === "string" ? t : t.name))
+                .join(", "),
+            visibility: event.visibility || "PUBLIC"
+        });
+    }, [event, clubs]);
 
     const submit = async (e) => {
         e.preventDefault();
@@ -52,19 +72,19 @@ export default function EditEventModal({
             visibility: form.visibility
         });
 
+        setSaving(false);
+
         if (ok !== false) {
             onClose();
         }
-
-        setSaving(false);
     };
 
     return (
-        <div style={styles.backdrop} onClick={onClose}>
-            <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <div className={"modal-backdrop"} onClick={onClose}>
+            <div className={"modal-card"} onClick={(e) => e.stopPropagation()}>
                 <h3>Edit Event</h3>
 
-                <form onSubmit={submit} style={{ display: "grid", gap: 10 }}>
+                <form onSubmit={submit} className={"modal-form"}>
                     {/* Club selector */}
                     <select
                         value={form.clubId}
@@ -73,18 +93,12 @@ export default function EditEventModal({
                             setForm((f) => ({ ...f, clubId: e.target.value }))
                         }
                     >
-                        {clubs.length === 0 ? (
-                            <option value="">Loading clubs…</option>
-                        ) : (
-                            <>
-                                <option value="">No Club (Independent)</option>
-                                {clubs.map((c) => (
-                                    <option key={c.id} value={String(c.id)}>
-                                        {c.name}
-                                    </option>
-                                ))}
-                            </>
-                        )}
+                        <option value="">No Club (Independent)</option>
+                        {clubs.map((c) => (
+                            <option key={c.id} value={String(c.id)}>
+                                {c.name}
+                            </option>
+                        ))}
                     </select>
 
                     {/* Title */}
@@ -95,7 +109,6 @@ export default function EditEventModal({
                         }
                         required
                         placeholder="Title"
-                        style={styles.input}
                     />
 
                     {/* Description */}
@@ -106,7 +119,6 @@ export default function EditEventModal({
                         }
                         rows={4}
                         placeholder="Description"
-                        style={styles.textarea}
                     />
 
                     {/* Location */}
@@ -116,7 +128,6 @@ export default function EditEventModal({
                             setForm((f) => ({ ...f, location: e.target.value }))
                         }
                         placeholder="Location"
-                        style={styles.input}
                     />
 
                     {/* Start time */}
@@ -127,7 +138,6 @@ export default function EditEventModal({
                             setForm((f) => ({ ...f, startAt: e.target.value }))
                         }
                         required
-                        style={styles.input}
                     />
 
                     {/* End time */}
@@ -137,7 +147,6 @@ export default function EditEventModal({
                         onChange={(e) =>
                             setForm((f) => ({ ...f, endAt: e.target.value }))
                         }
-                        style={styles.input}
                     />
 
                     {/* Tags */}
@@ -147,25 +156,35 @@ export default function EditEventModal({
                         onChange={(e) =>
                             setForm((f) => ({ ...f, tags: e.target.value }))
                         }
-                        style={styles.input}
                     />
 
+                    {/* Visibility */}
+                    <select
+                        value={form.visibility}
+                        onChange={(e) =>
+                            setForm((f) => ({ ...f, visibility: e.target.value }))
+                        }
+                    >
+                        <option value="PUBLIC">Visible to everyone</option>
+                        <option value="CLUB_MEMBERS">Club members only</option>
+                    </select>
+
                     {/* Actions */}
-                    <div style={styles.actions}>
+                    <div className={"modal-actions"}>
                         <button
                             type="button"
                             onClick={onClose}
-                            style={styles.cancelBtn}
+                            className={"cancelBtn"}
                             disabled={saving}
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            style={styles.saveBtn}
+                            className={"saveBtn"}
                             disabled={saving}
                         >
-                            Save
+                            {saving ? "Saving…" : "Save"}
                         </button>
                     </div>
                 </form>
