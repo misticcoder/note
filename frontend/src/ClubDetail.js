@@ -23,6 +23,16 @@ export default function ClubDetail() {
     const [content, setContent] = useState("");
     const [events, setEvents] = useState([]);
 
+    const [createForm, setCreateForm] = useState({
+        title: "",
+        content: "",
+        location: "",
+        startAt: "",
+        endAt: "",
+        tags: ""
+    });
+
+
     const {
         editingEvent,
         setEditingEvent,
@@ -58,8 +68,11 @@ export default function ClubDetail() {
     const isLeader =
         !!user && members.some((m) => m.userId === user.id && m.role === "LEADER");
 
+
+
     // High-level capability flags
-    const canManage = isAdmin || isLeader; // keep if you reference elsewhere
+    const canManageEvents = isAdmin || isLeader || isCoLeader;
+
     const canSeeActionMenu = !!user && (isAdmin || isLeader || isCoLeader);
 
     const canPostNews = isAdmin || isLeader || isCoLeader; // co-leaders can post
@@ -714,7 +727,7 @@ export default function ClubDetail() {
 
                 {activeTab === "events" && (
                     <div>
-                        {canCreateEvent && (
+                        {canManageEvents && (
                             <div style={{ display: "flex", justifyContent: "flex-end", padding:"10px"}}>
                                 <button
                                     style={{color:"#ffffe3"}}
@@ -747,25 +760,34 @@ export default function ClubDetail() {
                     </div>
                 )}
 
-                {showCreateEvent && (
-                    <div className="events-controls">
-                        <div>
+                {showCreateEvent && canManageEvents && (
+                    <div className="modal-backdrop" onClick={() => setShowCreateEvent(false)}>
+                        <div className="modal-card" onClick={(e) => e.stopPropagation()}>
                             <h3>Create Event for {club.name}</h3>
 
                             <form
+                                className="modal-form"
                                 onSubmit={async (e) => {
                                     e.preventDefault();
 
+                                    if (!createForm.title.trim() || !createForm.startAt) {
+                                        alert("Title and start date are required");
+                                        return;
+                                    }
+
                                     const payload = {
-                                        title: e.target.title.value.trim(),
-                                        content: e.target.content.value.trim(),
-                                        location: e.target.location.value.trim(),
-                                        startAt: e.target.startAt.value,
-                                        endAt: e.target.endAt.value || null,
-                                        clubId: clubId,
-                                        visibility: "CLUB_MEMBERS",
-                                        tags: e.target.tags.value
-                                            ? e.target.tags.value.split(",").map(t => t.trim()).filter(Boolean)
+                                        title: createForm.title.trim(),
+                                        content: createForm.content.trim(),
+                                        location: createForm.location.trim(),
+                                        startAt: createForm.startAt,
+                                        endAt: createForm.endAt || null,
+                                        clubId: clubId,                 // 🔒 locked
+                                        visibility: "CLUB_MEMBERS",     // 🔒 forced
+                                        tags: createForm.tags
+                                            ? createForm.tags
+                                                .split(",")
+                                                .map(t => t.trim())
+                                                .filter(Boolean)
                                             : []
                                     };
 
@@ -775,7 +797,7 @@ export default function ClubDetail() {
                                             {
                                                 method: "POST",
                                                 headers: { "Content-Type": "application/json" },
-                                                body: JSON.stringify(payload),
+                                                body: JSON.stringify(payload)
                                             }
                                         );
 
@@ -785,57 +807,88 @@ export default function ClubDetail() {
                                             return;
                                         }
 
-                                        // prepend newly created event
                                         setEvents(prev => [body.event, ...prev]);
                                         setShowCreateEvent(false);
+                                        setCreateForm({
+                                            title: "",
+                                            content: "",
+                                            location: "",
+                                            startAt: "",
+                                            endAt: "",
+                                            tags: ""
+                                        });
                                     } catch {
                                         alert("Create failed");
                                     }
                                 }}
-                                style={{ display: "grid", gap: 10 }}
                             >
+                                {/* Club (locked, visible) */}
                                 <input
-                                    name="title"
+                                    value={club.name}
+                                    disabled
+                                    title="Event will be created for this club"
+                                />
+
+                                <input
                                     placeholder="Event title"
+                                    value={createForm.title}
+                                    onChange={e =>
+                                        setCreateForm(f => ({ ...f, title: e.target.value }))
+                                    }
                                     required
                                 />
 
                                 <textarea
-                                    name="content"
                                     placeholder="Description"
                                     rows={4}
+                                    value={createForm.content}
+                                    onChange={e =>
+                                        setCreateForm(f => ({ ...f, content: e.target.value }))
+                                    }
                                 />
 
                                 <input
-                                    name="location"
                                     placeholder="Location"
+                                    value={createForm.location}
+                                    onChange={e =>
+                                        setCreateForm(f => ({ ...f, location: e.target.value }))
+                                    }
                                 />
 
                                 <input
                                     type="datetime-local"
-                                    name="startAt"
+                                    value={createForm.startAt}
+                                    onChange={e =>
+                                        setCreateForm(f => ({ ...f, startAt: e.target.value }))
+                                    }
                                     required
                                 />
 
                                 <input
                                     type="datetime-local"
-                                    name="endAt"
+                                    value={createForm.endAt}
+                                    onChange={e =>
+                                        setCreateForm(f => ({ ...f, endAt: e.target.value }))
+                                    }
                                 />
 
                                 <input
-                                    name="tags"
                                     placeholder="Tags (comma separated)"
+                                    value={createForm.tags}
+                                    onChange={e =>
+                                        setCreateForm(f => ({ ...f, tags: e.target.value }))
+                                    }
                                 />
 
-                                <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+                                <div className="modal-actions">
                                     <button
                                         type="button"
-                                        className="cancel-btn"
+                                        className="cancelBtn"
                                         onClick={() => setShowCreateEvent(false)}
                                     >
                                         Cancel
                                     </button>
-                                    <button type="submit" className="btn-primary">
+                                    <button type="submit" className="saveBtn">
                                         Create
                                     </button>
                                 </div>
@@ -843,8 +896,6 @@ export default function ClubDetail() {
                         </div>
                     </div>
                 )}
-
-
 
                 {activeTab === "members" && (
                     <div style={{margin: "15px"}}>

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 import "../styles/modal.css";
 
 export default function EditEventModal({
@@ -24,6 +23,11 @@ export default function EditEventModal({
         tags: "",
         visibility: "PUBLIC"
     });
+
+    /**
+     * 🔒 Lock club selector if event already belongs to a club
+     */
+    const lockClubSelector = event.clubId != null;
 
     /**
      * Initialise / sync form when event changes
@@ -80,17 +84,22 @@ export default function EditEventModal({
     };
 
     return (
-        <div className={"modal-backdrop"} onClick={onClose}>
-            <div className={"modal-card"} onClick={(e) => e.stopPropagation()}>
+        <div className="modal-backdrop" onClick={onClose}>
+            <div className="modal-card" onClick={(e) => e.stopPropagation()}>
                 <h3>Edit Event</h3>
 
-                <form onSubmit={submit} className={"modal-form"}>
-                    {/* Club selector */}
+                <form onSubmit={submit} className="modal-form">
+                    {/* 🔒 Club selector (locked for existing club events) */}
                     <select
                         value={form.clubId}
-                        disabled={clubs.length === 0}
+                        disabled={lockClubSelector || clubs.length === 0}
                         onChange={(e) =>
                             setForm((f) => ({ ...f, clubId: e.target.value }))
+                        }
+                        title={
+                            lockClubSelector
+                                ? "This event already belongs to a club and cannot be reassigned"
+                                : ""
                         }
                     >
                         <option value="">No Club (Independent)</option>
@@ -100,6 +109,12 @@ export default function EditEventModal({
                             </option>
                         ))}
                     </select>
+
+                    {lockClubSelector && (
+                        <small style={{ color: "#666" }}>
+                            This event belongs to a club and cannot be changed.
+                        </small>
+                    )}
 
                     {/* Title */}
                     <input
@@ -170,18 +185,18 @@ export default function EditEventModal({
                     </select>
 
                     {/* Actions */}
-                    <div className={"modal-actions"}>
+                    <div className="modal-actions">
                         <button
                             type="button"
                             onClick={onClose}
-                            className={"cancelBtn"}
+                            className="cancelBtn"
                             disabled={saving}
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            className={"saveBtn"}
+                            className="saveBtn"
                             disabled={saving}
                         >
                             {saving ? "Saving…" : "Save"}
@@ -192,57 +207,3 @@ export default function EditEventModal({
         </div>
     );
 }
-
-/* =====================
-   STYLES
-===================== */
-
-const styles = {
-    backdrop: {
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.35)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000
-    },
-    modal: {
-        background: "#fff",
-        padding: 20,
-        borderRadius: 8,
-        width: 520,
-        maxHeight: "90vh",
-        overflowY: "auto"
-    },
-    input: {
-        padding: "8px 10px",
-        border: "1px solid #ccc",
-        borderRadius: 6
-    },
-    textarea: {
-        padding: "8px 10px",
-        border: "1px solid #ccc",
-        borderRadius: 6
-    },
-    actions: {
-        display: "flex",
-        justifyContent: "flex-end",
-        gap: 8
-    },
-    cancelBtn: {
-        padding: "6px 10px",
-        background: "#ccc",
-        border: "none",
-        borderRadius: 6,
-        cursor: "pointer"
-    },
-    saveBtn: {
-        padding: "6px 12px",
-        background: "#0b57d0",
-        color: "#fff",
-        border: "none",
-        borderRadius: 6,
-        cursor: "pointer"
-    }
-};
