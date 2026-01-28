@@ -16,7 +16,7 @@ public class CorsConfig implements WebMvcConfigurer {
                        "https://note-np63.onrender.com/",
                         "http://localhost:3000")
 
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
     }

@@ -4,6 +4,7 @@ package com.vlrclone.backend.dto;
 import com.vlrclone.backend.Enums.EventVisibility;
 import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.model.Tag;
+import com.vlrclone.backend.model.User;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -31,6 +32,8 @@ public class EventUpdateDto {
     public Set<String> tags;
 
     public EventVisibility visibility;
+
+    public AuthorDto author;
 
 
     public EventUpdateDto() {
@@ -60,6 +63,23 @@ public class EventUpdateDto {
 
         this.visibility = e.getVisibility();
 
+        if (e.getAuthor() != null) {
+            this.author = new AuthorDto(e.getAuthor());
+        }
+
+    }
+
+    // 👇 INNER DTO (or separate file)
+    public static class AuthorDto {
+        public Long id;
+        public String name;
+        public String email;
+
+        public AuthorDto(User user) {
+            this.id = user.getId();
+            this.name = user.getUsername();   // or getUsername()
+            this.email = user.getEmail(); // optional
+        }
     }
 
 }

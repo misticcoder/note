@@ -81,8 +81,8 @@ public class EventController {
         }
 
         // Event creator can always see their own events
-        if (user != null && event.getCreatedBy() != null
-                && event.getCreatedBy().getId().equals(user.getId())) {
+        if (user != null && event.getAuthor() != null
+                && event.getAuthor().getId().equals(user.getId())) {
             return true;
         }
 
@@ -200,7 +200,7 @@ public class EventController {
         ev.setLocation(dto.location);
         ev.setStartAt(dto.startAt);
         ev.setEndAt(dto.endAt);
-        ev.setCreatedBy(me);
+        ev.setAuthor(me);
 
         /* =====================
            CLUB vs GLOBAL EVENT
@@ -492,8 +492,8 @@ public class EventController {
                     .body(Map.of("message", "Members only event"));
         }
 
-        boolean isOwner = ev.getCreatedBy() != null
-                && ev.getCreatedBy().getId().equals(me.getId());
+        boolean isOwner = ev.getAuthor() != null
+                && ev.getAuthor().getId().equals(me.getId());
 
         boolean isClubLeader = ev.getClub() != null
                 && ev.getClub().isLeaderOrCoLeader(me);

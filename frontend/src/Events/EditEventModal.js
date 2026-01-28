@@ -22,7 +22,8 @@ export default function EditEventModal({
         clubId: event.club?.id ? String(event.club.id) : "",
         tags: (event.tags || [])
             .map((t) => (typeof t === "string" ? t : t.name))
-            .join(", ")
+            .join(", "),
+        visibility: event.visibility || "PUBLIC"
     });
 
     const submit = async (e) => {
@@ -33,7 +34,7 @@ export default function EditEventModal({
 
         setSaving(true);
 
-        await onSave({
+        const ok = await onSave({
             title: form.title.trim(),
             content: form.content.trim(),
             location: form.location.trim(),
@@ -47,11 +48,15 @@ export default function EditEventModal({
                         .map((t) => t.trim())
                         .filter(Boolean)
                 )]
-                : []
+                : [],
+            visibility: form.visibility
         });
 
+        if (ok !== false) {
+            onClose();
+        }
+
         setSaving(false);
-        onClose();
     };
 
     return (

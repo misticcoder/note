@@ -59,6 +59,8 @@ export default function EventTable({
                                     ? new Date(ev.startAt).toLocaleString()
                                     : "TBA"}
                                 {ev.location && ` · ${ev.location}`}
+                                {ev.author?.name && ` · by ${ev.author.name}`}
+
                             </div>
 
                             <div>
@@ -110,20 +112,17 @@ export default function EventTable({
                         </div>
 
                         {isPrivileged && (
-                            <td>
-                                <span
-                                    className={`visibility-badge ${
-                                        ev.visibility === "PUBLIC"
-                                ? "public"
-                                : "restricted"
-                        }`}
-                    >
-                        {ev.visibility === "PUBLIC"
-                            ? "Public"
-                            : "Club Members"}
-                    </span>
-                            </td>
+                            <div>
+        <span
+            className={`visibility-badge ${
+                ev.visibility === "PUBLIC" ? "public" : "restricted"
+            }`}
+        >
+            {ev.visibility === "PUBLIC" ? "Public" : "Club Members"}
+        </span>
+                            </div>
                         )}
+
 
                         {isPrivileged && (
                             <div className="actions">

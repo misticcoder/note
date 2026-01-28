@@ -5,6 +5,8 @@ import ClubHeader from "./ClubHeader";
 import EventTable from "./Events/EventTable";
 import {apiFetch} from "./api";
 
+import EditEventModal from "./Events/EditEventModal";
+
 
 export default function ClubDetail() {
     const { user } = useContext(AuthContext);
@@ -17,6 +19,7 @@ export default function ClubDetail() {
     const [content, setContent] = useState("");
     const [events, setEvents] = useState([]);
 
+    const [editingEvent, setEditingEvent] = useState(null);
 
     const [myStatus, setMyStatus] = useState({
         isMember: false,
@@ -87,7 +90,7 @@ export default function ClubDetail() {
 
     const cancelJoinRequest = async () => {
         if (!user || !myStatus.requestId) return;
-        const res = await fapiFetchetch(
+        const res = await apiFetch(
             `/api/clubs/${clubId}/join-requests/${myStatus.requestId}?requesterEmail=${encodeURIComponent(
                 user.email
             )}`,
@@ -236,6 +239,53 @@ export default function ClubDetail() {
     ]);
 
 
+    const deleteEvent = async (ev) => {
+        if (!window.confirm("Delete this event?")) return;
+
+        const res = await apiFetch(
+            `/api/events/${ev.id}?requesterEmail=${encodeURIComponent(user.email)}`,
+            { method: "DELETE" }
+        );
+
+        if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            alert(body.message || "Delete failed");
+            return;
+        }
+
+        setEvents(prev => prev.filter(e => e.id !== ev.id));
+    };
+
+    const toIso = (v) => (v ? new Date(v).toISOString() : null);
+
+    const saveEvent = async (updates) => {
+        if (!editingEvent || !user) return false;
+
+        const payload = {
+            ...updates,
+            startAt: toIso(updates.startAt),
+            endAt: updates.endAt ? toIso(updates.endAt) : null,
+        };
+
+        const res = await apiFetch(
+            `/api/events/${editingEvent.id}?requesterEmail=${encodeURIComponent(user.email)}`,
+            {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            }
+        );
+
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            alert(body.message || "Update failed");
+            return false;
+        }
+
+        setEvents(prev => prev.map(e => (e.id === body.id ? body : e)));
+        setEditingEvent(null);
+        return true;
+    };
 
 
 
@@ -722,7 +772,20 @@ export default function ClubDetail() {
                             events={events}
                             showClub={false}
                             isPrivileged={isAdmin || isLeader}
+                            onEdit={setEditingEvent}
+                            onDelete={deleteEvent}
                         />
+
+                        {editingEvent && (
+                            <EditEventModal
+                                event={editingEvent}
+                                clubs={[club]}          // or full clubs list if you prefer
+                                onSave={saveEvent}
+                                onClose={() => setEditingEvent(null)}
+                            />
+                        )}
+
+
                     </div>
                 )}
 
@@ -979,7 +1042,9 @@ export default function ClubDetail() {
             </div>
         </div>
     );
+
 }
+
 
 /* ---- styles ---- */
 const s = {

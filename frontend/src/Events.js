@@ -285,17 +285,24 @@ export default function Events() {
     /* =====================
        ADMIN: EDIT
     ===================== */
+
+    const toIso = (v) => (v ? new Date(v).toISOString() : null);
+
     const saveEvent = async (updates) => {
         if (!editingEvent || !user) return;
 
+        const payload = {
+            ...updates,
+            startAt: toIso(updates.startAt),
+            endAt: updates.endAt ? toIso(updates.endAt) : null,
+        };
+
         const res = await apiFetch(
-            `/api/events/${editingEvent.id}?requesterEmail=${encodeURIComponent(
-                user.email
-            )}`,
+            `/api/events/${editingEvent.id}?requesterEmail=${encodeURIComponent(user.email)}`,
             {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(updates),
+                body: JSON.stringify(payload),
             }
         );
 
@@ -308,6 +315,7 @@ export default function Events() {
         setEvents((prev) => prev.map((e) => (e.id === body.id ? body : e)));
         setEditingEvent(null);
     };
+
 
     /* =====================
        ADMIN: DELETE

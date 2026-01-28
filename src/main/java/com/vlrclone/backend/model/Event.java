@@ -82,9 +82,10 @@ public class Event {
     @Column(length = 64)
     private String attendanceCodeHash;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "created_by_user_id")
-    private User createdBy;
+    private User author;
+
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -94,8 +95,8 @@ public class Event {
     public String getAttendanceCodeHash() { return attendanceCodeHash; }
     public void setAttendanceCodeHash(String attendanceCodeHash) { this.attendanceCodeHash = attendanceCodeHash; }
 
-    public User getCreatedBy() { return createdBy; }
-    public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
+    public User getAuthor() { return author; }
+    public void setAuthor(User createdBy) { this.author = createdBy; }
 
 
     @Transient
