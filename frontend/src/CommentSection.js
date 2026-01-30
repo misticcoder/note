@@ -1,9 +1,10 @@
 // src/CommentSection.js
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CommentItem from "./Comments/CommentItem";
+import { apiFetch } from "./api";
+
 import "./styles/Threads.css";
-import "./styles/comments.css"
-import {apiFetch} from "./api";
+import "./styles/comments.css";
 
 /* ===============================
    Build tree from flat list
@@ -28,10 +29,6 @@ function buildCommentTree(comments) {
     return roots;
 }
 
-
-/* ===============================
-   Comment Section
-================================ */
 export default function CommentSection({
                                            comments,
                                            user,
@@ -41,44 +38,70 @@ export default function CommentSection({
                                            onDelete,
                                            refreshComments
                                        }) {
-
     const [error, setError] = useState(null);
+    const [replyTo, setReplyTo] = useState(null);
+    const [highlightedId, setHighlightedId] = useState(null);
+
     const role = String(user?.role || "").toUpperCase();
     const isAdmin = role === "ADMIN";
 
-    const [replyTo, setReplyTo] = useState(null);
+    /* ===============================
+       Deep-link scroll via HASH
+    ================================ */
+    useEffect(() => {
+        const hash = window.location.hash;
+
+        // Expect: #/posts/12#comment-45 OR #comment-45
+        const match = hash.match(/comment-(\d+)/);
+        if (!match) return;
+
+        const id = Number(match[1]);
+        const el = document.getElementById(`comment-${id}`);
+        if (!el) return;
+
+        el.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
+
+        setHighlightedId(id);
+
+        const timeout = setTimeout(() => {
+            setHighlightedId(null);
+        }, 3000);
+
+        return () => clearTimeout(timeout);
+    }, [comments]);
 
     const tree = buildCommentTree(Array.isArray(comments) ? comments : []);
 
+    /* ===============================
+       Reactions
+    ================================ */
     async function toggleReaction(comment, type) {
         if (!user) return;
 
-        await apiFetch(
-            `/api/comments/${comment.id}/reactions?requesterEmail=${encodeURIComponent(
-                user.email
-            )}`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ type }),
-            }
-        );
+        await apiFetch(`/api/comments/${comment.id}/reactions`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type })
+        });
 
         refreshComments();
     }
 
-
-    /* -------- Submit handler -------- */
+    /* ===============================
+       Submit handler
+    ================================ */
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!user) return;
 
         const text = newComment.trim();
-
         if (!text) return;
 
-        if (text.length > 400){
-            setError("comment is too long (max 400 characters)")
+        if (text.length > 400) {
+            setError("Comment is too long (max 400 characters)");
             return;
         }
 
@@ -87,9 +110,8 @@ export default function CommentSection({
     };
 
     return (
-
         <div className="comments-card">
-            <h3 style={{color:"#000"}}>Comments</h3>
+            <h3 style={{ color: "#000" }}>Comments</h3>
 
             {tree.length === 0 && <p>No comments yet.</p>}
 
@@ -103,6 +125,7 @@ export default function CommentSection({
                         onDelete={onDelete}
                         toggleReaction={toggleReaction}
                         onReply={setReplyTo}
+                        highlightedId={highlightedId}
                     />
                 ))}
             </ul>
@@ -117,7 +140,7 @@ export default function CommentSection({
             <form onSubmit={handleSubmit} className="comment-form">
                 <textarea
                     value={newComment}
-                    className={"textarea"}
+                    className="textarea"
                     onChange={e => setNewComment(e.target.value)}
                     disabled={!user}
                     placeholder={
@@ -128,7 +151,10 @@ export default function CommentSection({
                             : "Log in to comment"
                     }
                 />
-                <button className={"post-btn"} disabled={!user || !newComment.trim()}>
+                <button
+                    className="post-btn"
+                    disabled={!user || !newComment.trim()}
+                >
                     {replyTo ? "Post Reply" : "Post Comment"}
                 </button>
             </form>
@@ -139,7 +165,6 @@ export default function CommentSection({
                     <button onClick={() => setError(null)}>×</button>
                 </div>
             )}
-
         </div>
     );
 }

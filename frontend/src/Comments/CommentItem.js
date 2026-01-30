@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { timeAgo } from "../components/timeAgo";
 import "../styles/comments.css";
 
@@ -8,7 +8,8 @@ export default function CommentItem({
                                         isAdmin,
                                         onDelete,
                                         toggleReaction,
-                                        onReply
+                                        onReply,
+                                        highlightedId // 🔑 NEW
                                     }) {
     const [showReplies, setShowReplies] = useState(false);
 
@@ -18,11 +19,21 @@ export default function CommentItem({
     const replies = comment.replies || [];
     const replyCount = replies.length;
 
-    const myReaction = comment.myReaction; // ✅ from backend
+    const myReaction = comment.myReaction;
     const counts = comment.reactionCounts || {};
 
+    const isHighlighted = comment.id === highlightedId;
+    useEffect(() => {
+        if (highlightedId && replies.some(r => r.id === highlightedId)) {
+            setShowReplies(true);
+        }
+    }, [highlightedId, replies]);
+
     return (
-        <li className="yt-comment">
+        <li
+            id={`comment-${comment.id}`} // 🔑 REQUIRED for scrolling
+            className={`yt-comment ${isHighlighted ? "highlight" : ""}`}
+        >
             <div className="yt-avatar">
                 {comment.username[0].toUpperCase()}
             </div>
@@ -87,6 +98,7 @@ export default function CommentItem({
                                 onDelete={onDelete}
                                 toggleReaction={toggleReaction}
                                 onReply={onReply}
+                                highlightedId={highlightedId} // 🔁 PASS DOWN
                             />
                         ))}
                     </ul>

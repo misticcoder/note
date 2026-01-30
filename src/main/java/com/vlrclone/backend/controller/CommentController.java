@@ -10,6 +10,8 @@ import com.vlrclone.backend.repository.CommentRepository;
 import com.vlrclone.backend.repository.ThreadRepository;
 import com.vlrclone.backend.repository.UserRepository;
 import com.vlrclone.backend.service.CommentService;
+import com.vlrclone.backend.service.CurrentUserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,17 +26,20 @@ public class CommentController {
     private final ThreadRepository threads;
     private final UserRepository users;
     private final CommentService commentService;
+    private final CurrentUserService currentUserService;
 
     public CommentController(
             CommentRepository comments,
             ThreadRepository threads,
             UserRepository users,
-            CommentService commentService
+            CommentService commentService,
+            CurrentUserService currentUserService
     ) {
         this.comments = comments;
         this.threads = threads;
         this.users = users;
         this.commentService = commentService;
+        this.currentUserService = currentUserService;
     }
 
     /* ============================================================
@@ -83,45 +88,49 @@ public class CommentController {
                     .body(Map.of("message", "Parent comment not found"));
         }
 
-        Comment c = new Comment();
-        c.setThreadId(threadId);
-        c.setUsername(username);
-        c.setComment(text);
-        c.setParentId(parentId);
+        return ResponseEntity.ok(
+                commentService.createComment(
+                        username,
+                        text,
+                        parentId,
+                        threadId,
+                        null,
+                        null
+                )
+        );
 
-        return ResponseEntity.ok(comments.save(c));
     }
 
     @DeleteMapping("/threads/{threadId}/comments/{commentId}")
     public ResponseEntity<?> deleteThreadComment(
             @PathVariable Long threadId,
             @PathVariable Long commentId,
-            @RequestParam String requesterEmail
+            HttpServletRequest request
     ) {
         if (!threads.existsById(threadId)) {
             return ResponseEntity.status(404)
                     .body(Map.of("message", "Thread not found"));
         }
-
-        return deleteCommentInternal(commentId, requesterEmail, threadId, null);
+        User requester = currentUserService.requireUser(request);
+        return deleteCommentInternal(commentId, requester, threadId, null);
     }
 
     /* ============================================================
        POST COMMENTS
     ============================================================ */
-
     @GetMapping("/posts/{postId}/comments")
     public ResponseEntity<List<CommentResponseDto>> getPostComments(
             @PathVariable Long postId,
-            @RequestParam(required = false) String username
+            HttpServletRequest request
     ) {
-        List<Comment> list =
-                comments.findByPostIdOrderByCreatedAtAsc(postId);
+        User user = currentUserService.requireUser(request);
 
         return ResponseEntity.ok(
-                commentService.getPostComments(postId, username)
+                commentService.getPostComments(postId, user.getUsername())
         );
     }
+
+
 
 
     @PostMapping("/posts/{postId}/comments")
@@ -143,23 +152,21 @@ public class CommentController {
                     .body(Map.of("message", "Parent comment not found"));
         }
 
-        Comment c = new Comment();
-        c.setPostId(postId);
-        c.setUsername(username);
-        c.setComment(text);
-        c.setParentId(parentId);
+        return ResponseEntity.ok(
+                commentService.createComment(username, text, parentId, null, postId, null));
 
-        return ResponseEntity.ok(comments.save(c));
     }
 
     @DeleteMapping("/posts/{postId}/comments/{commentId}")
     public ResponseEntity<?> deletePostComment(
             @PathVariable Long postId,
             @PathVariable Long commentId,
-            @RequestParam String requesterEmail
+            HttpServletRequest request
     ) {
-        return deleteCommentInternal(commentId, requesterEmail, null, postId);
+        User requester = currentUserService.requireUser(request);
+        return deleteCommentInternal(commentId, requester, null, postId);
     }
+
 
     /* ============================================================
        SHARED DELETE LOGIC
@@ -167,11 +174,11 @@ public class CommentController {
 
     private ResponseEntity<?> deleteCommentInternal(
             Long commentId,
-            String requesterEmail,
+            User requester,
             Long expectedThreadId,
             Long expectedPostId
     ) {
-        User requester = users.findByEmail(requesterEmail).orElse(null);
+
         if (requester == null) {
             return ResponseEntity.status(403)
                     .body(Map.of("message", "Requester not found"));
@@ -259,13 +266,10 @@ public class CommentController {
                     .body(Map.of("message", "Parent comment not found"));
         }
 
-        Comment c = new Comment();
-        c.setEventId(eventId);
-        c.setUsername(username);
-        c.setComment(text);
-        c.setParentId(parentId);
+        return ResponseEntity.ok(
+                commentService.createComment(username, text, parentId, null, null, eventId));
 
-        return ResponseEntity.ok(comments.save(c));
+
     }
 
 
@@ -273,9 +277,10 @@ public class CommentController {
     public ResponseEntity<?> deleteEventComment(
             @PathVariable Long eventId,
             @PathVariable Long commentId,
-            @RequestParam String requesterEmail
+            HttpServletRequest request
     ) {
-        return deleteCommentInternal(commentId, requesterEmail, null, null);
+        User user = currentUserService.requireUser(request);
+        return deleteCommentInternal(commentId, user, null, null);
     }
 
 }

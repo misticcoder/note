@@ -1,5 +1,6 @@
 package com.vlrclone.backend.service;
 
+import com.vlrclone.backend.Enums.NotificationType;
 import com.vlrclone.backend.Enums.ReactionType;
 import com.vlrclone.backend.dto.CommentResponseDto;
 import com.vlrclone.backend.model.Comment;
@@ -21,15 +22,18 @@ public class CommentService {
     private final CommentRepository comments;
     private final CommentReactionRepository reactions;
     private final UserRepository users;
+    private final NotificationService notificationService;
 
     public CommentService(
             CommentRepository comments,
             CommentReactionRepository reactions,
-            UserRepository users
+            UserRepository users,
+            NotificationService notificationService
     ) {
         this.comments = comments;
         this.reactions = reactions;
         this.users = users;
+        this.notificationService = notificationService;
     }
 
     /* ============================================================
@@ -186,5 +190,51 @@ public class CommentService {
                     reactions.save(r);
                 });
     }
+
+    @Transactional
+    public Comment createComment(
+            String username,
+            String text,
+            Long parentId,
+            Long threadId,
+            Long postId,
+            Long eventId
+    ) {
+        Comment comment = new Comment();
+        comment.setUsername(username);
+        comment.setComment(text);
+        comment.setParentId(parentId);
+        comment.setThreadId(threadId);
+        comment.setPostId(postId);
+        comment.setEventId(eventId);
+
+        Comment saved = comments.save(comment);
+
+        if (parentId != null) {
+            comments.findById(parentId).ifPresent(parent -> {
+
+                if (!parent.getUsername().equals(username)) {
+
+                    users.findByUsername(parent.getUsername()).ifPresent(parentUser -> {
+
+                        String message = "@" + username + " replied to your comment";
+
+                        notificationService.notifyUser(
+                                parentUser,
+                                NotificationType.COMMENT_REPLY,
+                                message,
+                                eventId,          // event context
+                                null,             // no club
+                                saved.getId()     // 🔗 LINK TO REPLY COMMENT
+                        );
+                    });
+                }
+            });
+        }
+
+
+        return saved;
+    }
+
 
 }

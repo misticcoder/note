@@ -31,12 +31,20 @@ public class CommentResponseDto {
         dto.parentId = c.getParentId();
 
         Map<String, Long> counts = new HashMap<>();
+
         for (CommentReaction r : c.getReactions()) {
             String key = r.getReactionType().name();
             counts.put(key, counts.getOrDefault(key, 0L) + 1);
-        }
-        dto.reactionCounts = counts;
 
+            if (currentUsername != null &&
+                    currentUsername.equals(r.getUser().getUsername())) {
+                dto.myReaction = r.getReactionType();
+            }
+
+        }
+
+        dto.reactionCounts = counts;
         return dto;
     }
+
 }

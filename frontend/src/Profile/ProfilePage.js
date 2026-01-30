@@ -8,6 +8,7 @@ import "../styles/badges.css";
 import "../styles/buttons.css"
 import DashboardSection from "../components/DashboardSection";
 import {apiFetch} from "../api";
+import ActivityTab from "../Notifications/ActivityTab";
 
 
 
@@ -24,7 +25,11 @@ export default function ProfilePage() {
 
 
 
-    const [activeTab, setActiveTab] = useState("overview")
+    const [activeTab, setActiveTab] = useState(() => {
+        const params = new URLSearchParams(window.location.hash.split("?")[1]);
+        return params.get("tab") || "overview";
+    });
+
 
     const [eventsView, setEventsView] = useState("attended");
 
@@ -119,6 +124,12 @@ export default function ProfilePage() {
                             onClick={() => setActiveTab("clubs")}
                         />
                         <TabButton
+                            label="Activity"
+                            active={activeTab === "activity"}
+                            onClick={() => setActiveTab("activity")}
+                        />
+
+                        <TabButton
                             label="Badges"
                             active={activeTab === "badges"}
                             onClick={() => setActiveTab("badges")}
@@ -202,6 +213,10 @@ export default function ProfilePage() {
                                 onCreateClub={() => alert("Create club modal later")}
                                 onManageClubs={() => setActiveTab("clubs")}
                             />
+                        )}
+
+                        {activeTab === "activity" && (
+                            <ActivityTab />
                         )}
 
 

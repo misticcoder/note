@@ -73,8 +73,14 @@ export default function PostDetailPage() {
             : "";
 
         const res = await apiFetch(
-            `/api/posts/${postId}/comments${usernameParam}`
+            `/api/posts/${postId}/comments${usernameParam}`,
+            {
+                headers: {
+                    "X-User-Email": user.email
+                }
+            }
         );
+
 
         if (!res.ok) {
             setComments([]);

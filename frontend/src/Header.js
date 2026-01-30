@@ -1,7 +1,8 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { AuthContext } from "./AuthContext";
 import SideNav from "./components/SideNav";
 import GlobalSearch from "./GlobalSearch";
+import { apiFetch } from "./api";
 import "./styles/header.css";
 
 const Header = () => {
@@ -10,21 +11,52 @@ const Header = () => {
 
     const isAdmin = !!user && String(user.role).toUpperCase() === "ADMIN";
 
-    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-
     const [showModal, setShowModal] = useState(false);
     const [form, setForm] = useState({ email: "", password: "", username: "" });
     const [isSignup, setIsSignup] = useState(false);
     const [error, setError] = useState("");
 
+    /* ─────────────────────────────
+       🔔 Activity unread count
+    ───────────────────────────── */
+
+    const [unread, setUnread] = useState(0);
+
+    useEffect(() => {
+        let alive = true;
+
+        if (!user?.email) {
+            setUnread(0);
+            return;
+        }
+
+        apiFetch("/api/me/activity/unread-count", {
+            headers: { "X-User-Email": user.email }
+        })
+            .then(r => r.ok ? r.json() : 0)
+            .then(count => {
+                if (alive) setUnread(Number(count) || 0);
+            })
+            .catch(() => {
+                if (alive) setUnread(0);
+            });
+
+        return () => {
+            alive = false;
+        };
+    }, [user]);
+
+    /* ───────────────────────────── */
+
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setForm((prev) => ({ ...prev, [name]: value }));
+        setForm(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+
         if (isSignup) {
             const result = await signup(form.email, form.password, form.username);
             if (!result.success) setError(result.message);
@@ -40,12 +72,6 @@ const Header = () => {
         }
     };
 
-    const showLogin = windowWidth > 800;
-    const showNews = windowWidth > 700;
-    const showEvents = windowWidth > 600;
-    const showClubs = windowWidth > 500;
-    const showThreads = windowWidth > 400;
-
     const openModal = () => {
         setError("");
         setForm({ email: "", password: "", username: "" });
@@ -57,8 +83,8 @@ const Header = () => {
         <header className="header">
             <div className="header-inner">
 
-                {/* Mobile menu */}
-                <div style={{display: "flex", gap: "10px"}}>
+                {/* Mobile menu + logo */}
+                <div style={{ display: "flex", gap: "10px" }}>
                     <button
                         className="menu-btn"
                         onClick={() => setNavOpen(true)}
@@ -67,66 +93,72 @@ const Header = () => {
                         ☰
                     </button>
 
-                    <SideNav open={navOpen} onClose={() => setNavOpen(false)}/>
+                    <SideNav open={navOpen} onClose={() => setNavOpen(false)} />
 
-                    {/* Logo */}
-                    <a href="#/home" className="logo">
-                        InfCom
-                    </a>
+                    <a href="#/home" className="logo">InfCom</a>
                 </div>
 
                 {/* Search */}
                 <div className="header-search">
-                    <GlobalSearch/>
+                    <GlobalSearch />
                 </div>
 
+                {/* Main nav */}
                 <nav className="nav">
                     <a href="#/threads">Threads</a>
                     <a href="#/clubs">Clubs</a>
                     <a href="#/events">Events</a>
                     <a href="#/news">News</a>
-
                     {isAdmin && <a href="#/admin/users">Users</a>}
-
-                    {user && (
-                        <a
-                            href="#/profile"
-                            className="badge"
-                            title="My Profile"
-                        >
-                            {user.username}
-                        </a>
-                    )}
                 </nav>
 
-
+                {/* User actions */}
                 {user ? (
-                    <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
 
+                        {/* 🔔 Activity */}
+                        <a
+                            href="#/profile?tab=activity"
+                            className="activity-btn"
+                            title="Activity"
+                        >
+                            🔔
+                            {unread > 0 && (
+                                <span className="activity-badge">
+                                    {unread}
+                                </span>
+                            )}
+                        </a>
 
+                        {/* Profile */}
+                        <a href="#/profile" className="badge">
+                            {user.username}
+                        </a>
+
+                        {/* Logout */}
                         <button className="Btn" onClick={logout}>
-
                             <div className="sign">
                                 <svg viewBox="0 0 512 512">
-                                    <path
-                                        d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"></path>
+                                    <path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9z" />
                                 </svg>
                             </div>
-
                             <div className="text">Logout</div>
                         </button>
                     </div>
                 ) : (
-                    showLogin && <button className={"login-button"} onClick={openModal}>Login</button>
+                    <button className="login-button" onClick={openModal}>
+                        Login
+                    </button>
                 )}
             </div>
 
-            {/* Modal */}
+            {/* Login modal */}
             {showModal && (
                 <div style={styles.modalOverlay}>
                     <div style={styles.modalContent}>
                         <h3>{isSignup ? "Sign Up" : "Login"}</h3>
-                        {error && <p style={{color: "red"}}>{error}</p>}
+                        {error && <p style={{ color: "red" }}>{error}</p>}
+
                         <form onSubmit={handleSubmit}>
                             {isSignup && (
                                 <input
@@ -156,7 +188,8 @@ const Header = () => {
                                 required
                                 style={styles.input}
                             />
-                            <div style={{display: "flex", justifyContent: "flex-end"}}>
+
+                            <div style={{ display: "flex", justifyContent: "flex-end" }}>
                                 <button type="submit" style={styles.submitBtn}>
                                     {isSignup ? "Sign Up" : "Login"}
                                 </button>
@@ -177,83 +210,45 @@ const Header = () => {
 };
 
 const styles = {
-    header: {
-        position: "fixed",
-        height: "200px",
-        width: "100%",
-        backgroundColor: "#041E42",
-        color: "white",
-        zIndex: 1000,
-    },
-    container: {
-        maxWidth: "1200px",
-        margin: " auto",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "10px 30px",
-    },
-    logo: {
-        fontWeight: "bold",
-        fontSize: "50px",
-        color: "#FFFFE3",
-        textDecoration: "none",
-        cursor: "pointer",
-    },
-    search: {
-        backgroundColor: "#6f7680",
-        flexGrow: 1,
-        margin: "0 20px",
-        padding: "5px 10px",
-        fontSize: "1rem",
-        borderRadius: "4px",
-        border: "none",
-        color: "white",
-    },
-    nav: { display: "flex", gap: "15px", whiteSpace: "nowrap" },
-    navLink: {
-        color: "white",
-        textDecoration: "none",
-        fontWeight: "300",
-        padding: "5px 10px",
-        borderRight: "1px solid gray",
-    },
-    loginBtn: {
-        marginLeft: "20px",
-        padding: "8px 15px",
-        fontSize: "1rem",
-        borderRadius: "4px",
-        backgroundColor: "#D50032",
-        color: "white",
-        border: "none",
-        cursor: "pointer",
-    },
-    logoutBtn: {
-        marginLeft: "10px",
-        padding: "8px 15px",
-        fontSize: "1rem",
-        borderRadius: "4px",
-        backgroundColor: "#D50032",
-        color: "white",
-        border: "none",
-        cursor: "pointer",
-    },
     modalOverlay: {
         position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        inset: 0,
         backgroundColor: "rgba(0,0,0,0.5)",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
     },
-    modalContent: { backgroundColor: "#fff", padding: "20px", borderRadius: "6px", width: "400px", maxWidth: "90%" },
-    input: { width: "100%", padding: "8px", marginBottom: "10px", borderRadius: "4px", border: "1px solid #ccc" },
-    submitBtn: { padding: "8px 12px", marginRight: "10px", backgroundColor: "#D50032", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" },
-    cancelBtn: { padding: "8px 12px", backgroundColor: "#ccc", color: "#000", border: "none", borderRadius: "4px", cursor: "pointer" },
+    modalContent: {
+        backgroundColor: "#fff",
+        padding: "20px",
+        borderRadius: "6px",
+        width: "400px",
+        maxWidth: "90%",
+    },
+    input: {
+        width: "100%",
+        padding: "8px",
+        marginBottom: "10px",
+        borderRadius: "4px",
+        border: "1px solid #ccc",
+    },
+    submitBtn: {
+        padding: "8px 12px",
+        marginRight: "10px",
+        backgroundColor: "#D50032",
+        color: "#fff",
+        border: "none",
+        borderRadius: "4px",
+        cursor: "pointer",
+    },
+    cancelBtn: {
+        padding: "8px 12px",
+        backgroundColor: "#ccc",
+        color: "#000",
+        border: "none",
+        borderRadius: "4px",
+        cursor: "pointer",
+    },
 };
-
 
 export default Header;

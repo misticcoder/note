@@ -1,0 +1,48 @@
+.activity-tab {
+    max-width: 100%;
+}
+
+.activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.activity-item {
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    background: #f6f6f6;
+    cursor: pointer;
+}
+
+.activity-item.unread {
+    background: #e9f1ff;
+    font-weight: 500;
+}
+
+.activity-item:hover {
+    background: #e3e3e3;
+}
+
+.activity-time {
+    font-size: 0.8rem;
+    color: #777;
+    margin-top: 4px;
+}
+
+.link {
+    background: none;
+    border: none;
+    color: #2b6fff;
+    cursor: pointer;
+}
+
+.muted {
+    color: #888;
+}
+
+.error {
+    color: #c00;
+}

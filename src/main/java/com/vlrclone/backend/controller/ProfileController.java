@@ -2,11 +2,13 @@ package com.vlrclone.backend.controller;
 
 import com.vlrclone.backend.dto.*;
 import com.vlrclone.backend.model.Event;
+import com.vlrclone.backend.model.Notification;
 import com.vlrclone.backend.model.User;
 import com.vlrclone.backend.repository.EventRepository;
 import com.vlrclone.backend.repository.UserRepository;
 import com.vlrclone.backend.service.CurrentUserService;
 import com.vlrclone.backend.service.EventService;
+import com.vlrclone.backend.service.NotificationService;
 import com.vlrclone.backend.service.UserProfileService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -33,17 +35,22 @@ public class ProfileController {
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
     private final EventService eventService;
+    private final NotificationService notificationService;
 
     public ProfileController(
             UserProfileService profileService,
             CurrentUserService currentUser,
             UserRepository userRepository,
-            EventRepository eventRepository, EventService eventService) {
+            EventRepository eventRepository,
+            EventService eventService,
+            NotificationService notificationService
+    ) {
         this.profileService = profileService;
         this.currentUser = currentUser;
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
         this.eventService = eventService;
+        this.notificationService = notificationService;
     }
 
     private User byEmail(String email) {
@@ -168,6 +175,30 @@ public class ProfileController {
     public List<EventUpdateDto> recommendations(HttpServletRequest request) {
         User user = currentUser.requireUser(request);
         return eventService.getRecommendedEventsForUser(user);
+    }
+
+   /* ─────────────────────────────
+   ACTIVITY / NOTIFICATIONS
+───────────────────────────── */
+
+    @GetMapping("/activity")
+    public List<NotificationDto> myNotifications(HttpServletRequest request) {
+        User user = currentUser.requireUser(request);
+        return notificationService.getUserNotifications(user);
+    }
+
+
+    @GetMapping("/activity/unread-count")
+    public long unreadActivityCount(HttpServletRequest request) {
+        User user = currentUser.requireUser(request);
+        return notificationService.getUnreadCount(user);
+    }
+
+    @PostMapping("/activity/read-all")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void markAllActivityRead(HttpServletRequest request) {
+        User user = currentUser.requireUser(request);
+        notificationService.markAllAsRead(user);
     }
 
 

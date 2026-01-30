@@ -1,32 +1,52 @@
 package com.vlrclone.backend.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import com.vlrclone.backend.Enums.NotificationType;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "notification")
 public class Notification {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
-    private String type; // EVENT_CREATED, EVENT_UPDATED
-
+    @Column(nullable = false)
     private String message;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private NotificationType type;
+
+    @Column(name = "is_read", nullable = false)
+    private boolean isRead = false;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "related_event_id")
     private Long relatedEventId;
+
+    @Column(name = "related_club_id")
     private Long relatedClubId;
 
-    private boolean read = false;
+    @Column(nullable = true)
+    private Long relatedCommentId;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+
+    public boolean isRead() {
+        return isRead;
+    }
+
+    public void setRead(boolean read) {
+        isRead = read;
+    }
 
     public Long getId() {
         return id;
@@ -44,20 +64,28 @@ public class Notification {
         this.user = user;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
     public String getMessage() {
         return message;
     }
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public NotificationType getType() {
+        return type;
+    }
+
+    public void setType(NotificationType type) {
+        this.type = type;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public Long getRelatedEventId() {
@@ -76,20 +104,13 @@ public class Notification {
         this.relatedClubId = relatedClubId;
     }
 
-    public boolean isRead() {
-        return read;
+    public Long getRelatedCommentId() {
+        return relatedCommentId;
     }
 
-    public void setRead(boolean read) {
-        this.read = read;
+    public void setRelatedCommentId(Long relatedCommentId) {
+        this.relatedCommentId = relatedCommentId;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
 }
-

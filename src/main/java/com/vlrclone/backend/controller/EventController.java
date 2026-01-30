@@ -27,19 +27,22 @@ public class EventController {
     private final EventRatingRepository ratings;
     private final EventService service;
     private final ClubRepository clubs;
+    private final EventService eventService;
 
     public EventController(
             EventRepository events,
             UserRepository users,
             EventRatingRepository ratings,
             EventService service,
-            ClubRepository clubs
+            ClubRepository clubs,
+            EventService eventService
     ) {
         this.events = events;
         this.users = users;
         this.ratings = ratings;
         this.service = service;
         this.clubs = clubs;
+        this.eventService = eventService;
     }
 
     /* =====================
@@ -240,6 +243,8 @@ public class EventController {
             );
         }
 
+
+
         /* =====================
            TAGS & ATTENDANCE CODE
         ===================== */
@@ -252,6 +257,8 @@ public class EventController {
         ev.setAttendanceCodeHash(service.sha256Hex(code));
 
         Event saved = events.save(ev);
+
+        eventService.notifyClubMembers(ev);
 
         EventUpdateDto out = new EventUpdateDto(
                 events.findWithClubAndTagsById(saved.getId()).orElse(saved)

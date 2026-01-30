@@ -1,14 +1,13 @@
 // src/main/java/com/vlrclone/backend/service/EventService.java
 package com.vlrclone.backend.service;
 
+import com.vlrclone.backend.Enums.NotificationType;
 import com.vlrclone.backend.dto.EventUpdateDto;
-import com.vlrclone.backend.model.Event;
-import com.vlrclone.backend.model.EventRating;
-import com.vlrclone.backend.model.Tag;
-import com.vlrclone.backend.model.User;
+import com.vlrclone.backend.model.*;
 import com.vlrclone.backend.repository.EventRatingRepository;
 import com.vlrclone.backend.repository.EventRepository;
 import com.vlrclone.backend.repository.TagRepository;
+import com.vlrclone.backend.repository.UserRepository;
 import com.vlrclone.backend.repository.spec.EventSpecifications;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Propagation;
@@ -30,15 +29,22 @@ public class EventService {
     private final EventRepository eventRepo;
     private final TagRepository tagRepo;
     private final EventRatingRepository ratingRepo;
+    private final NotificationService notificationService;
+    private final UserRepository userRepo;
 
     public EventService(
             EventRepository eventRepo,
             TagRepository tagRepo,
-            EventRatingRepository ratingRepo
+            EventRatingRepository ratingRepo,
+            NotificationService notificationService,
+            UserRepository userRepo
     ) {
         this.eventRepo = eventRepo;
         this.tagRepo = tagRepo;
         this.ratingRepo = ratingRepo;
+        this.notificationService = notificationService;
+        this.userRepo = userRepo;
+
     }
 
     /* =========================
@@ -284,6 +290,30 @@ public class EventService {
                 })
                 .map(entry -> new EventUpdateDto(entry.getKey()))
                 .toList();
+    }
+
+    public void notifyClubMembers(Event event) {
+        if (event.getClub() == null) return;
+        if (event.getClub().getMembers() == null) return;
+
+        for (ClubMember cm : event.getClub().getMembers()) {
+
+            User member = userRepo.findById(cm.getUserId())
+                    .orElse(null);
+
+            if (member == null) continue;
+
+            notificationService.notifyUser(
+                    member,
+                    NotificationType.EVENT_CREATED,
+                    "New event \"" + event.getTitle() + "\" posted by " + event.getAuthor(),
+                    event.getId(),
+                    event.getClub().getId(),
+                    null // no comment involved
+            );
+
+
+        }
     }
 
 

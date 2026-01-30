@@ -1,9 +1,13 @@
 package com.vlrclone.backend.service;
 
+import com.vlrclone.backend.Enums.NotificationType;
+import com.vlrclone.backend.dto.NotificationDto;
 import com.vlrclone.backend.model.Notification;
 import com.vlrclone.backend.model.User;
 import com.vlrclone.backend.repository.NotificationRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+
 
 import java.util.List;
 
@@ -22,10 +26,11 @@ public class NotificationService {
 
     public void notifyUser(
             User user,
-            String type,
+            NotificationType type,
             String message,
             Long eventId,
-            Long clubId
+            Long clubId,
+            Long commentId
     ) {
         Notification n = new Notification();
         n.setUser(user);
@@ -33,27 +38,52 @@ public class NotificationService {
         n.setMessage(message);
         n.setRelatedEventId(eventId);
         n.setRelatedClubId(clubId);
+        n.setRelatedCommentId(commentId); // 🔗
         n.setRead(false);
 
         notificationRepository.save(n);
     }
 
+
     /* =====================
-       Read operations
+       Read
        ===================== */
 
-    public List<Notification> getUserNotifications(User user) {
-        return notificationRepository.findByUserOrderByCreatedAtDesc(user);
+
+
+    @Transactional
+    public List<NotificationDto> getUserNotifications(User user) {
+
+        List<Notification> notifications =
+                notificationRepository.findByUserOrderByCreatedAtDesc(user);
+
+        List<Notification> unread = notifications.stream()
+                .filter(n -> !n.isRead())
+                .toList();
+
+        unread.forEach(n -> n.setRead(true));
+
+        if (!unread.isEmpty()) {
+            notificationRepository.saveAll(unread);
+        }
+
+        return notifications.stream()
+                .map(NotificationDto::from)
+                .toList();
     }
+
+
+
 
     public long getUnreadCount(User user) {
-        return notificationRepository.countByUserAndReadFalse(user);
+        return notificationRepository.countByUserAndIsReadFalse(user);
     }
 
     /* =====================
-       Update operations
+       Update
        ===================== */
 
+    @Transactional
     public void markAsRead(Long notificationId, User user) {
         Notification n = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
@@ -62,15 +92,18 @@ public class NotificationService {
             throw new RuntimeException("Unauthorized");
         }
 
-        n.setRead(true);
-        notificationRepository.save(n);
+        if (!n.isRead()) {
+            n.setRead(true);
+            notificationRepository.save(n);
+        }
     }
 
+    @Transactional
     public void markAllAsRead(User user) {
-        List<Notification> notifications =
-                notificationRepository.findByUserOrderByCreatedAtDesc(user);
+        List<Notification> unread =
+                notificationRepository.findByUserAndIsReadFalse(user);
 
-        notifications.forEach(n -> n.setRead(true));
-        notificationRepository.saveAll(notifications);
+        unread.forEach(n -> n.setRead(true));
+        notificationRepository.saveAll(unread);
     }
 }
