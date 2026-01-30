@@ -83,9 +83,13 @@ export default function CommentSection({
 
         await apiFetch(`/api/comments/${comment.id}/reactions`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "X-User-Email": user.email   // 🔑 REQUIRED NOW
+            },
             body: JSON.stringify({ type })
         });
+
 
         refreshComments();
     }

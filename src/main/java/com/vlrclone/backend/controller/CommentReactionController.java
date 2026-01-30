@@ -30,24 +30,12 @@ public class CommentReactionController {
     @PostMapping("/{commentId}/reactions")
     public ResponseEntity<?> toggleReaction(
             @PathVariable Long commentId,
-            @RequestBody Map<String, String> body,
-            HttpServletRequest request
+            HttpServletRequest request,
+            @RequestBody Map<String, String> body
     ) {
         User user = currentUser.requireUser(request);
 
-        String rawType = body.get("type");
-        if (rawType == null) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Reaction type is required"));
-        }
-
-        ReactionType type;
-        try {
-            type = ReactionType.valueOf(rawType);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Invalid reaction type"));
-        }
+        ReactionType type = ReactionType.valueOf(body.get("type"));
 
         commentService.toggleReaction(commentId, user, type);
 
