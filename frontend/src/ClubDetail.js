@@ -23,6 +23,12 @@ export default function ClubDetail() {
     const [content, setContent] = useState("");
     const [events, setEvents] = useState([]);
 
+    const [newLinkType, setNewLinkType] = useState("WHATSAPP");
+    const [newLinkUrl, setNewLinkUrl] = useState("");
+
+    const [editingLink, setEditingLink] = useState(null);
+
+
     const [createForm, setCreateForm] = useState({
         title: "",
         content: "",
@@ -72,7 +78,7 @@ export default function ClubDetail() {
 
     // High-level capability flags
     const canManageEvents = isAdmin || isLeader || isCoLeader;
-
+    const canManageLinks = isAdmin || isLeader || isCoLeader;
     const canSeeActionMenu = !!user && (isAdmin || isLeader || isCoLeader);
 
     const canPostNews = isAdmin || isLeader || isCoLeader; // co-leaders can post
@@ -166,6 +172,8 @@ export default function ClubDetail() {
             return 0;
         });
     }, [members]);
+
+
 
     useEffect(() => {
         if (!clubId) return;
@@ -448,6 +456,97 @@ export default function ClubDetail() {
         .filter((m) => m.role === "LEADER")
         .map((m) => userLabel(m.userId));
 
+    const addLink = async (e) => {
+        e.preventDefault();
+
+        if (!newLinkUrl.startsWith("https://")) {
+            alert("Link must start with https://");
+            return;
+        }
+
+        const res = await apiFetch(
+            `/api/clubs/${clubId}/links?requesterEmail=${encodeURIComponent(user.email)}`,
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    type: newLinkType,
+                    url: newLinkUrl
+                })
+            }
+        );
+
+        const body = await res.json().catch(() => null);
+        if (!res.ok) {
+            alert(body?.message || "Failed to add link");
+            return;
+        }
+
+        // ✅ update club.links locally
+        setClub(prev => ({
+            ...prev,
+            links: [...(prev.links || []), body]
+        }));
+
+        setNewLinkUrl("");
+    };
+
+    const deleteLink = async (linkId) => {
+        const res = await apiFetch(
+            `/api/clubs/links/${linkId}?requesterEmail=${encodeURIComponent(user.email)}`,
+            { method: "DELETE" }
+        );
+
+        if (!res.ok) {
+            alert("Failed to delete link");
+            return;
+        }
+
+        setClub(prev => ({
+            ...prev,
+            links: prev.links.filter(l => l.id !== linkId)
+        }));
+    };
+
+    const saveEditedLink = async (e) => {
+        e.preventDefault();
+
+        if (!editingLink.url.startsWith("https://")) {
+            alert("Link must start with https://");
+            return;
+        }
+
+        const res = await apiFetch(
+            `/api/clubs/links/${editingLink.id}?requesterEmail=${encodeURIComponent(user.email)}`,
+            {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    type: editingLink.type,
+                    url: editingLink.url
+                })
+            }
+        );
+
+        const body = await res.json().catch(() => null);
+        if (!res.ok) {
+            alert(body?.message || "Failed to update link");
+            return;
+        }
+
+        // update club.links locally
+        setClub(prev => ({
+            ...prev,
+            links: prev.links.map(l =>
+                l.id === body.id ? body : l
+            )
+        }));
+
+        setEditingLink(null);
+    };
+
+
+
     return (
         <div className={"page"}>
             <div className={"container"}>
@@ -528,6 +627,127 @@ export default function ClubDetail() {
 
                         {/* Members & Pending */}
                         <div>
+                            {/* Club Links */}
+                            <div>
+                                <div style={s.sectionHeader}>
+                                    <h3 style={s.h3}>Join & Socials</h3>
+                                </div>
+
+                                <div style={s.card}>
+                                    {(!club.links || club.links.length === 0) && (
+                                        <div style={s.muted}>No external links provided.</div>
+                                    )}
+
+                                    <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
+                                        {(club.links || []).map(link => {
+                                            const isEditing = editingLink?.id === link.id;
+
+                                            return (
+                                                <li
+                                                    key={link.id}
+                                                    style={{
+                                                        display: "flex",
+                                                        justifyContent: "space-between",
+                                                        alignItems: "center",
+                                                        gap: 8
+                                                    }}
+                                                >
+                                                    {!isEditing ? (
+                                                        <>
+                                                            <a
+                                                                href={link.url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                style={{ fontWeight: 600 }}
+                                                            >
+                                                                {link.type}
+                                                            </a>
+
+                                                            {canManageLinks && (
+                                                                <button
+                                                                    onClick={() => setEditingLink({ ...link })}
+                                                                    style={s.primaryBtnSm}
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                            )}
+                                                        </>
+                                                    ) : (
+                                                        <form
+                                                            onSubmit={saveEditedLink}
+                                                            style={{ display: "flex", gap: 6, width: "100%" }}
+                                                        >
+                                                            <select
+                                                                value={editingLink.type}
+                                                                onChange={e =>
+                                                                    setEditingLink(l => ({ ...l, type: e.target.value }))
+                                                                }
+                                                            >
+                                                                <option value="WHATSAPP">WhatsApp</option>
+                                                                <option value="DISCORD">Discord</option>
+                                                                <option value="INSTAGRAM">Instagram</option>
+                                                                <option value="TELEGRAM">Telegram</option>
+                                                                <option value="WEBSITE">Website</option>
+                                                            </select>
+
+                                                            <input
+                                                                type="url"
+                                                                value={editingLink.url}
+                                                                onChange={e =>
+                                                                    setEditingLink(l => ({ ...l, url: e.target.value }))
+                                                                }
+                                                                required
+                                                                style={{ flex: 1 }}
+                                                            />
+
+                                                            <button type="submit" style={s.primaryBtnSm}>
+                                                                Save
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setEditingLink(null)}
+                                                                style={s.dangerBtnSm}
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                        </form>
+                                                    )}
+                                                </li>
+                                            );
+                                        })}
+
+                                    </ul>
+
+                                    {canManageLinks && (
+                                        <form onSubmit={addLink} style={{ marginTop: 10, display: "flex", gap: 6 }}>
+                                            <select
+                                                value={newLinkType}
+                                                onChange={e => setNewLinkType(e.target.value)}
+                                            >
+                                                <option value="WHATSAPP">WhatsApp</option>
+                                                <option value="DISCORD">Discord</option>
+                                                <option value="INSTAGRAM">Instagram</option>
+                                                <option value="TELEGRAM">Telegram</option>
+                                                <option value="WEBSITE">Website</option>
+                                            </select>
+
+                                            <input
+                                                type="url"
+                                                placeholder="https://..."
+                                                value={newLinkUrl}
+                                                onChange={e => setNewLinkUrl(e.target.value)}
+                                                required
+                                                style={{ flex: 1 }}
+                                            />
+
+                                            <button type="submit" style={s.primaryBtnSm}>
+                                                Add
+                                            </button>
+                                        </form>
+                                    )}
+                                </div>
+                            </div>
+
                             <div style={s.sectionHeader}>
                                 <h3 style={s.h3}>Members</h3>
                             </div>

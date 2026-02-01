@@ -3,11 +3,13 @@ package com.vlrclone.backend.controller;
 
 import com.vlrclone.backend.Enums.ClubCategory;
 import com.vlrclone.backend.Enums.ClubSort;
+import com.vlrclone.backend.Enums.LinkType;
 import com.vlrclone.backend.model.*;
 import com.vlrclone.backend.model.ClubMember.Role;
 import com.vlrclone.backend.model.JoinRequest.Status;
 import com.vlrclone.backend.model.Club;
 import com.vlrclone.backend.repository.*;
+import com.vlrclone.backend.service.ClubLinkService;
 import com.vlrclone.backend.service.ClubService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -31,8 +33,10 @@ public class ClubController {
     private final ClubService clubService;
     private final EventRepository events;
     private final JoinRequestRepository joinRequestRepository;
+    private final ClubLinkRepository clubLinks;
 
-    public ClubController(ClubRepository c, ClubMemberRepository m, JoinRequestRepository r, ClubNewsRepository n, UserRepository u, ClubService clubService, EventRepository events, JoinRequestRepository joinRequestRepository) {
+
+    public ClubController(ClubRepository c, ClubMemberRepository m, JoinRequestRepository r, ClubNewsRepository n, UserRepository u, ClubService clubService, EventRepository events, JoinRequestRepository joinRequestRepository, ClubLinkRepository clubLinks) {
         this.clubs = c;
         this.members = m;
         this.requests = r;
@@ -41,6 +45,7 @@ public class ClubController {
         this.clubService = clubService;
         this.events = events;
         this.joinRequestRepository = joinRequestRepository;
+        this.clubLinks = clubLinks;
     }
 
     /* Utility */
@@ -76,9 +81,9 @@ public class ClubController {
 
     @GetMapping("/{clubId}")
     public ResponseEntity<?> getClub(@PathVariable Long clubId) {
-        return clubs.findById(clubId).<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(404).body(Map.of("message", "Club not found")));
+        return ResponseEntity.ok(clubService.findById(clubId));
     }
+
 
     @GetMapping("/{clubId}/news")
     public List<ClubNews> clubNews(@PathVariable Long clubId) {
@@ -474,6 +479,109 @@ public class ClubController {
 
 
         return ResponseEntity.ok(events.findByClubId(clubId));
+    }
+
+    @GetMapping("/{clubId}/links")
+    public ResponseEntity<?> getLinks(@PathVariable Long clubId) {
+        if (!clubs.existsById(clubId)) {
+            return ResponseEntity.status(404).body(Map.of("message", "Club not found"));
+        }
+        return ResponseEntity.ok(clubLinks.findByClubId(clubId));
+    }
+
+    @PostMapping("/{clubId}/links")
+    public ResponseEntity<?> addLink(
+            @PathVariable Long clubId,
+            @RequestParam String requesterEmail,
+            @RequestBody Map<String, String> body
+    ) {
+        var user = byEmail(requesterEmail).orElse(null);
+        if (user == null) return ResponseEntity.status(403).body(Map.of("message", "Login required"));
+
+        boolean allowed = isAdmin(user)
+                || isLeader(clubId, user.getId())
+                || isCoLeader(clubId, user.getId());
+
+        if (!allowed) return ResponseEntity.status(403).body(Map.of("message", "Forbidden"));
+
+        String type = body.get("type");
+        String url = body.get("url");
+
+        if (type == null || url == null)
+            return ResponseEntity.badRequest().body(Map.of("message", "type and url required"));
+
+        Club club = clubs.findById(clubId)
+                .orElseThrow(() -> new RuntimeException("Club not found"));
+
+        return ResponseEntity.ok(
+                clubService.addLink(
+                        club,
+                        LinkType.valueOf(type.toUpperCase()),
+                        url
+                )
+        );
+    }
+
+
+    @DeleteMapping("/links/{linkId}")
+    public ResponseEntity<?> deleteLink(
+            @PathVariable Long linkId,
+            @RequestParam String requesterEmail
+    ) {
+        var user = byEmail(requesterEmail).orElse(null);
+        if (user == null) return ResponseEntity.status(403).body(Map.of("message", "Login required"));
+
+        var linkOpt = clubLinks.findById(linkId);
+        if (linkOpt.isEmpty())
+            return ResponseEntity.status(404).body(Map.of("message", "Link not found"));
+
+        var link = linkOpt.get();
+        Long clubId = link.getClub().getId();
+
+        boolean allowed = isAdmin(user)
+                || isLeader(clubId, user.getId())
+                || isCoLeader(clubId, user.getId());
+
+        if (!allowed) return ResponseEntity.status(403).body(Map.of("message", "Forbidden"));
+
+        clubLinks.deleteById(linkId);
+        return ResponseEntity.ok(Map.of("status", "deleted"));
+    }
+
+    @PatchMapping("/links/{linkId}")
+    public ResponseEntity<?> updateLink(
+            @PathVariable Long linkId,
+            @RequestParam String requesterEmail,
+            @RequestBody Map<String, String> body
+    ) {
+        var user = byEmail(requesterEmail).orElse(null);
+        if (user == null) return ResponseEntity.status(403).body(Map.of("message", "Login required"));
+
+        var linkOpt = clubLinks.findById(linkId);
+        if (linkOpt.isEmpty())
+            return ResponseEntity.status(404).body(Map.of("message", "Link not found"));
+
+        var link = linkOpt.get();
+        Long clubId = link.getClub().getId();
+
+        boolean allowed = isAdmin(user)
+                || isLeader(clubId, user.getId())
+                || isCoLeader(clubId, user.getId());
+
+        if (!allowed) return ResponseEntity.status(403).body(Map.of("message", "Forbidden"));
+
+        if (body.containsKey("type")) {
+            link.setType(LinkType.valueOf(body.get("type").toUpperCase()));
+        }
+        if (body.containsKey("url")) {
+            String url = body.get("url");
+            if (!url.startsWith("https://")) {
+                return ResponseEntity.badRequest().body(Map.of("message", "URL must start with https://"));
+            }
+            link.setUrl(url);
+        }
+
+        return ResponseEntity.ok(clubLinks.save(link));
     }
 
 

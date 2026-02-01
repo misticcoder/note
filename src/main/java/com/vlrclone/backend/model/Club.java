@@ -1,9 +1,11 @@
 package com.vlrclone.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.vlrclone.backend.Enums.ClubCategory;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -31,6 +33,16 @@ public class Club {
 
     @OneToMany(mappedBy = "club")
     private List<ClubMember> members;
+
+    @OneToMany(
+            mappedBy = "club",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    @JsonManagedReference
+    private List<ClubLink> links = new ArrayList<>();
+
 
 
     // Getters and setters
@@ -64,5 +76,8 @@ public class Club {
                                 m.getRole() == ClubMember.Role.CO_LEADER)
         );
     }
+
+    public List<ClubLink> getLinks() { return links; }
+    public void setLinks(List<ClubLink> links) { this.links = links; }
 
 }

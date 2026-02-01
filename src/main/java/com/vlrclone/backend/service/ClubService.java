@@ -2,11 +2,17 @@ package com.vlrclone.backend.service;
 
 import com.vlrclone.backend.Enums.ClubCategory;
 import com.vlrclone.backend.Enums.ClubSort;
+import com.vlrclone.backend.Enums.LinkType;
 import com.vlrclone.backend.model.Club;
+import com.vlrclone.backend.model.ClubLink;
 import com.vlrclone.backend.model.Event;
+import com.vlrclone.backend.repository.ClubLinkRepository;
 import com.vlrclone.backend.repository.ClubRepository;
 import com.vlrclone.backend.repository.EventRepository;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -17,10 +23,13 @@ public class ClubService {
 
     private final ClubRepository clubRepo;
     private final EventRepository eventRepo;
+    private final ClubLinkRepository linkRepo;
 
-    public ClubService(ClubRepository clubRepo, EventRepository eventRepo) {
+
+    public ClubService(ClubRepository clubRepo, EventRepository eventRepo, ClubLinkRepository linkRepo) {
         this.clubRepo = clubRepo;
         this.eventRepo = eventRepo;
+        this.linkRepo = linkRepo;
     }
 
     /* =========================
@@ -35,10 +44,19 @@ public class ClubService {
         return clubRepo.findByCategory(category);
     }
 
+    @Transactional(readOnly = true)
     public Club findById(Long id) {
-        return clubRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Club not found"));
+        Club club = clubRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Club not found"
+                ));
+
+        // Force initialization by touching it
+        club.getLinks().size();
+
+        return club;
     }
+
 
     /* =========================
        CREATE (existing)
@@ -294,4 +312,25 @@ public class ClubService {
                 ));
     }
 
+
+    public List<ClubLink> getLinks(Long clubId) {
+        return linkRepo.findByClubId(clubId);
+    }
+
+    public ClubLink addLink(Club club, LinkType type, String url) {
+        if (!url.startsWith("https://")) {
+            throw new IllegalArgumentException("URL must start with https://");
+        }
+
+        ClubLink link = new ClubLink();
+        link.setClub(club);
+        link.setType(type);
+        link.setUrl(url);
+
+        return linkRepo.save(link);
+    }
+
+    public void deleteLink(ClubLink link) {
+        linkRepo.delete(link);
+    }
 }
