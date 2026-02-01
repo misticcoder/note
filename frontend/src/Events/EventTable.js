@@ -52,7 +52,25 @@ export default function EventTable({
                         <div className="rank">{i + 1}</div>
 
                         <div className="event-main">
-                            <div className="event-title">{ev.title}</div>
+                            <div
+                                className="event-title"
+                                style={{display: "flex", alignItems: "center", gap: 8}}
+                            >
+                                <span>{ev.title}</span>
+
+                                {ev.category === "EXTERNAL" && ev.externalUrl && (
+                                    <a
+                                        href={ev.externalUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="external-link-btn"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        Open link
+                                    </a>
+                                )}
+                            </div>
+
 
                             <div className="event-meta">
                                 {ev.startAt

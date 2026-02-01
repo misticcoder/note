@@ -9,6 +9,7 @@ import "./styles/index.css";
 import EventCommentSection from "./Events/EventCommentSection";
 import EventAttendanceQR from "./components/EventAttendanceQR";
 import {apiFetch} from "./api";
+import {useEventActions} from "./hooks/useEventActions";
 
 export default function EventPage() {
     const { user } = useContext(AuthContext);
@@ -23,7 +24,6 @@ export default function EventPage() {
     /* =====================
        ADMIN
     ===================== */
-    const [editingEvent, setEditingEvent] = useState(null);
     const isAdmin = String(user?.role || "").toUpperCase() === "ADMIN";
 
     /* =====================
@@ -47,6 +47,17 @@ export default function EventPage() {
     const [manualCode, setManualCode] = useState("");
     const [checkingIn, setCheckingIn] = useState(false);
     const [attendanceStatus, setAttendanceStatus] = useState(null);
+
+    const {
+        editingEvent,
+        setEditingEvent,
+        saveEvent,
+        deleteEvent
+    } = useEventActions({
+        user,
+        setEvent
+    });
+
 
     useEffect(() => {
         const onHashChange = () => setHash(window.location.hash);
@@ -372,52 +383,6 @@ export default function EventPage() {
         }
     };
 
-    /* =====================
-       ADMIN: EDIT / DELETE
-    ===================== */
-    const saveEvent = async (updates) => {
-        if (!user || !event) return;
-
-        const res = await apiFetch(
-            `/api/events/${event.id}?requesterEmail=${encodeURIComponent(
-                user.email
-            )}`,
-            {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(updates),
-            }
-        );
-
-        const body = await res.json();
-        if (!res.ok) {
-            alert(body.message || "Failed to update event");
-            return;
-        }
-
-        setEvent(body);
-        setEditingEvent(null);
-    };
-
-    const deleteEvent = async () => {
-        if (!user || !event) return;
-
-        if (!window.confirm("Delete this event?")) return;
-
-        const res = await apiFetch(
-            `/api/events/${event.id}?requesterEmail=${encodeURIComponent(
-                user.email
-            )}`,
-            { method: "DELETE" }
-        );
-
-        if (!res.ok) {
-            alert("Failed to delete event");
-            return;
-        }
-
-        window.location.hash = "#/events";
-    };
 
     /* =====================
        ROTATE ATTENDANCE CODE
@@ -476,8 +441,8 @@ export default function EventPage() {
                     onRSVP={sendRSVP}
                     onCancelRSVP={cancelRSVP}
                     isAdmin={isAdmin}
-                    onEdit={() => setEditingEvent(event)}
-                    onDelete={deleteEvent}
+                    onEdit={() => setEditingEvent({ ...event })}
+                    onDelete={() => deleteEvent(event)}
                     canEdit={isAdmin && eventStatus !== "ENDED"}
                 />
 
@@ -725,6 +690,7 @@ export default function EventPage() {
                         onClose={() => setEditingEvent(null)}
                     />
                 )}
+
             </div>
         </div>
     );

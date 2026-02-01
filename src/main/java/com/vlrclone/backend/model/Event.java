@@ -2,6 +2,7 @@ package com.vlrclone.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.vlrclone.backend.Enums.EventCategory;
 import com.vlrclone.backend.Enums.EventVisibility;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -90,6 +91,14 @@ public class Event {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EventVisibility visibility = EventVisibility.PUBLIC;
+
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private EventCategory category = EventCategory.INTERNAL;
+
+    @Column(length = 1024)
+    private String externalUrl;
 
 
     public String getAttendanceCodeHash() { return attendanceCodeHash; }
@@ -246,6 +255,18 @@ public class Event {
         return visibility;
     }
 
+    public void setCategory(EventCategory category) {
+        this.category = category;
+    }
+    public EventCategory getCategory() {
+        return category;
+    }
 
+public void setExternalUrl(String externalUrl) {
+        this.externalUrl = externalUrl;
+}
+public String getExternalUrl() {
+        return externalUrl;
+}
 
 }

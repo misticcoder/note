@@ -7,13 +7,15 @@ import Dropdown from "./components/Dropdown";
 export default function EventHeader({
                                         event,
                                         activeTab,
-                                        rsvp,                 // "GOING" | "MAYBE" | null
+                                        rsvp,
                                         onRSVP,
                                         onCancelRSVP,
-                                        isAdmin,              // ✅ NEW
-                                        onEdit,               // ✅ NEW
-                                        onDelete              // ✅ NEW
-                                    }) {
+                                        isAdmin,
+                                        canEdit,
+                                        onEdit,
+                                        onDelete
+}) {
+
     const { user } = useContext(AuthContext);
 
     const TABS = ["overview", "posts", "attendees"];
@@ -77,6 +79,28 @@ export default function EventHeader({
                                 📍 {event.location}
                             </div>
                         )}
+
+                        {/* EXTERNAL EVENT LINK */}
+                        {event.category === "EXTERNAL" && event.externalUrl && (
+                            <div className="event-external-link"
+                                 onClick={(e) => {
+                                     if (!window.confirm("This will open an external website. Continue?")) {
+                                         e.preventDefault();
+                                     }
+                                 }}
+                            >
+                                🔗{" "}
+                                <a
+                                    href={event.externalUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="external-link"
+                                >
+                                    Visit external event
+                                </a>
+                            </div>
+                        )}
+
 
                         {event.tags && event.tags.length > 0 && (
                             <div className="event-tags">
@@ -149,13 +173,13 @@ export default function EventHeader({
 
                             {/* ADMIN ACTIONS */}
                             <div className={"event-actions"}>
-                                {isAdmin && (
+                                {isAdmin && canEdit && (
                                     <Dropdown
-
                                         onEdit={onEdit}
                                         onDelete={onDelete}
                                     />
                                 )}
+
                             </div>
                         </div>
                     )}

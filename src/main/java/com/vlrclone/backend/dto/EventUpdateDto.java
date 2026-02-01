@@ -1,6 +1,7 @@
 // src/main/java/com/vlrclone/backend/dto/EventUpdateDto.java
 package com.vlrclone.backend.dto;
 
+import com.vlrclone.backend.Enums.EventCategory;
 import com.vlrclone.backend.Enums.EventVisibility;
 import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.model.Tag;
@@ -35,6 +36,10 @@ public class EventUpdateDto {
 
     public AuthorDto author;
 
+    public EventCategory category;
+    public String externalUrl;
+
+
 
     public EventUpdateDto() {
     }
@@ -66,6 +71,8 @@ public class EventUpdateDto {
         if (e.getAuthor() != null) {
             this.author = new AuthorDto(e.getAuthor());
         }
+        this.category = e.getCategory();
+        this.externalUrl = e.getExternalUrl();
 
     }
 

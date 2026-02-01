@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { apiFetch } from "../api";
 
-export function useEventActions({ user, setEvents }) {
+export function useEventActions({ user, setEvents, setEvent }) {
     const [editingEvent, setEditingEvent] = useState(null);
 
     const toIso = (v) => (v ? new Date(v).toISOString() : null);
@@ -15,13 +15,22 @@ export function useEventActions({ user, setEvents }) {
             { method: "DELETE" }
         );
 
+        const body = await res.json().catch(() => ({}));
         if (!res.ok) {
-            const body = await res.json().catch(() => ({}));
             alert(body.message || "Delete failed");
             return;
         }
 
-        setEvents(prev => prev.filter(e => e.id !== ev.id));
+        // 🔁 list page
+        if (setEvents) {
+            setEvents(prev => prev.filter(e => e.id !== ev.id));
+        }
+
+        // 🔁 single page
+        if (setEvent) {
+            setEvent(null);
+            window.location.hash = "#/events";
+        }
     };
 
     const saveEvent = async (updates) => {
@@ -48,9 +57,17 @@ export function useEventActions({ user, setEvents }) {
             return false;
         }
 
-        setEvents(prev =>
-            prev.map(e => (e.id === body.id ? body : e))
-        );
+        // 🔁 list page
+        if (setEvents) {
+            setEvents(prev =>
+                prev.map(e => (e.id === body.id ? body : e))
+            );
+        }
+
+        // 🔁 single page
+        if (setEvent) {
+            setEvent(body);
+        }
 
         setEditingEvent(null);
         return true;

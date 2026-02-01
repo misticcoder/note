@@ -1,6 +1,7 @@
 // src/main/java/com/vlrclone/backend/controller/EventController.java
 package com.vlrclone.backend.controller;
 
+import com.vlrclone.backend.Enums.EventCategory;
 import com.vlrclone.backend.Enums.EventVisibility;
 import com.vlrclone.backend.dto.EventUpdateDto;
 import com.vlrclone.backend.model.Club;
@@ -205,6 +206,22 @@ public class EventController {
         ev.setEndAt(dto.endAt);
         ev.setAuthor(me);
 
+        EventCategory category =
+                dto.category != null
+                        ? dto.category
+                        : EventCategory.INTERNAL;
+
+        // Validate external link rules
+        service.validateExternalEvent(category, dto.externalUrl);
+
+        ev.setCategory(category);
+        ev.setExternalUrl(
+                category == EventCategory.EXTERNAL
+                        ? dto.externalUrl
+                        : null
+        );
+
+
         /* =====================
            CLUB vs GLOBAL EVENT
         ===================== */
@@ -325,6 +342,21 @@ public class EventController {
                 ev.setTags(service.resolveTags(dto.tags));
             }
         }
+
+        // ===== CATEGORY & EXTERNAL LINK =====
+        if (dto.category != null) {
+            ev.setCategory(dto.category);
+
+            if (dto.category == EventCategory.INTERNAL) {
+                // 🔑 force clear stale external link
+                ev.setExternalUrl(null);
+            } else if (dto.category == EventCategory.EXTERNAL) {
+                // validate + set external link
+                service.validateExternalEvent(dto.category, dto.externalUrl);
+                ev.setExternalUrl(dto.externalUrl);
+            }
+        }
+
 
         Event saved = events.save(ev);
 

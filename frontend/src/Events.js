@@ -43,9 +43,12 @@ export default function Events() {
         startAt: "",
         endAt: "",
         tags: "",
-        clubId:"",
-        visibility: "PUBLIC"
+        clubId: "",
+        visibility: "PUBLIC",
+        category: "INTERNAL",
+        externalUrl: ""
     });
+
 
 
     const [status, setStatus] = useState("all");      // upcoming | ongoing | past | all
@@ -306,6 +309,11 @@ export default function Events() {
             return;
         }
 
+        if (form.category === "EXTERNAL" && !form.externalUrl.trim()) {
+            alert("External link is required for external events");
+            return;
+        }
+
         const payload = {
             title: form.title.trim(),
             content: form.content.trim(),
@@ -316,8 +324,14 @@ export default function Events() {
             tags: form.tags
                 ? form.tags.split(",").map(t => t.trim()).filter(Boolean)
                 : [],
-            clubId: form.clubId !== "" ? Number(form.clubId) : null
+            clubId: form.clubId !== "" ? Number(form.clubId) : null,
+            category: form.category,
+            externalUrl:
+                form.category === "EXTERNAL"
+                    ? form.externalUrl.trim()
+                    : null
         };
+
 
 
 
@@ -339,7 +353,19 @@ export default function Events() {
             setEvents(prev => [body.event, ...prev]);
 
             setShowAdd(false);
-            setForm({ title: "", content: "", location: "", startAt: "", endAt: "", tags: "", clubId: "" });
+            setForm({
+                title: "",
+                content: "",
+                location: "",
+                startAt: "",
+                endAt: "",
+                tags: "",
+                clubId: "",
+                visibility: "PUBLIC",
+                category: "INTERNAL",
+                externalUrl: ""
+            });
+
         } catch (e2) {
             alert(e2.message);
         }
@@ -456,6 +482,33 @@ export default function Events() {
                                     <h3>Add Event</h3>
 
                                     <form onSubmit={createEvent} className="modal-form">
+                                        <select
+                                            value={form.category}
+                                            onChange={e =>
+                                                setForm(f => ({
+                                                    ...f,
+                                                    category: e.target.value,
+                                                    // clear link if switching back to INTERNAL
+                                                    externalUrl: e.target.value === "INTERNAL" ? "" : f.externalUrl
+                                                }))
+                                            }
+                                        >
+                                            <option value="INTERNAL">Internal event</option>
+                                            <option value="EXTERNAL">External event</option>
+                                        </select>
+
+                                        {form.category === "EXTERNAL" && (
+                                            <input
+                                                type="url"
+                                                placeholder="External link (https://...)"
+                                                value={form.externalUrl}
+                                                onChange={e =>
+                                                    setForm(f => ({ ...f, externalUrl: e.target.value }))
+                                                }
+                                                required
+                                            />
+                                        )}
+
                                         <select
                                             value={form.clubId || ""}
                                             onChange={e => setForm(f => ({ ...f, clubId: e.target.value }))}

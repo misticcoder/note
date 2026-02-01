@@ -21,7 +21,9 @@ export default function EditEventModal({
         endAt: "",
         clubId: "",
         tags: "",
-        visibility: "PUBLIC"
+        visibility: "PUBLIC",
+        category: "INTERNAL",
+        externalUrl: ""
     });
 
     /**
@@ -46,9 +48,12 @@ export default function EditEventModal({
             tags: (event.tags || [])
                 .map((t) => (typeof t === "string" ? t : t.name))
                 .join(", "),
-            visibility: event.visibility || "PUBLIC"
+            visibility: event.visibility || "PUBLIC",
+            category: event.category || "INTERNAL",
+            externalUrl: event.externalUrl || ""
         });
-    }, [event, clubs]);
+
+    }, [event]);
 
     const submit = async (e) => {
         e.preventDefault();
@@ -56,7 +61,13 @@ export default function EditEventModal({
 
         if (!form.title.trim()) return;
 
+        if (form.category === "EXTERNAL" && !form.externalUrl.trim()) {
+            alert("External link is required for external events");
+            return;
+        }
+
         setSaving(true);
+
 
         const ok = await onSave({
             title: form.title.trim(),
@@ -73,8 +84,14 @@ export default function EditEventModal({
                         .filter(Boolean)
                 )]
                 : [],
-            visibility: form.visibility
+            visibility: form.visibility,
+            category: form.category,
+            externalUrl:
+                form.category === "EXTERNAL"
+                    ? form.externalUrl.trim()
+                    : null
         });
+
 
         setSaving(false);
 
@@ -135,6 +152,35 @@ export default function EditEventModal({
                         rows={4}
                         placeholder="Description"
                     />
+
+                    {/* Category */}
+                    <select
+                        value={form.category}
+                        onChange={(e) =>
+                            setForm(f => ({
+                                ...f,
+                                category: e.target.value,
+                                externalUrl: e.target.value === "INTERNAL" ? "" : f.externalUrl
+                            }))
+                        }
+                    >
+                        <option value="INTERNAL">Internal event</option>
+                        <option value="EXTERNAL">External event</option>
+                    </select>
+
+                    {/* External link (only for EXTERNAL events) */}
+                    {form.category === "EXTERNAL" && (
+                        <input
+                            type="url"
+                            placeholder="External link (https://...)"
+                            value={form.externalUrl}
+                            onChange={(e) =>
+                                setForm(f => ({ ...f, externalUrl: e.target.value }))
+                            }
+                            required
+                        />
+                    )}
+
 
                     {/* Location */}
                     <input

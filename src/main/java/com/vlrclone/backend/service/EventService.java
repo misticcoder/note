@@ -1,6 +1,7 @@
 // src/main/java/com/vlrclone/backend/service/EventService.java
 package com.vlrclone.backend.service;
 
+import com.vlrclone.backend.Enums.EventCategory;
 import com.vlrclone.backend.Enums.NotificationType;
 import com.vlrclone.backend.dto.EventUpdateDto;
 import com.vlrclone.backend.model.*;
@@ -313,6 +314,28 @@ public class EventService {
             );
 
 
+        }
+    }
+
+    public void validateExternalEvent(
+            EventCategory category,
+            String externalUrl
+    ) {
+        if (category == null) {
+            category = EventCategory.INTERNAL;
+        }
+
+        if (category == EventCategory.EXTERNAL) {
+            if (externalUrl == null || externalUrl.isBlank()) {
+                throw new IllegalArgumentException(
+                        "externalUrl is required for EXTERNAL events"
+                );
+            }
+            if (!externalUrl.startsWith("https://")) {
+                throw new IllegalArgumentException(
+                        "externalUrl must start with https://"
+                );
+            }
         }
     }
 
