@@ -9,6 +9,7 @@ import { useEventActions } from "./hooks/useEventActions";
 import EditEventModal from "./Events/EditEventModal";
 
 import "./styles/modal.css";
+import ConfirmDialog from "./hooks/ConfirmDialog";
 
 
 
@@ -27,6 +28,14 @@ export default function ClubDetail() {
     const [newLinkUrl, setNewLinkUrl] = useState("");
 
     const [editingLink, setEditingLink] = useState(null);
+
+    const [confirmState, setConfirmState] = useState({
+        open: false,
+        title: "",
+        message: "",
+        onConfirm: null,
+    });
+
 
 
     const [createForm, setCreateForm] = useState({
@@ -539,39 +548,82 @@ export default function ClubDetail() {
     const saveEditedLink = async (e) => {
         e.preventDefault();
 
-        if (!editingLink.url.startsWith("https://")) {
+        const { type, url, _original } = editingLink;
+
+        if (!url.startsWith("https://")) {
             alert("Link must start with https://");
             return;
         }
 
-        const res = await apiFetch(
-            `/api/clubs/links/${editingLink.id}?requesterEmail=${encodeURIComponent(user.email)}`,
-            {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    type: editingLink.type,
-                    url: editingLink.url
-                })
-            }
-        );
+        const typeChanged = type !== _original.type;
+        const urlChanged = url !== _original.url;
 
-        const body = await res.json().catch(() => null);
-        if (!res.ok) {
-            alert(body?.message || "Failed to update link");
+        if (!typeChanged && !urlChanged) {
+            setEditingLink(null);
             return;
         }
 
-        // update club.links locally
-        setClub(prev => ({
-            ...prev,
-            links: prev.links.map(l =>
-                l.id === body.id ? body : l
-            )
-        }));
+        setConfirmState({
+            open: true,
+            title: "Confirm link update",
+            message: typeChanged
+                ? "You are changing the platform type for this link. Are you sure?"
+                : "Save changes to this link?",
+            onConfirm: async () => {
+                try {
+                    const res = await apiFetch(
+                        `/api/clubs/links/${editingLink.id}?requesterEmail=${encodeURIComponent(user.email)}`,
+                        {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ type, url }),
+                        }
+                    );
 
-        setEditingLink(null);
+                    const body = await res.json().catch(() => null);
+                    if (!res.ok) {
+                        alert(body?.message || "Failed to update link");
+                        return;
+                    }
+
+                    setClub(prev => ({
+                        ...prev,
+                        links: prev.links.map(l =>
+                            l.id === body.id ? body : l
+                        )
+                    }));
+
+                    setEditingLink(null);
+                } finally {
+                    setConfirmState({ open: false });
+                }
+            }
+        });
     };
+
+    const cancelEditLink = () => {
+        const { type, url, _original } = editingLink;
+
+        const dirty =
+            type !== _original.type ||
+            url !== _original.url;
+
+        if (!dirty) {
+            setEditingLink(null);
+            return;
+        }
+
+        setConfirmState({
+            open: true,
+            title: "Discard changes?",
+            message: "You have unsaved changes. Do you want to discard them?",
+            onConfirm: () => {
+                setEditingLink(null);
+                setConfirmState({ open: false });
+            }
+        });
+    };
+
 
 
 
@@ -709,8 +761,11 @@ export default function ClubDetail() {
 
                                                             {canManageLinks && (
                                                                 <button
-                                                                    onClick={() => setEditingLink({ ...link })}
-                                                                    style={s.primaryBtnSm}
+                                                                    onClick={() => setEditingLink({
+                                                                        ...link,
+                                                                        _original: { type: link.type, url: link.url }
+                                                                    })}
+                                                                        style={s.primaryBtnSm}
                                                                 >
                                                                     Edit
                                                                 </button>
@@ -761,11 +816,12 @@ export default function ClubDetail() {
                                                             </button>
                                                             <button
                                                                 type="button"
-                                                                onClick={() => setEditingLink(null)}
+                                                                onClick={cancelEditLink}
                                                                 style={s.dangerBtnSm}
                                                             >
                                                                 Cancel
                                                             </button>
+
                                                         </form>
                                                     )}
                                                 </li>
@@ -1325,7 +1381,16 @@ export default function ClubDetail() {
                     </div>
                 )}
             </div>
+            <ConfirmDialog
+                open={confirmState.open}
+                title={confirmState.title}
+                message={confirmState.message}
+                onConfirm={confirmState.onConfirm}
+                onCancel={() => setConfirmState({ open: false })}
+            />
+
         </div>
+
     );
 
 }

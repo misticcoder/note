@@ -17,7 +17,8 @@ export default function ConfirmDialog({
                     <button className="button" onClick={onConfirm}>
                                 <span className="button_lg">
                                     <span className="button_sl"></span>
-                                    <span className="button_text"> Delete </span>
+                                    <span className="button_text"> Confirm </span>
+
                                 </span>
                     </button>
 
