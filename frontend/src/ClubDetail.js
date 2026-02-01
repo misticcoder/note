@@ -91,6 +91,34 @@ export default function ClubDetail() {
     const canCreateEvent = isAdmin || isLeader || isCoLeader;
     const [showCreateEvent, setShowCreateEvent] = useState(false);
 
+    const linkMeta = {
+        WHATSAPP: {
+            icon: "fa-whatsapp",
+            className: "social-whatsapp",
+            label: "WhatsApp"
+        },
+        DISCORD: {
+            icon: "fa-comments",
+            className: "social-discord",
+            label: "Discord"
+        },
+        INSTAGRAM: {
+            icon: "fa-instagram",
+            className: "social-instagram",
+            label: "Instagram"
+        },
+        TELEGRAM: {
+            icon: "fa-paper-plane",
+            className: "social-telegram",
+            label: "Telegram"
+        },
+        WEBSITE: {
+            icon: "fa-globe",
+            className: "social-website",
+            label: "Website"
+        }
+    };
+
 
     const requestJoinClub = async () => {
         if (!user) {
@@ -638,30 +666,46 @@ export default function ClubDetail() {
                                         <div style={s.muted}>No external links provided.</div>
                                     )}
 
-                                    <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
+                                    <ul
+                                        style={{
+                                            listStyle: "none",
+                                            padding: 0,
+                                            margin: 0,
+                                            display: "grid",
+                                            gap: 10
+                                        }}
+                                    >
                                         {(club.links || []).map(link => {
                                             const isEditing = editingLink?.id === link.id;
+                                            const meta = linkMeta[link.type] || linkMeta.WEBSITE;
 
                                             return (
                                                 <li
                                                     key={link.id}
                                                     style={{
                                                         display: "flex",
-                                                        justifyContent: "space-between",
                                                         alignItems: "center",
-                                                        gap: 8
+                                                        justifyContent: "space-between",
+                                                        gap: 12
                                                     }}
                                                 >
+
                                                     {!isEditing ? (
                                                         <>
-                                                            <a
-                                                                href={link.url}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                style={{ fontWeight: 600 }}
-                                                            >
-                                                                {link.type}
-                                                            </a>
+                                                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                                                <a
+                                                                    href={link.url}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className={`social-icon ${meta.className}`}
+                                                                    title={meta.label}
+                                                                    aria-label={meta.label}
+                                                                >
+                                                                    <i className={`fa ${meta.icon}`} />
+                                                                </a>
+
+                                                                <span style={{ fontWeight: 600 }}>{meta.label}</span>
+                                                            </div>
 
                                                             {canManageLinks && (
                                                                 <button
@@ -672,15 +716,24 @@ export default function ClubDetail() {
                                                                 </button>
                                                             )}
                                                         </>
+
                                                     ) : (
                                                         <form
                                                             onSubmit={saveEditedLink}
-                                                            style={{ display: "flex", gap: 6, width: "100%" }}
+                                                            style={{
+                                                                display: "flex",
+                                                                gap: 8,
+                                                                width: "100%",
+                                                                alignItems: "center"
+                                                            }}
                                                         >
                                                             <select
                                                                 value={editingLink.type}
                                                                 onChange={e =>
-                                                                    setEditingLink(l => ({ ...l, type: e.target.value }))
+                                                                    setEditingLink(l => ({
+                                                                        ...l,
+                                                                        type: e.target.value
+                                                                    }))
                                                                 }
                                                             >
                                                                 <option value="WHATSAPP">WhatsApp</option>
@@ -694,10 +747,13 @@ export default function ClubDetail() {
                                                                 type="url"
                                                                 value={editingLink.url}
                                                                 onChange={e =>
-                                                                    setEditingLink(l => ({ ...l, url: e.target.value }))
+                                                                    setEditingLink(l => ({
+                                                                        ...l,
+                                                                        url: e.target.value
+                                                                    }))
                                                                 }
                                                                 required
-                                                                style={{ flex: 1 }}
+                                                                style={{flex: 1}}
                                                             />
 
                                                             <button type="submit" style={s.primaryBtnSm}>
@@ -715,11 +771,11 @@ export default function ClubDetail() {
                                                 </li>
                                             );
                                         })}
-
                                     </ul>
 
+
                                     {canManageLinks && (
-                                        <form onSubmit={addLink} style={{ marginTop: 10, display: "flex", gap: 6 }}>
+                                        <form onSubmit={addLink} style={{marginTop: 10, display: "flex", gap: 6}}>
                                             <select
                                                 value={newLinkType}
                                                 onChange={e => setNewLinkType(e.target.value)}
@@ -737,7 +793,7 @@ export default function ClubDetail() {
                                                 value={newLinkUrl}
                                                 onChange={e => setNewLinkUrl(e.target.value)}
                                                 required
-                                                style={{ flex: 1 }}
+                                                style={{flex: 1}}
                                             />
 
                                             <button type="submit" style={s.primaryBtnSm}>

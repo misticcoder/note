@@ -248,3 +248,28 @@
     border-radius: 2px;
 
 }
+
+.social-icon {
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    color: white;
+    font-size: 20px;
+    text-decoration: none;
+    transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+.social-icon:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+}
+
+/* Platform colours */
+.social-whatsapp { background: #25D366; }
+.social-discord { background: #5865F2; }
+.social-instagram { background: #125688; }
+.social-telegram { background: #0088cc; }
+.social-website { background: #374151; }
