@@ -1,3 +1,4 @@
+// frontend/src/components/ThreadPage.js
 import { useContext, useEffect, useState, useCallback } from "react";
 import { AuthContext } from "../AuthContext";
 import ThreadSection from "./ThreadSection";
@@ -6,17 +7,19 @@ import ConfirmDialog from "../hooks/ConfirmDialog";
 import { useConfirm } from "../hooks/useConfirm";
 import "../styles/Threads.css";
 import "../styles/buttons.css";
-import {apiFetch} from "../api";
+import { apiFetch } from "../api";
 
 export default function ThreadPage() {
     const { user } = useContext(AuthContext);
 
     const [thread, setThread] = useState(null);
-    const [threads, setThreads] = useState([]);
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState("");
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState("");
+
+    const role = String(user?.role || "").toUpperCase();
+    const isAdmin = role === "ADMIN";
 
     /* ===================== CONFIRM HOOK ===================== */
 
@@ -34,27 +37,13 @@ export default function ThreadPage() {
         return m ? Number(m[1]) : null;
     })();
 
-    const role = String(user?.role || "").toUpperCase();
-    const isAdmin = role === "ADMIN";
+    /* ===================== DOCUMENT TITLE ===================== */
 
     useEffect(() => {
         document.title = thread?.title
             ? `${thread.title} | InfCom`
             : "InfCom";
     }, [thread]);
-
-    /* ===================== SIDEBAR THREAD LIST ===================== */
-
-    useEffect(() => {
-        const controller = new AbortController();
-
-        apiFetch("/api/threads", { signal: controller.signal })
-            .then(r => r.json())
-            .then(data => setThreads(Array.isArray(data) ? data : []))
-            .catch(() => setThreads([]));
-
-        return () => controller.abort();
-    }, []);
 
     /* ===================== FETCH COMMENTS ===================== */
 
@@ -68,7 +57,7 @@ export default function ThreadPage() {
 
             const res = await apiFetch(
                 `/api/threads/${threadId}/comments${usernameParam}`,
-                { signal }
+                signal ? { signal } : undefined
             );
 
             if (!res.ok) {
@@ -91,6 +80,7 @@ export default function ThreadPage() {
         (async () => {
             try {
                 setLoading(true);
+                setErr("");
 
                 const tRes = await apiFetch(
                     `/api/threads/${threadId}`,
@@ -105,7 +95,6 @@ export default function ThreadPage() {
                 setThread(t);
 
                 await fetchComments(controller.signal);
-                setErr("");
             } catch (e) {
                 if (e.name !== "AbortError") {
                     console.error(e);
@@ -123,6 +112,7 @@ export default function ThreadPage() {
 
     const postComment = async (e, parentId = null) => {
         e.preventDefault();
+
         if (!user) {
             alert("You must be logged in to comment.");
             return;
@@ -132,18 +122,21 @@ export default function ThreadPage() {
         if (!text) return;
 
         try {
-            const res = await apiFetch(`/api/threads/${threadId}/comments`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    username: user.username,
-                    comment: text,
-                    parentId,
-                }),
-            });
+            const res = await apiFetch(
+                `/api/threads/${threadId}/comments`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        comment: text,
+                        parentId,
+                    }),
+                }
+            );
+
+            const body = await res.json().catch(() => ({}));
 
             if (!res.ok) {
-                const body = await res.json().catch(() => ({}));
                 throw new Error(
                     body.message || `Failed to post comment (${res.status})`
                 );
@@ -165,23 +158,27 @@ export default function ThreadPage() {
         }
 
         confirm(commentId, async (id) => {
-            const res = await apiFetch(
-                `/api/threads/${threadId}/comments/${id}?requesterEmail=${encodeURIComponent(
-                    user.email
-                )}`,
-                { method: "DELETE" }
-            );
+            try {
+                const res = await apiFetch(
+                    `/api/threads/${threadId}/comments/${id}?requesterEmail=${encodeURIComponent(
+                        user.email
+                    )}`,
+                    { method: "DELETE" }
+                );
 
-            if (!res.ok) {
-                const msg = await res.text();
-                throw new Error(msg || "Delete failed");
+                if (!res.ok) {
+                    const msg = await res.text();
+                    throw new Error(msg || "Delete failed");
+                }
+
+                fetchComments();
+            } catch (e) {
+                alert(e.message || "Failed to delete comment");
             }
-
-            fetchComments();
         });
     };
 
-    /* ===================== GUARD ===================== */
+    /* ===================== INVALID THREAD ===================== */
 
     if (!threadId) {
         return (
@@ -197,43 +194,44 @@ export default function ThreadPage() {
     /* ===================== RENDER ===================== */
 
     return (
-        <div className={"page"}>
-            <div className={"container"}>
+        <div className="page">
+            <div className="container">
                 <div className="table-wrap">
-                    <div className={"table-top"}>
-                        <h2 className={"title"}>Thread</h2>
-                        <div>
-                            <a href="#/home" className={"back-link"}>← Back</a>
-                        </div>
+                    <div className="table-top">
+                        <a href="#/home" className="back-link">
+                            ← Back
+                        </a>
                     </div>
-                    <div className={"page-row"}>
+
+                    <div className="page-row">
+                        {/* SIDEBAR */}
                         <aside className="thread-sidebar">
-                            <ThreadSection
-                                threads={threads}
-                                showAddButton={isAdmin}
-                            />
+                            <ThreadSection showAddButton={isAdmin} />
                         </aside>
 
+                        {/* MAIN CONTENT */}
                         <main className="content-col">
-
                             {loading && <p>Loading…</p>}
-                            {err && <p style={{color: "red"}}>{err}</p>}
+                            {err && <p style={{ color: "red" }}>{err}</p>}
 
                             {thread && (
                                 <div className="thread-card">
-                                    <h2 className="thread-title">{thread.title}</h2>
+                                    <h2 className="thread-title">
+                                        {thread.title}
+                                    </h2>
 
                                     <div className="thread-meta">
-                            <span>
-                                Posted by <strong>{thread.author}</strong>
-                            </span>
+                                        <span>
+                                            Posted by{" "}
+                                            <strong>{thread.author}</strong>
+                                        </span>
                                         <span className="thread-meta-sep">•</span>
                                         <span>
-                                {thread.published &&
-                                    new Date(
-                                        thread.published
-                                    ).toLocaleString()}
-                            </span>
+                                            {thread.published &&
+                                                new Date(
+                                                    thread.published
+                                                ).toLocaleString()}
+                                        </span>
                                     </div>
 
                                     <div className="thread-content">
@@ -254,8 +252,7 @@ export default function ThreadPage() {
                         </main>
                     </div>
 
-                    {/* ===================== CONFIRM DIALOG ===================== */}
-
+                    {/* CONFIRM DIALOG */}
                     <ConfirmDialog
                         open={confirmState.open}
                         title="Delete Comment"

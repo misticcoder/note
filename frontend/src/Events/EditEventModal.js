@@ -106,7 +106,7 @@ export default function EditEventModal({
                 <h3>Edit Event</h3>
 
                 <form onSubmit={submit} className="modal-form">
-                    {/* 🔒 Club selector (locked for existing club events) */}
+                    {/* Club selector (locked for existing club events) */}
                     <select
                         value={form.clubId}
                         disabled={lockClubSelector || clubs.length === 0}

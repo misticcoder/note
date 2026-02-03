@@ -1,38 +1,337 @@
+/* ============================================
+   FRONT PAGE - Hero Landing
+   W3.CSS Inspired Theme
+   ============================================ */
+
 .front-page {
     min-height: 100vh;
-    background: linear-gradient(135deg, #111827, #1f2933);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    background: linear-gradient(135deg, #455a64 0%, #546e7a 50%, #607d8b 100%);
+    position: relative;
+    overflow: hidden;
+    padding: 20px;
 }
+
+/* Animated background pattern */
+.front-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+            radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+            radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+    animation: patternMove 20s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes patternMove {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        transform: translateY(-20px) scale(1.05);
+    }
+}
+
+/* Floating decorative elements */
+.front-page::after {
+    content: '';
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    top: -100px;
+    right: -100px;
+    animation: float 15s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    33% {
+        transform: translate(30px, -30px) rotate(120deg);
+    }
+    66% {
+        transform: translate(-20px, 20px) rotate(240deg);
+    }
+}
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
 
 .front-hero {
     text-align: center;
-    max-width: 500px;
-    padding: 24px;
+    max-width: 700px;
+    position: relative;
+    z-index: 1;
+    animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+
 .front-hero h1 {
-    font-size: 36px;
-    margin-bottom: 12px;
+    font-size: 56px;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0 0 24px 0;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards;
 }
 
 .front-hero p {
-    color: #9ca3af;
-    margin-bottom: 24px;
+    font-size: 22px;
+    color: rgba(255, 255, 255, 0.95);
+    margin: 0 0 40px 0;
+    line-height: 1.6;
+    font-weight: 400;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.4s backwards;
 }
 
+/* ============================================
+   ENTER BUTTON
+   ============================================ */
+
 .enter-btn {
-    padding: 12px 24px;
-    font-size: 16px;
-    border-radius: 8px;
+    padding: 18px 48px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #546e7a;
+    background: #ffffff;
     border: none;
+    border-radius: 50px;
     cursor: pointer;
-    background: #2563eb;
-    color: white;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s backwards;
+}
+
+/* Button shine effect */
+.enter-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.4),
+            transparent
+    );
+    transition: left 0.5s ease;
+}
+
+.enter-btn:hover::before {
+    left: 100%;
 }
 
 .enter-btn:hover {
-    background: #1d4ed8;
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25), 0 6px 12px rgba(0, 0, 0, 0.15);
+    background: #ffffff;
+}
+
+.enter-btn:active {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Pulse animation on button */
+.enter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50px;
+    border: 2px solid #ffffff;
+    opacity: 0;
+    animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-ring {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1.3);
+        opacity: 0;
+    }
+}
+
+/* ============================================
+   DECORATIVE ELEMENTS
+   ============================================ */
+
+/* Add subtle grid lines */
+.front-page {
+    background-image:
+            linear-gradient(135deg, #455a64 0%, #546e7a 50%, #607d8b 100%),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+            linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 50px 50px, 50px 50px;
+}
+
+/* ============================================
+   FEATURE HIGHLIGHTS (Optional)
+   ============================================ */
+
+.front-features {
+    display: flex;
+    gap: 32px;
+    margin-top: 48px;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.8s backwards;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.feature-icon {
+    font-size: 24px;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+    .front-hero h1 {
+        font-size: 40px;
+    }
+
+    .front-hero p {
+        font-size: 18px;
+        margin-bottom: 32px;
+    }
+
+    .enter-btn {
+        padding: 16px 40px;
+        font-size: 16px;
+    }
+
+    .front-features {
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .front-page {
+        padding: 16px;
+    }
+
+    .front-hero h1 {
+        font-size: 32px;
+        margin-bottom: 16px;
+    }
+
+    .front-hero p {
+        font-size: 16px;
+        margin-bottom: 24px;
+    }
+
+    .enter-btn {
+        width: 100%;
+        padding: 14px 32px;
+    }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+.enter-btn:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 4px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .front-page::before,
+    .front-page::after,
+    .enter-btn::after {
+        animation: none;
+    }
+
+    .front-hero,
+    .front-hero h1,
+    .front-hero p,
+    .enter-btn,
+    .front-features {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+
+    .enter-btn:hover {
+        transform: none;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .front-page {
+        background: #263238;
+    }
+
+    .enter-btn {
+        border: 2px solid #ffffff;
+    }
+}
+
+/* ============================================
+   LOADING STATE (Optional)
+   ============================================ */
+
+.front-page.loading .front-hero {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* ============================================
+   ALTERNATIVE THEME - Dark Mode Ready
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+    /* Already dark by default, but can be customized */
+    .front-page {
+        background: linear-gradient(135deg, #111827, #1f2933);
+    }
 }

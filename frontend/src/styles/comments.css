@@ -73,3 +73,79 @@
     0% { background-color: rgba(255, 215, 0, 0.4); }
     100% { background-color: rgba(255, 215, 0, 0.25); }
 }
+
+/* ===============================
+COMMENTS (THREAD STYLE)
+================================ */
+
+.comment-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.yt-comment {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+}
+
+.yt-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #333333;
+    color: white;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.yt-username{
+    color: black;
+}
+
+.yt-main {
+    flex: 1;
+}
+
+.yt-header {
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.yt-time {
+    color: var(--text-muted);
+}
+
+.yt-text {
+    margin: 4px 0;
+    font-size: 14px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: black;
+}
+
+.yt-actions {
+    display: flex;
+    gap: 12px;
+    font-size: 13px;
+}
+
+.yt-actions button {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.yt-actions button:hover {
+    color: white;
+}
+
+.yt-replies {
+    margin-left: 48px;
+    margin-top: 8px;
+}

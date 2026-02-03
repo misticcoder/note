@@ -9,6 +9,9 @@ import { useConfirm } from "../hooks/useConfirm";
 import EditPostModal from "./EditPostModal";
 import "../styles/Posts.css";
 import "../styles/comments.css";
+import "../styles/index.css";
+import "../styles/buttons.css"
+
 
 import { apiFetch } from "../api";
 
@@ -265,63 +268,67 @@ export default function PostDetailPage() {
     /* ===================== RENDER ===================== */
 
     return (
-        <div className="post-page">
-            <div className="post-page-inner">
-                <div className="post-nav">
-                    <button
-                        className="back-btn"
-                        onClick={() => window.history.back()}
-                    >
-                        ← Back
-                    </button>
-                </div>
+        <div className={"page"}>
+            <div className={"container"}>
+                <div className="post-page">
+                    <div className="post-page-inner">
+                        <div className="post-nav">
+                            <button
+                                className="back-btn"
+                                onClick={() => window.history.back()}
+                            >
+                                ← Back
+                            </button>
+                        </div>
 
-                <div className="post-card-wrapper">
-                    <PostCard
-                        key={post.id}
-                        post={post}
-                        user={user}
-                        onLike={toggleLike}
-                        onDelete={requestDeletePost}
-                        onEdit={setEditingPost}
-                        onPin={togglePin}
-                    />
+                        <div className="post-card-wrapper">
+                            <PostCard
+                                key={post.id}
+                                post={post}
+                                user={user}
+                                onLike={toggleLike}
+                                onDelete={requestDeletePost}
+                                onEdit={setEditingPost}
+                                onPin={togglePin}
+                            />
 
 
-                </div>
+                        </div>
 
-                <div className="comments-card-wrapper">
-                    <CommentSection
-                        comments={comments}
-                        user={user}
-                        newComment={newComment}
-                        setNewComment={setNewComment}
-                        onSubmit={postComment}
-                        onDelete={requestDeleteComment}
-                        refreshComments={fetchComments}
+                        <div className="comments-card-wrapper">
+                            <CommentSection
+                                comments={comments}
+                                user={user}
+                                newComment={newComment}
+                                setNewComment={setNewComment}
+                                onSubmit={postComment}
+                                onDelete={requestDeleteComment}
+                                refreshComments={fetchComments}
+                            />
+                        </div>
+                    </div>
+
+                    {/* ===================== EDIT MODAL ===================== */}
+
+                    {editingPost && (
+                        <EditPostModal
+                            post={editingPost}
+                            onClose={() => setEditingPost(null)}
+                            onSave={saveEdit}
+                        />
+                    )}
+
+                    {/* ===================== CONFIRM DIALOG ===================== */}
+
+                    <ConfirmDialog
+                        open={confirmState.open}
+                        title="Confirm Deletion"
+                        message="Are you sure you want to delete this? This action cannot be undone."
+                        onConfirm={handleConfirm}
+                        onCancel={handleCancel}
                     />
                 </div>
             </div>
-
-            {/* ===================== EDIT MODAL ===================== */}
-
-            {editingPost && (
-                <EditPostModal
-                    post={editingPost}
-                    onClose={() => setEditingPost(null)}
-                    onSave={saveEdit}
-                />
-            )}
-
-            {/* ===================== CONFIRM DIALOG ===================== */}
-
-            <ConfirmDialog
-                open={confirmState.open}
-                title="Confirm Deletion"
-                message="Are you sure you want to delete this? This action cannot be undone."
-                onConfirm={handleConfirm}
-                onCancel={handleCancel}
-            />
         </div>
     );
 }

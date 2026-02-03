@@ -4,6 +4,7 @@ import { AuthContext } from "./AuthContext";
 import "./styles/index.css";
 import "./styles/events.css";
 import Dropdown from "./components/Dropdown";
+import "./styles/modal.css";
 
 import { apiFetch } from "./api";
 
@@ -72,14 +73,29 @@ export default function Clubs() {
         const t = (q || "").toLowerCase();
 
         let out = clubs.filter(cl =>
-            cl.name.toLowerCase().includes(t) ||
+            (cl.name || "").toLowerCase().includes(t) ||
             cl.description.toLowerCase().includes(t) ||
             String(cl.id).includes(t)
         );
 
-        if (sortBy === "EVENTS_DESC") {
-            out = [...out].sort((a, b) => b.eventCount - a.eventCount);
+        switch (sortBy) {
+            case "NAME_DESC":
+                out.sort((a, b) => b.name.localeCompare(a.name));
+                break;
+            case "CREATED_NEW":
+                out.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+                break;
+            case "CREATED_OLD":
+                out.sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
+                break;
+            case "MEMBERS_DESC":
+                out.sort((a, b) => b.memberCount - a.memberCount);
+                break;
+            case "EVENTS_DESC":
+                out.sort((a, b) => b.eventCount - a.eventCount);
+                break;
         }
+
 
         return out;
     }, [clubs, q, sortBy]);
@@ -244,8 +260,9 @@ export default function Clubs() {
                                         <div className="actions">
                                             <Dropdown
                                                 onEdit={() => openEdit(cl)}
-                                                onDelete={() => onDelete(cl)}
+                                                onDelete={() => deleteClub(cl)}
                                             />
+
                                         </div>
                                     )}
                                 </div>
@@ -258,21 +275,19 @@ export default function Clubs() {
                     )}
 
                     {isAdmin && showEdit && editClub && (
-                        <div style={styles.backdrop}>
-                            <div style={styles.modal}>
+                        <div className={"modal-backdrop"}>
+                            <div className={"modal-card"}>
                                 <h3>Edit Club</h3>
-                                <form onSubmit={saveEdit} style={{display: "flex", flexDirection: "column", gap: 10}}>
+                                <form onSubmit={saveEdit} className={"modal-form"}>
                                     <input
                                         value={editClub.name}
                                         onChange={e => setEditClub(c => ({...c, name: e.target.value}))}
                                         required
-                                        style={styles.input}
                                     />
                                     <textarea
                                         value={editClub.description}
                                         onChange={e => setEditClub(c => ({...c, description: e.target.value}))}
                                         rows={6}
-                                        style={styles.textarea}
                                     />
                                     <div style={{display: "flex", justifyContent: "flex-end", gap: 8}}>
                                         <button type="button" onClick={() => {

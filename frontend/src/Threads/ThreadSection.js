@@ -2,7 +2,6 @@ import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../AuthContext";
 import "../styles/Threads.css";
 import {timeAgo} from "../components/timeAgo";
-import "../styles/Home.css";
 import "../styles/modal.css"
 import {apiFetch} from "../api";
 
@@ -14,7 +13,6 @@ export default function ThreadSection({
     const { user } = useContext(AuthContext);
 
     const [threads, setThreads] = useState([]);
-    const [hoveredId, setHoveredId] = useState(null);
 
     // Modal state
     const [showModal, setShowModal] = useState(false);
@@ -34,13 +32,6 @@ export default function ThreadSection({
             })
             .catch(() => setThreads([]));
     }, []);
-
-
-    const boxHover = {
-        transform: "translateY(-2px)",
-        boxShadow: "0 6px 16px rgba(0,0,0,0.25)",
-        backgroundColor: "#cac7c7"
-    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -91,16 +82,12 @@ export default function ThreadSection({
                 <div
                     key={thread.id}
                     className="card"
-                    style={hoveredId === thread.id ? boxHover : {}}
-                    onMouseEnter={() => setHoveredId(thread.id)}
-                    onMouseLeave={() => setHoveredId(null)}
                     onClick={() => {
                         window.location.hash = `#/threads/${thread.id}`;
                     }}
                 >
-
                     <div style={{display: "flex", flexDirection: "column"}}>
-                        <span style={{fontWeight: 600}}>
+                        <span style={{color:"black", fontWeight: 600}}>
                             {thread.title}
                         </span>
                         <span className={"x-time"}>

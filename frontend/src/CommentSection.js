@@ -2,8 +2,6 @@
 import { useState, useEffect } from "react";
 import CommentItem from "./Comments/CommentItem";
 import { apiFetch } from "./api";
-
-import "./styles/Threads.css";
 import "./styles/comments.css";
 
 /* ===============================
