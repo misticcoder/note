@@ -78,27 +78,45 @@
     flex-shrink: 0;
 }
 
+/* ============================================
+   COMPOSER BODY
+   ============================================ */
+
 .composer-body {
-    flex: 1;
-    margin: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    margin-bottom: 12px;
 }
 
 .composer-body textarea {
     width: 100%;
-    min-height: 60px;
-    resize: none;
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--text-main);
+    min-height: 100px;
+    padding: 12px;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
     font-size: 15px;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.2s ease;
+    background: #1a1a1a;
+    color: #e0e0e0;
+}
+
+.composer-body textarea:focus {
+    outline: none;
+    border-color: #546e7a;
+    background: #1f1f1f;
+    box-shadow: 0 0 0 3px rgba(84, 110, 122, 0.2);
+}
+
+.composer-body textarea:disabled {
+    background: #2a2a2a;
+    cursor: not-allowed;
+    color: #808080;
 }
 
 .composer-body textarea::placeholder {
+    color: #808080;
 }
+
 
 /* ===============================
    COMPOSER FOOTER
@@ -360,76 +378,6 @@
 .x-carousel-btn.left { left: 8px; }
 .x-carousel-btn.right { right: 8px; }
 
-/* ===============================
-   COMMENTS (THREAD STYLE)
-================================ */
-
-.comment-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.yt-comment {
-    display: flex;
-    gap: 12px;
-    padding: 12px 0;
-}
-
-.yt-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #333333;
-    color: white;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.yt-main {
-    flex: 1;
-}
-
-.yt-header {
-    display: flex;
-    gap: 8px;
-    font-size: 13px;
-}
-
-.yt-time {
-    color: var(--text-muted);
-}
-
-.yt-text {
-    margin: 4px 0;
-    font-size: 14px;
-    white-space: pre-wrap;
-    word-break: break-word;
-}
-
-.yt-actions {
-    display: flex;
-    gap: 12px;
-    font-size: 13px;
-}
-
-.yt-actions button {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-}
-
-.yt-actions button:hover {
-    color: white;
-}
-
-.yt-replies {
-    margin-left: 48px;
-    margin-top: 8px;
-}
 
 /* ===============================
    CONFIRM MODAL

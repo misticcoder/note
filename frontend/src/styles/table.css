@@ -1,119 +1,186 @@
+/* ============================================
+   TABLE STYLES - Dark Theme
+   ============================================ */
+
+.table-wrap {
+    width: 100%;
+    padding: 20px;
+}
+
 .table-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
-    padding: 10px;
-}
-.table-wrap{
-    padding: 20px;
-    max-width: 1100px;
-    margin: 0 auto;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 16px;
 }
 
-.table{
-    background: #ffffff;
-    border: 1px solid #ddd;
-    border-radius: 2px;
+.table-top h2 {
+    margin: 0;
+    color: #e0e0e0;
 }
 
-
-.table-header{
-    background: #f4f4f4;
-    font-weight: 600;
-    font-size: 13px;
-    color: #555;
-    height: 2em;
+.table-top > div {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-.table-row,
+/* ============================================
+   TABLE STRUCTURE
+   ============================================ */
+
+.table {
+    background: #242424;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
 .table-header {
     display: grid;
-    align-items: center;
-    column-gap: 10px;
-    padding: 12px 14px;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    background: #2a2a2a;
+    border-bottom: 2px solid #3a3a3a;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #b0b0b0;
+    padding: 12px 16px;
+}
+
+.table-header.user {
+    grid-template-columns: 60px 1fr 120px 2fr;
+}
+
+.table-header.admin {
+    grid-template-columns: 60px 1fr 120px 2fr 120px;
+}
+
+.table-row {
+    display: grid;
+    padding: 14px 16px;
+    border-bottom: 1px solid #3a3a3a;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    color: #e0e0e0;
+    font-size: 14px;
+}
+
+.table-row:last-child {
+    border-bottom: none;
+}
+
+.table-row.user {
+    grid-template-columns: 60px 1fr 120px 2fr;
+}
+
+.table-row.admin {
+    grid-template-columns: 60px 1fr 120px 2fr 120px;
 }
 
 .table-row:hover {
-    background: #fafafa;
+    background: #2a2a2a;
 }
 
-/* =========================
-   RANK COLUMN
-========================= */
+.table-row > div {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Rank column */
 .rank {
-    padding-right: 10px;
-    font-weight: 600;
-    color: #666;
+    font-weight: 700;
+    color: #808080;
 }
 
-
-
-/* Admin: includes Actions column */
-.table-row.admin,
-.table-header.admin {
-    grid-template-columns:
-        5% 20% 15% 30% 20%
-}
-
-/* Non-admin: no Actions column */
-.table-row.user,
-.table-header.user {
-    grid-template-columns:
-        5% 25% 15% 40%
-}
-
-/* =========================
-   RANK COLUMN
-========================= */
-.rank {
-    padding-right: 10px;
-    font-weight: 600;
-    color: #666;
-}
+/* ============================================
+   RESPONSIVE TABLE
+   ============================================ */
 
 @media (max-width: 900px) {
-    .table-header,
-    .table-row {
-        grid-template-columns:
-            40px
-            minmax(180px, 2fr)
-            minmax(80px, 1fr)
-            minmax(90px, 1fr);
+    .table-header.user,
+    .table-row.user {
+        grid-template-columns: 50px 1fr 100px;
     }
 
-    .table-header .table-col,
-    .table-row .table-col,
-    .table-header .actions-col,
-    .table-row .actions-col {
+    .table-header.admin,
+    .table-row.admin {
+        grid-template-columns: 50px 1fr 100px 100px;
+    }
+
+    /* Hide content column on mobile */
+    .table-header > div:nth-child(4),
+    .table-row > div:nth-child(4) {
         display: none;
     }
 }
 
+@media (max-width: 640px) {
+    .table-wrap {
+        padding: 12px;
+    }
 
-.table-main {
-    display: flex;
-    flex-direction: column;
+    .table-top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .table-top > div {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .table-header.user,
+    .table-row.user {
+        grid-template-columns: 40px 1fr;
+    }
+
+    .table-header.admin,
+    .table-row.admin {
+        grid-template-columns: 40px 1fr 80px;
+    }
+
+    /* Hide author column on small mobile */
+    .table-header > div:nth-child(3),
+    .table-row > div:nth-child(3) {
+        display: none;
+    }
+
+    .table-header,
+    .table-row {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
 }
 
-.row-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: #111;
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+
+.table > div:last-child {
+    padding: 24px;
+    text-align: center;
+    color: #808080;
+    font-size: 14px;
 }
 
-.row-meta {
-    font-size: 12px;
-    color: #777;
-    margin-top: 2px;
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+.table-row:focus-visible {
+    outline: 2px solid #2196f3;
+    outline-offset: -2px;
 }
 
-/* =========================
-   STATUS COLUMN
-========================= */
-.row-status {
-    font-weight: 600;
-    font-size: 13px;
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .table-row {
+        transition: none;
+    }
 }

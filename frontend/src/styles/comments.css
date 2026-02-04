@@ -1,151 +1,236 @@
-.comment-reactions {
-    display: flex;
-    gap: 8px;
-    margin-top: 6px;
+/* === Dark Mode Container === */
+.comments-card {
+    background: #1e1e1e;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    margin: 2rem auto;
 }
 
-.reaction-btn {
-    border: 1px solid #ddd;
-    background: #fff;
-    padding: 4px 8px;
-    border-radius: 14px;
-    font-size: 13px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+/* === Headings === */
+.comments-card h3 {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    color: #ffffff;
 }
 
-.reaction-btn:hover {
-    background: #f5f5f5;
-}
-
-.reaction-btn.active {
-    border-color: #007bff;
-    background: #eef4ff;
-}
-
-.count {
-    font-size: 12px;
-    color: #555;
-}
-
-.comments-card-wrapper {
-    color: #1f1f1f;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 16px;
-}
-
-.reaction-btn {
-    border: none;
-    background: transparent;
-    padding: 4px 8px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.reaction-btn.active {
-    background-color: #e0f2fe;
-    color: #0369a1;
-    font-weight: 600;
-}
-
-
-.reaction-btn:hover {
-    background: #f1f5f9;
-}
-
-.reaction-btn.active {
-    background: #e0f2fe;
-    color: #0369a1;
-    font-weight: 600;
-}
-
-.yt-comment.highlight {
-    background-color: rgba(255, 215, 0, 0.25);
-    border-left: 4px solid #ff9800;
-    animation: pulse 1.5s ease-in-out;
-}
-
-@keyframes pulse {
-    0% { background-color: rgba(255, 215, 0, 0.4); }
-    100% { background-color: rgba(255, 215, 0, 0.25); }
-}
-
-/* ===============================
-COMMENTS (THREAD STYLE)
-================================ */
-
-.comment-list {
+/* === Comment List === */
+.comment-list,
+.yt-replies {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
+/* === Single Comment === */
 .yt-comment {
     display: flex;
-    gap: 12px;
-    padding: 12px 0;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    transition: background 0.3s ease;
+    background: #2a2a2a;
 }
 
+.yt-comment.highlight {
+    background: #3a2f00;
+}
+
+/* === Avatar === */
 .yt-avatar {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
+    background: #444;
     border-radius: 50%;
-    background: #333333;
-    color: white;
     font-weight: bold;
+    font-size: 1.2rem;
+    color: #ddd;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.yt-username{
-    color: black;
-}
-
+/* === Main Area === */
 .yt-main {
     flex: 1;
 }
 
+/* === Header: Username & Time === */
 .yt-header {
+    font-size: 0.9rem;
+    color: #bbb;
+    margin-bottom: 0.4rem;
     display: flex;
-    gap: 8px;
-    font-size: 13px;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.yt-username {
+    font-weight: 600;
+    color: #fff;
 }
 
 .yt-time {
-    color: var(--text-muted);
+    font-size: 0.8rem;
+    color: #888;
 }
 
+/* === Comment Text === */
 .yt-text {
-    margin: 4px 0;
-    font-size: 14px;
-    white-space: pre-wrap;
-    word-break: break-word;
-    color: black;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    white-space: pre-line;
 }
 
+/* === Actions === */
 .yt-actions {
     display: flex;
-    gap: 12px;
-    font-size: 13px;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    color: #aaa;
+    margin-bottom: 0.4rem;
 }
 
-.yt-actions button {
+.reaction-btn {
     background: none;
     border: none;
-    color: var(--text-muted);
+    cursor: pointer;
+    color: #bbb;
+    font-weight: 500;
+    padding: 0.2rem 0.4rem;
+    border-radius: 6px;
+    transition: background 0.2s ease;
+}
+
+.reaction-btn:hover {
+    background: #3b3b3b;
+}
+
+.reaction-btn.active {
+    color: #0a84ff;
+}
+
+/* === Delete Button === */
+.yt-delete {
+    background: none;
+    border: none;
+    color: #ff5c5c;
     cursor: pointer;
 }
 
-.yt-actions button:hover {
-    color: white;
+.yt-delete:hover {
+    text-decoration: underline;
 }
 
+/* === Reply Toggle Button === */
+.yt-toggle {
+    background: none;
+    border: none;
+    font-size: 0.85rem;
+    color: #4da6ff;
+    cursor: pointer;
+    padding-left: 0;
+    margin-top: 0.3rem;
+}
+
+/* === Replies Indent === */
 .yt-replies {
-    margin-left: 48px;
-    margin-top: 8px;
+    margin-top: 0.8rem;
+    padding-left: 2.5rem;
+}
+
+/* === Replying Indicator === */
+.replying-indicator {
+    background: #2f2f2f;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #eee;
+}
+
+.replying-indicator button {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    cursor: pointer;
+}
+
+/* === Form === */
+.comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.textarea {
+    width: 100%;
+    min-height: 80px;
+    resize: vertical;
+    border-radius: 8px;
+    border: 1px solid #444;
+    background: #1a1a1a;
+    padding: 0.75rem;
+    font-size: 1rem;
+    color: #fff;
+    font-family: inherit;
+    transition: border 0.2s ease;
+}
+
+.textarea:focus {
+    outline: none;
+    border-color: #0a84ff;
+}
+
+/* === Submit Button === */
+.post-btn {
+    align-self: flex-end;
+    background-color: #0a84ff;
+    color: white;
+    border: none;
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.post-btn:disabled {
+    background-color: #444;
+    cursor: not-allowed;
+}
+
+.post-btn:not(:disabled):hover {
+    background-color: #006fd6;
+}
+
+/* === Error Toast === */
+.toast-error {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background-color: #4c1e1e;
+    border: 1px solid #cc4444;
+    color: #ffbcbc;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.toast-error button {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    line-height: 1;
+    color: #ffbcbc;
+    cursor: pointer;
 }

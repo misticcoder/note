@@ -1,5 +1,5 @@
 /* ============================================
-   BASE STYLES — DARK SOCIAL THEME
+   BASE STYLES - Dark Theme
    ============================================ */
 
 body {
@@ -7,12 +7,12 @@ body {
     height: 100%;
     margin: 0;
     padding: 0;
-    background-color: #020617;
-    color: #e5e7eb;
+    background-color: #1a1a1a;
+    color: #e0e0e0;
 }
 
 .title {
-    color: #f9fafb;
+    color: #ffffff;
     font-weight: 600;
 }
 
@@ -20,23 +20,21 @@ body {
     width: 100%;
     max-width: 1400px;
     box-sizing: border-box;
-    background: linear-gradient(180deg, #111827, #020617);
-    border-radius: 6px;
-    box-shadow:
-            0 10px 30px rgba(0, 0, 0, 0.55),
-            0 4px 12px rgba(0, 0, 0, 0.4);
+    background-color: #242424;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .page {
+    background-color: #1a1a1a;
     margin: 0 auto;
-    background: radial-gradient(circle at top, #0f172a, #020617);
     min-height: 100vh;
     display: flex;
     justify-content: center;
 }
 
 /* ============================================
-   TOAST NOTIFICATIONS — DARK MATERIAL STYLE
+   TOAST NOTIFICATIONS - Material Design Style
    ============================================ */
 
 .toast-container {
@@ -53,32 +51,27 @@ body {
     min-width: 280px;
     max-width: 400px;
     padding: 14px 18px;
-    border-radius: 6px;
+    border-radius: 4px;
     font-size: 14px;
     font-weight: 500;
-    color: #f9fafb;
-    background: #111827;
-    border: 1px solid #1f2937;
-    box-shadow:
-            0 10px 24px rgba(0, 0, 0, 0.6),
-            0 4px 10px rgba(0, 0, 0, 0.4);
+    color: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2), 0 3px 6px rgba(0, 0, 0, 0.12);
     animation: toast-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-/* Toast Variants */
 .toast-info {
-    border-left: 4px solid #3b82f6;
+    background: #2196f3;
 }
 
 .toast-success {
-    border-left: 4px solid #22c55e;
+    background: #4caf50;
 }
 
 .toast-error {
-    border-left: 4px solid #ef4444;
+    background: #f44336;
 }
 
 @keyframes toast-in {
@@ -109,7 +102,7 @@ body {
 }
 
 /* ============================================
-   TOOLTIPS — DARK W3 STYLE
+   TOOLTIPS - W3.CSS Style
    ============================================ */
 
 [data-tooltip] {
@@ -131,8 +124,8 @@ body {
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%) translateY(4px);
-    border: 6px solid transparent;
-    border-top-color: #020617;
+    border: 5px solid transparent;
+    border-top-color: #3a3a3a;
     z-index: 1001;
 }
 
@@ -140,19 +133,17 @@ body {
 [data-tooltip]::after {
     white-space: nowrap;
     content: attr(data-tooltip);
-    bottom: calc(100% + 12px);
+    bottom: calc(100% + 10px);
     left: 50%;
     transform: translateX(-50%) translateY(4px);
-    background: #020617;
-    color: #f9fafb;
+    background: #3a3a3a;
+    color: #e0e0e0;
     font-size: 12px;
     font-weight: 500;
     padding: 6px 10px;
-    border-radius: 6px;
+    border-radius: 4px;
     z-index: 1000;
-    border: 1px solid #1f2937;
-    box-shadow:
-            0 8px 20px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 [data-tooltip]:hover::before,
@@ -173,6 +164,7 @@ body {
     .container {
         border-radius: 0;
         box-shadow: none;
+        background-color: #242424;
     }
 
     .toast-container {

@@ -113,7 +113,7 @@ export default function CommentSection({
 
     return (
         <div className="comments-card">
-            <h3 style={{ color: "#000" }}>Comments</h3>
+            <h3>Comments</h3>
 
             {tree.length === 0 && <p>No comments yet.</p>}
 

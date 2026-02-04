@@ -87,7 +87,7 @@ export default function ThreadSection({
                     }}
                 >
                     <div style={{display: "flex", flexDirection: "column"}}>
-                        <span style={{color:"black", fontWeight: 600}}>
+                        <span>
                             {thread.title}
                         </span>
                         <span className={"x-time"}>

@@ -210,7 +210,7 @@ export default function ThreadPage() {
                         </aside>
 
                         {/* MAIN CONTENT */}
-                        <main className="content-col">
+                        <div className="content-col">
                             {loading && <p>Loading…</p>}
                             {err && <p style={{ color: "red" }}>{err}</p>}
 
@@ -240,7 +240,7 @@ export default function ThreadPage() {
                                 </div>
                             )}
 
-                            <CommentSection
+                            {<CommentSection
                                 comments={comments}
                                 user={user}
                                 newComment={newComment}
@@ -248,8 +248,9 @@ export default function ThreadPage() {
                                 onSubmit={postComment}
                                 onDelete={requestDeleteComment}
                                 refreshComments={fetchComments}
-                            />
-                        </main>
+                            />}
+                        </div>
+
                     </div>
 
                     {/* CONFIRM DIALOG */}
