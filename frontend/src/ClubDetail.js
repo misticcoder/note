@@ -756,7 +756,7 @@ export default function ClubDetail() {
                                                                     <i className={`fa ${meta.icon}`} />
                                                                 </a>
 
-                                                                <span style={{ fontWeight: 600 }}>{meta.label}</span>
+                                                                <span style={{ fontWeight: 600, color: "black" }}>{meta.label}</span>
                                                             </div>
 
                                                             {canManageLinks && (
@@ -1420,8 +1420,8 @@ const s = {
         boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
         marginBottom: 12,
     },
-    headerCard: {width: "100%", backgroundColor: "#605f5f", marginTop: 50},
-    headerTop: {display: "flex", padding: "20", justifyContent: "space-between",},
+    headerCard: {width: "100%", backgroundColor: "#605f5f"},
+    headerTop: {display: "flex", justifyContent: "space-between",},
     title: {margin: 0, fontSize: "24px", lineHeight: 1.2, color: "#FFFFE4", fontWeight: "700"},
     desc: {marginTop: 8, color: "#444", lineHeight: 1.6},
 

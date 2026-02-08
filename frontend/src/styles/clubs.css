@@ -4,29 +4,33 @@
 
 .club-header {
     background: #3a3f45;
-    border-bottom: 1px solid #2a2f35;
+    border-bottom: 2px solid #2a2f35;
     width: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .club-header-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 24px;
+    padding: 20px;
+    height: 5cm;
 }
 
 .club-header-left {
     display: flex;
-    gap: 16px;
+    gap: 20px;
     align-items: center;
 }
 
 .club-logo {
-    width: 56px;
-    height: 56px;
-    border-radius: 8px;
+    width: 64px;                             /* Larger logo */
+    height: 64px;
+    border-radius: 10px;                     /* Slightly rounder */
     object-fit: cover;
-    background: #222;
+    background: #1a1a1a;
+    border: 2px solid #3a4556;               /* Added border */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* ======================================================
@@ -35,9 +39,10 @@
 
 .club-title {
     margin: 0;
-    font-size: 26px;
+    font-size: 28px;                         /* Slightly larger */
     font-weight: 700;
-    color: #f9fafb;
+    color: #f7fafc;                          /* Brighter white */
+    letter-spacing: 0.3px;
 }
 
 .club-short {
@@ -47,36 +52,47 @@
 }
 
 .club-leaders {
-    margin-top: 4px;
+    margin-top: 6px;
     font-size: 13px;
-    color: #facc15;
+    color: #fbbf24;                          /* Brighter yellow */
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.club-leaders::before {
+    content: "👑";
+    font-size: 14px;
 }
 
 .club-description {
-    margin-top: 6px;
+    margin-top: 8px;
     font-size: 14px;
-    color: #d1d5db;
-    max-width: 520px;
-    line-height: 1.4;
+    color: #cbd5e0;                          /* Brighter description */
+    max-width: 600px;                        /* Wider for better readability */
+    line-height: 1.5;
 }
 
 .club-sub {
-    margin-top: 6px;
+    margin-top: 8px;
     display: flex;
-    gap: 12px;
+    gap: 16px;                               /* Increased gap */
     font-size: 13px;
-    color: #9ca3af;
+    color: #a0aec0;
 }
 
 .club-sub a {
-    color: #60a5fa;
+    color: #6ba3c8;                          /* Matches primary blue */
     text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
 }
 
 .club-sub a:hover {
+    color: #5a93b8;
     text-decoration: underline;
 }
-
 /* ======================================================
    MEMBER ACTION PILL
 ====================================================== */
@@ -84,57 +100,72 @@
 .club-member-pill {
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: #1f2933;
-    padding: 6px 10px;
+    gap: 12px;
+    background: #1e2530;                     /* Slightly lighter */
+    padding: 8px 14px;                       /* Increased padding */
     border-radius: 999px;
+    border: 1px solid #3a4556;               /* Added border */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .club-member-user {
-    color: #e5e7eb;
+    color: #f7fafc;                          /* Brighter text */
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;                        /* Increased weight */
     white-space: nowrap;
 }
 
-/* Base pill button */
+/* Base pill button - Enhanced */
 .pill-btn {
     border: none;
     border-radius: 999px;
-    padding: 6px 14px;
+    padding: 8px 18px;                       /* Increased padding */
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;                        /* Bolder */
     cursor: pointer;
     line-height: 1;
-    transition: background-color 0.15s ease, transform 0.1s ease;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.3px;
 }
 
-/* JOIN */
+.pill-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* JOIN - Enhanced Blue */
 .pill-btn.pill-join {
-    background-color: #0b57d0;
+    background-color: #5a93b8;               /* Matches theme */
     color: #ffffff;
 }
 
 .pill-btn.pill-join:hover {
-    background-color: #0842a0;
+    background-color: #6ba3c8;
+    box-shadow: 0 4px 8px rgba(90, 147, 184, 0.4);
+    transform: translateY(-1px);
 }
 
-/* LEAVE */
+/* LEAVE - Enhanced Red */
 .pill-btn.pill-leave {
-    background-color: #b00020;
+    background-color: #ef5350;
     color: #ffffff;
 }
 
 .pill-btn.pill-leave:hover {
-    background-color: #8e0018;
+    background-color: #e53935;
+    box-shadow: 0 4px 8px rgba(239, 83, 80, 0.4);
+    transform: translateY(-1px);
 }
 
-/* PENDING */
+/* PENDING - Enhanced Grey */
 .pill-btn.pill-pending {
-    background-color: #9aa0a6;
+    background-color: #718096;               /* More visible grey */
     color: #ffffff;
     cursor: default;
+    opacity: 0.8;
 }
+
 
 /* ======================================================
    CLUB TABS
@@ -169,11 +200,12 @@
 ====================================================== */
 
 .clubs-table {
-    background: #ffffff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    background: #ffffff;                     /* Dark background */
+    border: 1px solid #3a4556;               /* Visible border */
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
-
 /* Shared header + rows */
 .clubs-header,
 .clubs-row {
@@ -187,21 +219,33 @@
         minmax(120px, 1fr)
         minmax(100px, 1fr);
     align-items: center;
-    padding: 12px 14px;
-    column-gap: 12px;
+    padding: 14px 16px;                      /* Increased padding */
+    column-gap: 16px;
 }
 
 .clubs-header {
-    background: #f4f4f4;
-    font-weight: 600;
-    font-size: 13px;
-    color: #555;
+    background: #1e2530;                     /* Darker header */
+    font-weight: 700;                        /* Bolder */
+    font-size: 12px;
+    color: #a0aec0;                          /* Muted but visible */
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 2px solid #3a4556;
 }
 
 .clubs-row {
-    border-top: 1px solid #eee;
-    color: black;
+    border-top: 1px solid #eee;         /* Visible separator */
+    color: #000;                          /* Bright text */
     font-size: 14px;
+    transition: background-color 0.15s ease;
+}
+
+.clubs-row:hover {
+    background: rgba(90, 147, 184, 0.08);    /* Subtle blue hover */
+}
+
+.clubs-row:first-of-type {
+    border-top: none;
 }
 
 /* ======================================================
@@ -209,7 +253,8 @@
 ====================================================== */
 
 .title {
-    color: #ffffe3;
+    color: #ffffe3;                          /* Brighter yellow */
+    font-weight: 600;
 }
 
 /* ======================================================
@@ -243,3 +288,49 @@
 .social-instagram{ background: #125688; }
 .social-telegram { background: #0088cc; }
 .social-website  { background: #374151; }
+
+/* Category badge in header */
+.club-category-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(90, 147, 184, 0.15);
+    border: 1px solid rgba(90, 147, 184, 0.3);
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #6ba3c8;
+    margin-left: 12px;
+}
+
+/* Member count display */
+.club-member-count {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #a0aec0;
+    font-weight: 600;
+}
+
+.club-member-count::before {
+    content: "👥";
+    font-size: 14px;
+}
+
+/* Loading states */
+.pill-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Success state (for join confirmation) */
+.pill-btn.pill-success {
+    background-color: #66bb6a;
+    color: #ffffff;
+}
+
+.pill-btn.pill-success:hover {
+    background-color: #57a85a;
+}

@@ -501,13 +501,16 @@
         minmax(90px, 1fr)   /* status */
         minmax(110px, 1fr)  /* rating */
         minmax(120px, 1fr); /* actions */
-    align-items: center;
+    align-content: center;
     padding: 12px 14px;
     column-gap: 12px;
 }
 
 .events-row {
     border-top: 1px solid #eee;
+}
+.events-header {
+   height: 1cm;
 }
 .events-header,
 .events-row {
@@ -535,7 +538,7 @@
         minmax(110px, 1fr)  /* rating */
         minmax(110px, 1fr)  /* rating */
         minmax(120px, 1fr); /* actions */
-    align-items: center;
+    align-content: center;
     padding: 12px 14px;
     column-gap: 12px;
 }
