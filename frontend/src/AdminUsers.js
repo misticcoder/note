@@ -157,7 +157,7 @@ export default function AdminUsers() {
                             + Add User
                         </button>
                     )}
-                    <a href="#/" style={styles.backLink}>← Back</a>
+                    <a href="#/home" style={styles.backLink}>← Back</a>
                 </div>
             </div>
 
@@ -300,8 +300,8 @@ const styles = {
     addBtn: { padding: "6px 10px", background: "#0b57d0", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" },
 
     tableWrap: { background: "#fff", border: "1px solid #ddd", borderRadius: 8, overflow: "hidden" },
-    row: { display: "flex", gap: 8, padding: "10px 8px", borderBottom: "1px solid #eee", alignItems: "center" },
-    head: { background: "#f5f5f5", fontWeight: "bold" },
+    row: { display: "flex", gap: 8, padding: "10px 8px", borderBottom: "1px solid #eee", alignItems: "center", color:"#000" },
+    head: { background: "#f5f5f5", fontWeight: "bold", color:"#000" },
 
     delBtn: { padding: "6px 10px", background: "#b00020", color: "#fff", border: "none", borderRadius: 6 },
     saveBtn: { padding: "6px 10px", background: "#0b57d0", color: "#fff", border: "none", borderRadius: 6 },

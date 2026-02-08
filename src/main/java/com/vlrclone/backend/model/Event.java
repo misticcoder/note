@@ -101,6 +101,8 @@ public class Event {
     private String externalUrl;
 
 
+
+
     public String getAttendanceCodeHash() { return attendanceCodeHash; }
     public void setAttendanceCodeHash(String attendanceCodeHash) { this.attendanceCodeHash = attendanceCodeHash; }
 
@@ -129,6 +131,33 @@ public class Event {
 
         return EventStatus.LIVE;
     }
+
+    public Event() {
+        // Required by JPA
+    }
+
+    public Event(
+            String title,
+            String content,
+            String location,
+            LocalDateTime startAt,
+            LocalDateTime endAt,
+            EventCategory category,
+            EventVisibility visibility,
+            Club club,
+            User author
+    ) {
+        this.title = title;
+        this.content = content;
+        this.location = location;
+        this.startAt = startAt;
+        this.endAt = endAt;
+        this.category = category;
+        this.visibility = visibility;
+        this.club = club;
+        this.author = author;
+    }
+
 
     /* =====================
        GETTERS / SETTERS

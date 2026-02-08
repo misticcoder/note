@@ -106,7 +106,7 @@ public class SearchService {
            =============================== */
 
         var clubs = clubRepo
-                .findByNameContainingIgnoreCase(cleanQuery, pageable)
+                .findByNameContainingIgnoreCase(cleanQuery)
                 .stream()
                 .map(c -> new SearchResultDto(
                         c.getId(),

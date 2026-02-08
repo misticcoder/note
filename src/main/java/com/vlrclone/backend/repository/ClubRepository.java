@@ -14,10 +14,10 @@ public interface ClubRepository extends JpaRepository<Club, Long> {
     List<Club> findTop10ByNameContainingIgnoreCase(String name);
     List<Club> findByCategory(ClubCategory category);
     List<Club> findByCategoryIn(List<ClubCategory> categories);
+    Optional<Club> findByName(String name);
 
     List<Club> findByNameContainingIgnoreCase(
-            String name,
-            Pageable pageable
+            String name
     );
 
     List<Club> findAllByOrderByCreatedAtDesc(Pageable pageable);

@@ -43,6 +43,18 @@ public class Club {
     @JsonManagedReference
     private List<ClubLink> links = new ArrayList<>();
 
+    public Club() {
+        // Required by JPA
+    }
+
+    public Club(ClubCategory category, String name, String description) {
+        this.category = category;
+        this.name = name;
+        this.description = description;
+        this.createdAt = LocalDateTime.now();
+    }
+
+
 
 
     // Getters and setters

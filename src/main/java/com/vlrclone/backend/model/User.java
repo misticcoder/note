@@ -58,7 +58,22 @@ public class User {
     }
 
     // Constructors
-    public User() {}
+    public User() {
+        // required by JPA
+    }
+
+    public User(
+            String username,
+            String email,
+            String password,
+            Role role
+    ) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+    }
+
 
 
     // Getters and Setters

@@ -6,6 +6,7 @@ import com.vlrclone.backend.model.User;
 import com.vlrclone.backend.model.User.Role;
 import com.vlrclone.backend.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,9 +17,11 @@ import java.util.Map;
 
 public class AuthController {
     private final UserRepository users;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthController(UserRepository users) {
+    public AuthController(UserRepository users, PasswordEncoder passwordEncoder) {
         this.users = users;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping("/users")
@@ -38,13 +41,12 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody User body) {
-        // Basic validation
+
         if (body.getEmail() == null || body.getUsername() == null || body.getPassword() == null
                 || body.getEmail().isBlank() || body.getUsername().isBlank() || body.getPassword().isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("message", "email, username, and password are required"));
         }
 
-        // Duplicates
         if (users.existsByEmail(body.getEmail())) {
             return ResponseEntity.status(409).body(Map.of("message", "Email already in use"));
         }
@@ -52,11 +54,12 @@ public class AuthController {
             return ResponseEntity.status(409).body(Map.of("message", "Username already in use"));
         }
 
-        // Default role if none provided
         Role role = body.getRole() != null ? body.getRole() : User.Role.STUDENT;
         body.setRole(role);
 
-        // NOTE: For prototype only; password is plain text.
+        // ✅ ENCODE PASSWORD
+        body.setPassword(passwordEncoder.encode(body.getPassword()));
+
         User saved = users.save(body);
 
         return ResponseEntity.ok(Map.of(
@@ -70,20 +73,25 @@ public class AuthController {
         ));
     }
 
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User body) {
-        String email = body.getEmail();
-        String password = body.getPassword();
 
-        if (email == null || password == null) {
+        String email = body.getEmail();
+        String rawPassword = body.getPassword();
+
+        if (email == null || rawPassword == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "email and password required"));
         }
 
         return users.findByEmail(email)
                 .<ResponseEntity<?>>map(u -> {
-                    if (!u.getPassword().equals(password)) {
+
+                    // ✅ PROPER PASSWORD CHECK
+                    if (!passwordEncoder.matches(rawPassword, u.getPassword())) {
                         return ResponseEntity.status(401).body(Map.of("message", "Invalid credentials"));
                     }
+
                     return ResponseEntity.ok(Map.of(
                             "status", "success",
                             "user", Map.of(
@@ -96,6 +104,7 @@ public class AuthController {
                 })
                 .orElse(ResponseEntity.status(404).body(Map.of("message", "User not found")));
     }
+
 
     @DeleteMapping("/users/{id}")
     public ResponseEntity<?> deleteById(@PathVariable Long id) {
@@ -122,4 +131,47 @@ public class AuthController {
                 })
                 .orElse(ResponseEntity.status(404).body(Map.of("message", "User not found")));
     }
+
+    @PatchMapping("/users/{id}/role")
+    public ResponseEntity<?> updateUserRole(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body
+    ) {
+        String roleRaw = body.get("role");
+
+        if (roleRaw == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "role is required"));
+        }
+
+        Role role;
+        try {
+            role = Role.valueOf(roleRaw.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Invalid role"));
+        }
+
+        return users.findById(id)
+                .map(u -> {
+                    if (u.isProtectedAccount()) {
+                        return ResponseEntity.status(403)
+                                .body(Map.of("message", "This account role cannot be changed"));
+                    }
+
+                    u.setRole(role);
+                    users.save(u);
+
+                    return ResponseEntity.ok(Map.of(
+                            "status", "success",
+                            "user", Map.of(
+                                    "id", u.getId(),
+                                    "role", u.getRole().name()
+                            )
+                    ));
+                })
+                .orElse(ResponseEntity.status(404).body(Map.of("message", "User not found")));
+    }
+
+
 }
+
+

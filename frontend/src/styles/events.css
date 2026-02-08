@@ -700,13 +700,12 @@
 .event-status-tabs {
     display: flex;
     gap: 8px;
-    margin-top: 10px;
-    margin-bottom: 8px;
 }
 
 .event-status-tabs button.active {
     font-weight: 700;
-    border-bottom: 2px solid currentColor;
+    border-bottom: 4px solid red;
+    padding: 5px;
 }
 
 .event-tags-filter {

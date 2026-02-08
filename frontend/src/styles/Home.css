@@ -1,11 +1,11 @@
 /* ============================================
    HOME PAGE STYLES - Social Media Theme
-   Inspired by modern social network layouts
+   Enhanced Based on Screenshot Analysis
    ============================================ */
 
-/* CSS Variables - Social Media Color System */
+/* CSS Variables - Optimized for Visibility */
 :root {
-    /* Blue-Grey Theme (W3.CSS inspired) - Dark Mode */
+    /* Blue-Grey Theme */
     --color-theme-d5: #b0bec5;
     --color-theme-d4: #90a4ae;
     --color-theme-d3: #78909c;
@@ -18,30 +18,35 @@
     --color-theme-l4: #212b30;
     --color-theme-l5: #1a1a1a;
 
-    /* Functional Colors */
-    --color-background: #1a1a1a;
-    --color-white: #242424;
-    --color-card-bg: #242424;
-    --color-border: #3a3a3a;
-    --color-border-light: #2f2f2f;
+    /* Functional Colors - OPTIMIZED FOR SCREENSHOT */
+    --color-background: #1a1a1a;           /* Dark base matching screenshot */
+    --color-card-bg: #2a2a2a;              /* Significantly lighter cards */
+    --color-white: #2a2a2a;                /* Card background */
+    --color-border: #4a5568;               /* Much more visible borders */
+    --color-border-light: #3a4556;         /* Visible light borders */
+    --color-border-subtle: #2d3748;        /* Subtle but visible */
 
-    --color-text-primary: #e0e0e0;
-    --color-text-secondary: #b0b0b0;
-    --color-text-muted: #808080;
+    /* Text Colors - HIGH CONTRAST */
+    --color-text-primary: #f7fafc;         /* Near white */
+    --color-text-secondary: #cbd5e0;       /* Light grey */
+    --color-text-muted: #a0aec0;           /* Visible muted */
+    --color-text-dimmed: #718096;          /* Dimmed but readable */
 
-    --color-primary: #2196f3;
-    --color-primary-hover: #1976d2;
-    --color-success: #4caf50;
-    --color-danger: #f44336;
-    --color-warning: #ff9800;
+    /* Interactive Colors - Matching Screenshot Blues */
+    --color-primary: #5a93b8;              /* Blue from screenshot buttons */
+    --color-primary-hover: #6ba3c8;
+    --color-primary-dark: #4a7fa0;
+    --color-success: #66bb6a;
+    --color-danger: #ef5350;
+    --color-warning: #ffa726;
 
-    /* Event Status Colors */
-    --color-live: #f44336;
-    --color-live-bg: #ffebee;
-    --color-upcoming: #2196f3;
-    --color-upcoming-bg: #e3f2fd;
-    --color-ended: #9e9e9e;
-    --color-ended-bg: #f5f5f5;
+    /* Event Status Colors - High Contrast */
+    --color-live: #ef5350;
+    --color-live-bg: rgba(239, 83, 80, 0.2);
+    --color-upcoming: #5a93b8;             /* Matching your blue */
+    --color-upcoming-bg: rgba(90, 147, 184, 0.2);
+    --color-ended: #a0aec0;
+    --color-ended-bg: rgba(160, 174, 192, 0.15);
 
     /* Spacing */
     --spacing-xs: 4px;
@@ -50,10 +55,11 @@
     --spacing-lg: 24px;
     --spacing-xl: 32px;
 
-    /* Shadows - Soft material design style */
-    --shadow-card: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-    --shadow-hover: 0 4px 8px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08);
-    --shadow-modal: 0 10px 25px rgba(0, 0, 0, 0.15), 0 5px 10px rgba(0, 0, 0, 0.1);
+    /* Shadows - Pronounced */
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
+    --shadow-modal: 0 24px 48px rgba(0, 0, 0, 0.6), 0 12px 24px rgba(0, 0, 0, 0.5);
+    --shadow-button: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* ============================================
@@ -98,25 +104,29 @@ body {
 }
 
 /* ============================================
-   COLUMN CARDS - W3.CSS Style
+   COLUMN CARDS - HIGH VISIBILITY
    ============================================ */
 
 .column {
-    background: var(--color-white);
-    border-radius: 4px;
+    background: var(--color-card-bg);
+    border-radius: 8px;
     box-shadow: var(--shadow-card);
     overflow: hidden;
+    border: 1px solid var(--color-border-subtle);
 }
 
-/* Column Headers */
+/* Column Headers - PROMINENT */
 .column-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--color-text-primary);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text-muted);          /* Muted but visible */
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
     margin: 0;
     padding: var(--spacing-md);
-    background: var(--color-white);
-    border-bottom: 1px solid var(--color-border-light);
+    padding-bottom: var(--spacing-sm);
+    background: transparent;
+    border-bottom: 1px solid var(--color-border-subtle);
 }
 
 /* Column Content Padding */
@@ -131,7 +141,7 @@ body {
 }
 
 /* ============================================
-   CARD ITEMS - Social Feed Style
+   CARD ITEMS - CLEAR SEPARATION
    ============================================ */
 
 .card {
@@ -140,10 +150,10 @@ body {
     justify-content: space-between;
     gap: var(--spacing-sm);
     padding: var(--spacing-md);
-    background: var(--color-white);
-    border-bottom: 1px solid var(--color-border-light);
+    background: transparent;
+    border-bottom: 1px solid var(--color-border-subtle);
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.15s ease;
     position: relative;
 }
 
@@ -152,21 +162,23 @@ body {
 }
 
 .card:hover {
-    background: var(--color-theme-l5);
+    background: rgba(90, 147, 184, 0.08);    /* Subtle blue tint */
+    padding-left: calc(var(--spacing-md) - 3px);
+    border-left: 3px solid var(--color-primary);
 }
 
 .card:active {
-    background: var(--color-theme-l4);
+    background: rgba(90, 147, 184, 0.12);
 }
 
-/* Card Text */
+/* Card Text - HIGH READABILITY */
 .truncate {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     flex: 1;
     font-size: 14px;
-    font-weight: 400;
+    font-weight: 500;
     color: var(--color-text-primary);
 }
 
@@ -175,19 +187,23 @@ body {
     font-size: 13px;
     padding: var(--spacing-lg);
     text-align: center;
+    font-style: italic;
 }
 
-/* Member count badge style */
+/* Member count badge - CLEAR VISIBILITY */
 .card .muted {
-    padding: 2px 8px;
-    background: var(--color-theme-l4);
+    padding: 4px 12px;
+    background: rgba(90, 147, 184, 0.15);
     border-radius: 12px;
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 600;
+    border: 1px solid rgba(90, 147, 184, 0.3);
+    color: var(--color-text-secondary);
+    font-style: normal;
 }
 
 /* ============================================
-   EVENT CARDS
+   EVENT CARDS - PROMINENT STATUS PILLS
    ============================================ */
 
 .event-row {
@@ -199,140 +215,154 @@ body {
 .event-pill {
     display: inline-flex;
     align-items: center;
-    padding: 4px 12px;
-    border-radius: 12px;
+    padding: 6px 14px;
+    border-radius: 16px;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
     white-space: nowrap;
+    border: 1.5px solid transparent;
 }
 
 .event-pill.live {
     background: var(--color-live-bg);
-    color: var(--color-live);
+    color: #ff6b6b;                          /* Brighter red */
+    border-color: #ff6b6b;
     animation: pulse 2s ease-in-out infinite;
+    box-shadow: 0 0 12px rgba(255, 107, 107, 0.3);
 }
 
 .event-pill.upcoming {
     background: var(--color-upcoming-bg);
-    color: var(--color-upcoming);
+    color: #6ba3c8;                          /* Brighter blue */
+    border-color: #6ba3c8;
 }
 
 .event-pill.ended {
     background: var(--color-ended-bg);
-    color: var(--color-ended);
+    color: var(--color-text-muted);
+    border-color: var(--color-border-subtle);
 }
 
 /* ============================================
-   BUTTONS - Social Media Style
+   BUTTONS - MATCHING SCREENSHOT STYLE
    ============================================ */
 
 .add-btn {
-    width: 100%;
-    padding: var(--spacing-sm) var(--spacing-md);
+    width: calc(100% - 2 * var(--spacing-md));
+    padding: 12px var(--spacing-md);
     margin: var(--spacing-md);
-    margin-bottom: 0;
-    background: var(--color-theme-d2);
+    margin-bottom: var(--spacing-md);
+    background: var(--color-primary);        /* Solid blue like screenshot */
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-button);
+    letter-spacing: 0.3px;
 }
 
 .add-btn:hover {
-    background: var(--color-theme-d3);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    background: var(--color-primary-hover);
+    box-shadow: 0 4px 12px rgba(90, 147, 184, 0.4);
+    transform: translateY(-1px);
 }
 
 .add-btn:active {
-    background: var(--color-theme-d4);
-    transform: translateY(1px);
+    background: var(--color-primary-dark);
+    transform: translateY(0px);
 }
 
 /* ============================================
-   CLUB CATEGORIES
+   CLUB CATEGORIES - CLEAR HEADERS
    ============================================ */
 
 .clubs-column > div > h4 {
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--color-text-secondary);
-    margin: var(--spacing-md);
-    margin-bottom: var(--spacing-sm);
-    padding-top: var(--spacing-sm);
-    border-top: 1px solid var(--color-border-light);
+    letter-spacing: 1.2px;
+    color: var(--color-text-muted);
+    margin: 0;
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--color-border-subtle);
+    background: rgba(255, 255, 255, 0.02);
 }
 
 .clubs-column > div:first-of-type > h4 {
     border-top: none;
-    padding-top: 0;
+    margin-top: 0;
 }
 
 /* ============================================
-   EVENT SECTIONS
+   EVENT SECTIONS - CLEAR HEADERS
    ============================================ */
 
 .events-column > div > h4 {
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--color-text-secondary);
-    margin: var(--spacing-md);
-    margin-bottom: var(--spacing-sm);
-    padding-top: var(--spacing-sm);
-    border-top: 1px solid var(--color-border-light);
+    letter-spacing: 1.2px;
+    color: var(--color-text-muted);
+    margin: 0;
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--color-border-subtle);
+    background: rgba(255, 255, 255, 0.02);
 }
 
 .events-column > div:first-of-type > h4 {
     border-top: none;
-    padding-top: 0;
+    margin-top: 0;
 }
 
 /* ============================================
-   MODAL STYLES - Material Design
+   MODAL STYLES - ENHANCED VISIBILITY
    ============================================ */
 
 .modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.8);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
     padding: var(--spacing-md);
     animation: fadeIn 0.2s ease;
+    backdrop-filter: blur(6px);
 }
 
 .modal-card {
-    background: var(--color-white);
-    border-radius: 4px;
+    background: #2d3748;                     /* Lighter than cards for prominence */
+    border-radius: 10px;
     box-shadow: var(--shadow-modal);
-    padding: var(--spacing-lg);
+    padding: var(--spacing-xl);
     max-width: 500px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
     animation: slideUp 0.3s ease;
+    border: 1px solid var(--color-border);
 }
 
 .modal-card h3 {
     margin: 0 0 var(--spacing-lg) 0;
-    font-size: 20px;
-    font-weight: 600;
+    font-size: 22px;
+    font-weight: 700;
     color: var(--color-text-primary);
+    letter-spacing: 0.3px;
 }
 
 /* ============================================
-   FORM STYLES
+   FORM STYLES - HIGH CONTRAST
    ============================================ */
 
 .modal-form {
@@ -347,103 +377,108 @@ body {
 .modal-form textarea,
 .modal-form select {
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
+    padding: 12px 14px;
+    border: 2px solid var(--color-border-subtle);
+    border-radius: 6px;
     font-size: 14px;
     font-family: inherit;
     color: var(--color-text-primary);
-    background: var(--color-white);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background: #1a202c;                     /* Darker input background */
+    transition: all 0.2s ease;
 }
 
 .modal-form input:focus,
 .modal-form textarea:focus,
 .modal-form select:focus {
     outline: none;
-    border-color: var(--color-theme-d2);
-    box-shadow: 0 0 0 2px var(--color-theme-l4);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(90, 147, 184, 0.25);
+    background: #242b38;
 }
 
 .modal-form textarea {
-    min-height: 100px;
+    min-height: 120px;
     resize: vertical;
     font-family: inherit;
 }
 
 .modal-form input[type="file"] {
-    padding: 8px;
+    padding: 10px;
     cursor: pointer;
 }
 
 .modal-form input[type="file"]::file-selector-button {
-    padding: 6px 12px;
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-    background: var(--color-theme-l5);
+    padding: 8px 14px;
+    border: 2px solid var(--color-border-subtle);
+    border-radius: 6px;
+    background: var(--color-theme-l2);
     color: var(--color-text-primary);
     cursor: pointer;
-    font-weight: 500;
+    font-weight: 600;
     font-size: 13px;
     margin-right: var(--spacing-sm);
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .modal-form input[type="file"]::file-selector-button:hover {
-    background: var(--color-theme-l4);
+    background: var(--color-theme-l1);
+    border-color: var(--color-primary);
 }
 
 /* Placeholder styling */
 .modal-form input::placeholder,
 .modal-form textarea::placeholder {
-    color: var(--color-text-muted);
+    color: var(--color-text-dimmed);
 }
 
 /* ============================================
-   MODAL ACTIONS
+   MODAL ACTIONS - PROMINENT BUTTONS
    ============================================ */
 
 .modal-actions {
     display: flex;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-md);
     margin-top: var(--spacing-md);
 }
 
 .saveBtn,
 .cancelBtn {
     flex: 1;
-    padding: 10px var(--spacing-lg);
+    padding: 12px var(--spacing-lg);
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
+    letter-spacing: 0.3px;
 }
 
 .saveBtn {
-    background: var(--color-theme-d2);
+    background: var(--color-primary);
     color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-button);
 }
 
 .saveBtn:hover {
-    background: var(--color-theme-d3);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    background: var(--color-primary-hover);
+    box-shadow: 0 4px 12px rgba(90, 147, 184, 0.4);
+    transform: translateY(-1px);
 }
 
 .saveBtn:active {
-    transform: translateY(1px);
+    transform: translateY(0px);
 }
 
 .cancelBtn {
-    background: var(--color-theme-l4);
+    background: transparent;
     color: var(--color-text-primary);
-    border: 1px solid var(--color-border);
+    border: 2px solid var(--color-border);
 }
 
 .cancelBtn:hover {
-    background: var(--color-theme-l3);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--color-border-light);
 }
 
 /* ============================================
@@ -463,19 +498,20 @@ body {
 }
 
 /* ============================================
-   BADGE STYLES
+   BADGE STYLES - HIGH VISIBILITY
    ============================================ */
 
 .w3-badge {
     display: inline-block;
-    padding: 0 6px;
+    padding: 2px 8px;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
     line-height: 18px;
-    border-radius: 9px;
+    border-radius: 10px;
     background: var(--color-danger);
     color: white;
     margin-left: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* ============================================
@@ -494,7 +530,7 @@ body {
 @keyframes slideUp {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(30px);
     }
     to {
         opacity: 1;
@@ -505,9 +541,11 @@ body {
 @keyframes pulse {
     0%, 100% {
         opacity: 1;
+        transform: scale(1);
     }
     50% {
-        opacity: 0.7;
+        opacity: 0.85;
+        transform: scale(1.02);
     }
 }
 
@@ -578,12 +616,12 @@ body {
     }
 
     .column {
-        border-radius: 0;
+        border-radius: 8px;
     }
 
     .modal-card {
-        padding: var(--spacing-md);
-        border-radius: 4px;
+        padding: var(--spacing-lg);
+        border-radius: 8px;
         max-height: 95vh;
     }
 
@@ -593,40 +631,42 @@ body {
 
     .add-btn {
         margin: var(--spacing-sm);
+        width: calc(100% - 2 * var(--spacing-sm));
     }
 }
 
 /* ============================================
-   SCROLLBAR STYLING
+   SCROLLBAR STYLING - VISIBLE
    ============================================ */
 
 .modal-card::-webkit-scrollbar {
-    width: 8px;
+    width: 10px;
 }
 
 .modal-card::-webkit-scrollbar-track {
-    background: var(--color-theme-l5);
+    background: #1a202c;
 }
 
 .modal-card::-webkit-scrollbar-thumb {
-    background: var(--color-theme-l2);
-    border-radius: 4px;
+    background: var(--color-primary);
+    border-radius: 5px;
+    border: 2px solid #1a202c;
 }
 
 .modal-card::-webkit-scrollbar-thumb:hover {
-    background: var(--color-theme-l1);
+    background: var(--color-primary-hover);
 }
 
 /* ============================================
-   ACCESSIBILITY
+   ACCESSIBILITY - CLEAR FOCUS STATES
    ============================================ */
 
 .card:focus-visible,
 .add-btn:focus-visible,
 .saveBtn:focus-visible,
 .cancelBtn:focus-visible {
-    outline: 2px solid var(--color-theme-d2);
-    outline-offset: 2px;
+    outline: 3px solid var(--color-primary);
+    outline-offset: 3px;
 }
 
 /* Reduced motion support */
@@ -649,7 +689,7 @@ body {
 }
 
 /* ============================================
-   HOVER EFFECTS FOR INTERACTIVE ELEMENTS
+   HOVER EFFECTS - VISIBLE INDICATOR
    ============================================ */
 
 .card::after {
@@ -658,9 +698,9 @@ body {
     right: var(--spacing-md);
     top: 50%;
     transform: translateY(-50%);
-    width: 6px;
-    height: 6px;
-    background: var(--color-theme-l2);
+    width: 8px;
+    height: 8px;
+    background: var(--color-primary);
     border-radius: 50%;
     opacity: 0;
     transition: opacity 0.2s ease;
@@ -668,28 +708,31 @@ body {
 
 .card:hover::after {
     opacity: 1;
+    box-shadow: 0 0 8px rgba(90, 147, 184, 0.6);
 }
 
 /* ============================================
-   TAG/PILL STYLES (for categories/interests)
+   TAG/PILL STYLES - ENHANCED
    ============================================ */
 
 .w3-tag {
     display: inline-block;
-    padding: 4px 10px;
+    padding: 5px 12px;
     margin: 2px;
     font-size: 12px;
-    border-radius: 2px;
+    font-weight: 600;
+    border-radius: 4px;
     background: var(--color-theme-l3);
     color: var(--color-text-primary);
+    border: 1px solid var(--color-border-subtle);
 }
 
-.w3-tag.w3-theme-d5 { background: var(--color-theme-d5); color: white; }
-.w3-tag.w3-theme-d4 { background: var(--color-theme-d4); color: white; }
-.w3-tag.w3-theme-d3 { background: var(--color-theme-d3); color: white; }
-.w3-tag.w3-theme-d2 { background: var(--color-theme-d2); color: white; }
-.w3-tag.w3-theme-d1 { background: var(--color-theme-d1); color: white; }
-.w3-tag.w3-theme { background: var(--color-theme); color: white; }
+.w3-tag.w3-theme-d5 { background: var(--color-theme-d5); color: white; border-color: transparent; }
+.w3-tag.w3-theme-d4 { background: var(--color-theme-d4); color: white; border-color: transparent; }
+.w3-tag.w3-theme-d3 { background: var(--color-theme-d3); color: white; border-color: transparent; }
+.w3-tag.w3-theme-d2 { background: var(--color-theme-d2); color: white; border-color: transparent; }
+.w3-tag.w3-theme-d1 { background: var(--color-theme-d1); color: white; border-color: transparent; }
+.w3-tag.w3-theme { background: var(--color-theme); color: white; border-color: transparent; }
 .w3-tag.w3-theme-l1 { background: var(--color-theme-l1); color: var(--color-text-primary); }
 .w3-tag.w3-theme-l2 { background: var(--color-theme-l2); color: var(--color-text-primary); }
 .w3-tag.w3-theme-l3 { background: var(--color-theme-l3); color: var(--color-text-primary); }

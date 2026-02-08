@@ -1,3 +1,7 @@
+/* ======================================================
+   CLUB DETAIL HEADER
+====================================================== */
+
 .club-header {
     background: #3a3f45;
     border-bottom: 1px solid #2a2f35;
@@ -25,129 +29,9 @@
     background: #222;
 }
 
-.club-title {
-    margin: 0;
-    font-size: 22px;
-    color: #fff;
-}
-
-.club-short {
-    color: #9aa0a6;
-    font-weight: 600;
-    margin-left: 6px;
-}
-
-.club-sub {
-    display: flex;
-    gap: 12px;
-    font-size: 13px;
-    color: #c9ccd1;
-}
-
-.club-sub a {
-    color: #8ab4f8;
-    text-decoration: none;
-}
-
-.club-header .club-member-pill {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #1f2933;
-    padding: 6px 10px;
-    border-radius: 999px;
-}
-
-.club-header .member-user {
-    font-size: 13px;
-    color: #ffffff;
-    white-space: nowrap;
-}
-
-/* =========================
-   MEMBER ACTION PILL
-========================= */
-
-.club-member-pill {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* User label */
-.club-member-user {
-    color: #e5e7eb;
-    font-size: 13px;
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-/* Base pill button */
-.pill-btn {
-    border: none;
-    border-radius: 999px;
-    padding: 6px 14px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    line-height: 1;
-    transition: background-color 0.15s ease, transform 0.1s ease;
-}
-
-/* JOIN — BLUE */
-.pill-btn.pill-join {
-    background-color: #0b57d0;
-    color: #ffffff;
-}
-
-.pill-btn.pill-join:hover {
-    background-color: #0842a0;
-}
-
-/* LEAVE — RED */
-.pill-btn.pill-leave {
-    background-color: #b00020;
-    color: #ffffff;
-}
-
-.pill-btn.pill-leave:hover {
-    background-color: #8e0018;
-}
-
-/* PENDING — GRAY */
-.pill-btn.pill-pending {
-    background-color: #9aa0a6;
-    color: #ffffff;
-}
-
-/* DISAB*
-
-
-
-/* Tabs */
-.club-tabs {
-    display: flex;
-    background: #32383e;
-    border-top: 1px solid rgba(255,255,255,0.08);
-}
-
-.club-tabs a {
-    padding: 12px 18px;
-    color: #cfd8dc;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 13px;
-}
-
-.club-tabs a:hover {
-    background: rgba(255,255,255,0.06);
-}
-
-.club-tabs a.active {
-    background: #2b3036;
-    border-bottom: 3px solid #4fc3f7;
-    color: #fff;
-}
+/* ======================================================
+   CLUB TEXT BLOCK
+====================================================== */
 
 .club-title {
     margin: 0;
@@ -193,61 +77,144 @@
     text-decoration: underline;
 }
 
+/* ======================================================
+   MEMBER ACTION PILL
+====================================================== */
 
-/* =========================
-   TABLE CONTAINER
-========================= */
+.club-member-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #1f2933;
+    padding: 6px 10px;
+    border-radius: 999px;
+}
+
+.club-member-user {
+    color: #e5e7eb;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Base pill button */
+.pill-btn {
+    border: none;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    line-height: 1;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+/* JOIN */
+.pill-btn.pill-join {
+    background-color: #0b57d0;
+    color: #ffffff;
+}
+
+.pill-btn.pill-join:hover {
+    background-color: #0842a0;
+}
+
+/* LEAVE */
+.pill-btn.pill-leave {
+    background-color: #b00020;
+    color: #ffffff;
+}
+
+.pill-btn.pill-leave:hover {
+    background-color: #8e0018;
+}
+
+/* PENDING */
+.pill-btn.pill-pending {
+    background-color: #9aa0a6;
+    color: #ffffff;
+    cursor: default;
+}
+
+/* ======================================================
+   CLUB TABS
+====================================================== */
+
+.club-tabs {
+    display: flex;
+    background: #32383e;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.club-tabs a {
+    padding: 12px 18px;
+    color: #cfd8dc;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.club-tabs a:hover {
+    background: rgba(255,255,255,0.06);
+}
+
+.club-tabs a.active {
+    background: #2b3036;
+    border-bottom: 3px solid #4fc3f7;
+    color: #ffffff;
+}
+
+/* ======================================================
+   ADMIN CLUBS TABLE (SEPARATE CONTEXT)
+====================================================== */
+
 .clubs-table {
     background: #ffffff;
     border: 1px solid #ddd;
-    border-radius: 2px;
-
+    border-radius: 4px;
 }
 
-/* =========================
-   HEADER + ROW (SHARED)
-========================= */
+/* Shared header + rows */
+.clubs-header,
+.clubs-row {
+    display: grid;
+    grid-template-columns:
+        40px
+        minmax(100px, 1fr)
+        minmax(140px, 1.4fr)
+        minmax(90px, 1fr)
+        minmax(110px, 1fr)
+        minmax(120px, 1fr)
+        minmax(100px, 1fr);
+    align-items: center;
+    padding: 12px 14px;
+    column-gap: 12px;
+}
 
 .clubs-header {
     background: #f4f4f4;
     font-weight: 600;
     font-size: 13px;
     color: #555;
-    height: 2em;
 }
 
-/* =========================
-   DATA ROW
-========================= */
 .clubs-row {
     border-top: 1px solid #eee;
-}
-.clubs-header,
-.clubs-row {
-    display: grid;
-    grid-template-columns:
-        40px                /* index */
-        minmax(100px, 1fr)  /* category */
-        minmax(100px, 1fr)  /* Name */
-        minmax(90px, 1fr)   /* Members */
-        minmax(110px, 1fr)  /* Events */
-        minmax(120px, 1fr) /* Upcoming */
-        minmax(120px, 1fr); /* Actions */
-    align-items: center;
-    padding: 12px 14px;
-    column-gap: 12px;
+    color: black;
+    font-size: 14px;
 }
 
-.title{
+/* ======================================================
+   MISC
+====================================================== */
+
+.title {
     color: #ffffe3;
 }
 
-.clubs-table {
-    background: #ffffff;
-    border: 1px solid #ddd;
-    border-radius: 2px;
-
-}
+/* ======================================================
+   SOCIAL ICONS
+====================================================== */
 
 .social-icon {
     width: 42px;
@@ -256,7 +223,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 8px;
-    color: white;
+    color: #ffffff;
     font-size: 20px;
     text-decoration: none;
     transition: opacity 0.2s ease, transform 0.1s ease;
@@ -266,10 +233,13 @@
     opacity: 0.85;
     transform: translateY(-1px);
 }
+.filter{
+    padding: 5px;
+}
 
 /* Platform colours */
 .social-whatsapp { background: #25D366; }
-.social-discord { background: #5865F2; }
-.social-instagram { background: #125688; }
+.social-discord  { background: #5865F2; }
+.social-instagram{ background: #125688; }
 .social-telegram { background: #0088cc; }
-.social-website { background: #374151; }
+.social-website  { background: #374151; }
