@@ -308,9 +308,11 @@ public class EventService {
                     member,
                     NotificationType.EVENT_CREATED,
                     "New event \"" + event.getTitle() + "\" posted by " + event.getAuthor(),
-                    event.getId(),
-                    event.getClub().getId(),
-                    null // no comment involved
+                    event.getId(),     // eventId
+                    event.getClub().getId(),  // clubId
+                    null,              // commentId - no comment involved
+                    null,              // threadId - not a thread notification
+                    null               // postId - not a post notification
             );
 
 

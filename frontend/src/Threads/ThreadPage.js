@@ -7,6 +7,7 @@ import ConfirmDialog from "../hooks/ConfirmDialog";
 import { useConfirm } from "../hooks/useConfirm";
 import "../styles/Threads.css";
 import "../styles/buttons.css";
+import "../styles/index.css";
 import { apiFetch } from "../api";
 
 export default function ThreadPage() {
@@ -118,6 +119,11 @@ export default function ThreadPage() {
             return;
         }
 
+        if (!user.username) {
+            alert("User profile is incomplete. Please update your profile.");
+            return;
+        }
+
         const text = newComment.trim();
         if (!text) return;
 
@@ -128,6 +134,7 @@ export default function ThreadPage() {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
+                        username: user.username,
                         comment: text,
                         parentId,
                     }),
@@ -160,10 +167,13 @@ export default function ThreadPage() {
         confirm(commentId, async (id) => {
             try {
                 const res = await apiFetch(
-                    `/api/threads/${threadId}/comments/${id}?requesterEmail=${encodeURIComponent(
-                        user.email
-                    )}`,
-                    { method: "DELETE" }
+                    `/api/threads/${threadId}/comments/${id}`,
+                    {
+                        method: "DELETE",
+                        headers: {
+                            "X-User-Email": user.email
+                        }
+                    }
                 );
 
                 if (!res.ok) {

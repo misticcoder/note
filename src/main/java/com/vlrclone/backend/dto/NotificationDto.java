@@ -16,6 +16,8 @@ public class NotificationDto {
     private Long relatedEventId;
     private Long relatedClubId;
     private Long relatedCommentId;
+    private Long relatedThreadId;
+    private Long relatedPostId;
 
     /* =====================
        Factory
@@ -30,7 +32,9 @@ public class NotificationDto {
         dto.isRead = n.isRead();
         dto.relatedEventId = n.getRelatedEventId();
         dto.relatedClubId = n.getRelatedClubId();
-        dto.relatedCommentId = n.getRelatedCommentId(); // ✅ NEW
+        dto.relatedCommentId = n.getRelatedCommentId();
+        dto.relatedThreadId = n.getRelatedThreadId();
+        dto.relatedPostId = n.getRelatedPostId();
         return dto;
     }
 
@@ -65,5 +69,17 @@ public class NotificationDto {
 
     public Long getRelatedClubId() {
         return relatedClubId;
+    }
+
+    public Long getRelatedCommentId() {
+        return relatedCommentId;
+    }
+
+    public Long getRelatedThreadId() {
+        return relatedThreadId;
+    }
+
+    public Long getRelatedPostId() {
+        return relatedPostId;
     }
 }

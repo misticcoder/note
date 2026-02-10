@@ -25,7 +25,6 @@
 /* Layout wrapper */
 .wrap {
     padding: 20px;
-    max-width: 1100px;
     margin: 0 auto;
 }
 
@@ -108,10 +107,22 @@
 .page-row {
     display: flex;
     gap: 24px;
-    max-width: 1200px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
     align-items: flex-start;
 }
 
+.thread-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+}
+
+.content-col {
+    flex: 1;
+    min-width: 0; /* Prevents flex item from overflowing */
+}
 
 /* Column titles */
 .col-title {
@@ -139,6 +150,7 @@
     text-decoration: none;
     display: inline-block;
     transition: all 0.2s ease;
+    width: 100%;
 }
 
 .add-btn:hover {
@@ -206,7 +218,7 @@
     color: #e0e0e0;
     padding: 24px;
     border-radius: 8px;
-    max-width: 90%;
+    width: 100%;
     border: 1px solid #3a3a3a;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
 }
@@ -283,11 +295,6 @@
     padding: 0 20px;
 }
 
-.thread-sidebar {
-    width: 260px;
-    flex-shrink: 0;
-}
-
 .thread-main {
     flex: 1;
 }
@@ -295,6 +302,10 @@
 @media (max-width: 1000px) {
     .thread-sidebar {
         display: none;
+    }
+
+    .content-col {
+        width: 100%;
     }
 }
 
@@ -392,6 +403,11 @@
 @media (max-width: 768px) {
     .page-row {
         flex-direction: column;
+        padding: 0 12px;
+    }
+
+    .thread-sidebar {
+        width: 100%;
     }
 
     .thread-list-col {

@@ -23,12 +23,32 @@ export default function ProfilePage() {
     const [clubs, setClubs] = useState([]);
     const [recommendedEvents, setRecommendedEvents] = useState([]);
 
-
-
-    const [activeTab, setActiveTab] = useState(() => {
+    const getTabFromUrl = () => {
         const params = new URLSearchParams(window.location.hash.split("?")[1]);
         return params.get("tab") || "overview";
-    });
+    };
+
+    const setTabInUrl = (tab) => {
+        const base = window.location.hash.split("?")[0] || "#/profile";
+        window.location.hash = `${base}?tab=${tab}`;
+    };
+
+
+    const [activeTab, setActiveTab] = useState(getTabFromUrl);
+
+    useEffect(() => {
+        setTabInUrl(activeTab);
+    }, [activeTab]);
+
+    useEffect(() => {
+        const onHashChange = () => {
+            setActiveTab(getTabFromUrl());
+        };
+
+        window.addEventListener("hashchange", onHashChange);
+        return () => window.removeEventListener("hashchange", onHashChange);
+    }, []);
+
 
 
     const [eventsView, setEventsView] = useState("attended");
@@ -108,43 +128,34 @@ export default function ProfilePage() {
 
                     {/* Tabs */}
                     <div className="profile-tabs">
-                        <TabButton
-                            label="Overview"
-                            active={activeTab === "overview"}
-                            onClick={() => setActiveTab("overview")}
-                        />
-                        <TabButton
-                            label="Events"
-                            active={activeTab === "events"}
-                            onClick={() => setActiveTab("events")}
-                        />
-                        <TabButton
-                            label="Clubs"
-                            active={activeTab === "clubs"}
-                            onClick={() => setActiveTab("clubs")}
-                        />
+                        <TabButton label="Overview" tab="overview" active={activeTab === "overview"} />
+
+                        <TabButton label="Events" tab="events" active={activeTab === "events"} />
+                        <TabButton label="Clubs" tab="clubs" active={activeTab === "clubs"} />
+
                         <TabButton
                             label="Activity"
+                            tab={"activity"}
                             active={activeTab === "activity"}
-                            onClick={() => setActiveTab("activity")}
                         />
 
                         <TabButton
                             label="Badges"
+                            tab={"badges"}
                             active={activeTab === "badges"}
-                            onClick={() => setActiveTab("badges")}
+
                         />
                         <TabButton
                             label="Edit Profile"
+                            tab={"edit"}
                             active={activeTab === "edit"}
-                            onClick={() => setActiveTab("edit")}
                         />
 
                         {(profile.role === "ADMIN" || profile.role === "LEADER") && (
                             <TabButton
                                 label="Dashboard"
+                                tab={"dashboard"}
                                 active={activeTab === "dashboard"}
-                                onClick={() => setActiveTab("dashboard")}
                             />
                         )}
 
@@ -340,7 +351,7 @@ function OverviewTab({
                     </div>
 
                     <div className="stat-card">
-                    <strong>{profile.participationScore}</strong>
+                        <strong>{profile.participationScore}</strong>
                         <span>Participation Score</span>
                     </div>
 
@@ -410,16 +421,18 @@ function OverviewTab({
 
 
 
-function TabButton({ label, active, onClick }) {
+function TabButton({ label, tab, active }) {
     return (
-        <button
+        <a
+            href={`#/profile?tab=${tab}`}
             className={`profile-tab ${active ? "active" : ""}`}
-            onClick={onClick}
+            aria-current={active ? "page" : undefined}
         >
             {label}
-        </button>
+        </a>
     );
 }
+
 
 function EventsTab({ events, eventsView, setEventsView }) {
     const attended = events.filter(e => e.status === "ATTENDED");

@@ -30,7 +30,9 @@ public class NotificationService {
             String message,
             Long eventId,
             Long clubId,
-            Long commentId
+            Long commentId,
+            Long threadId,
+            Long postId
     ) {
         Notification n = new Notification();
         n.setUser(user);
@@ -38,7 +40,9 @@ public class NotificationService {
         n.setMessage(message);
         n.setRelatedEventId(eventId);
         n.setRelatedClubId(clubId);
-        n.setRelatedCommentId(commentId); // 🔗
+        n.setRelatedCommentId(commentId);
+        n.setRelatedThreadId(threadId);
+        n.setRelatedPostId(postId);
         n.setRead(false);
 
         notificationRepository.save(n);
@@ -49,24 +53,12 @@ public class NotificationService {
        Read
        ===================== */
 
-
-
     @Transactional
     public List<NotificationDto> getUserNotifications(User user) {
-
         List<Notification> notifications =
                 notificationRepository.findByUserOrderByCreatedAtDesc(user);
 
-        List<Notification> unread = notifications.stream()
-                .filter(n -> !n.isRead())
-                .toList();
-
-        unread.forEach(n -> n.setRead(true));
-
-        if (!unread.isEmpty()) {
-            notificationRepository.saveAll(unread);
-        }
-
+        // ✅ Just return the notifications, don't auto-mark as read
         return notifications.stream()
                 .map(NotificationDto::from)
                 .toList();

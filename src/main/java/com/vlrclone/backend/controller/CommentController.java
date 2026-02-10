@@ -131,8 +131,6 @@ public class CommentController {
     }
 
 
-
-
     @PostMapping("/posts/{postId}/comments")
     public ResponseEntity<?> createPostComment(
             @PathVariable Long postId,

@@ -225,7 +225,9 @@ public class CommentService {
                                 message,
                                 eventId,          // event context
                                 null,             // no club
-                                saved.getId()     // 🔗 LINK TO REPLY COMMENT
+                                saved.getId(),    // 🔗 LINK TO REPLY COMMENT
+                                threadId,         // 🔗 thread context
+                                postId            // 🔗 post context
                         );
                     });
                 }

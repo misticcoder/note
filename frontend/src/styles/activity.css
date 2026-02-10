@@ -1,48 +1,143 @@
+/* ============================================
+   ACTIVITY TAB - Dark Theme
+   ============================================ */
+
 .activity-tab {
-    max-width: 100%;
+    width: 100%;
 }
 
 .activity-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #3a3a3a;
 }
 
-.activity-item {
-    padding: 12px;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    background: #f6f6f6;
+.activity-header h3 {
+    margin: 0;
+    color: #e0e0e0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.activity-header .link {
+    background: none;
+    border: none;
+    color: #2196f3;
     cursor: pointer;
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.activity-header .link:hover {
+    background: #1a2a3a;
+    text-decoration: underline;
+}
+
+/* Activity Item */
+.activity-item {
+    background: #242424;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+}
+
+.activity-item.clickable {
+    cursor: pointer;
+}
+
+.activity-item.clickable:hover {
+    background: #2a2a2a;
+    border-color: #4a4a4a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .activity-item.unread {
-    background: #e9f1ff;
+    background: #1a2a3a;
+    border-color: #2196f3;
+    border-left-width: 3px;
+}
+
+.activity-item.unread.clickable:hover {
+    background: #1e3a4a;
+}
+
+.activity-message {
+    color: #e0e0e0;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 6px;
+}
+
+.activity-item.unread .activity-message {
     font-weight: 500;
 }
 
-.activity-item:hover {
-    background: #e3e3e3;
-}
-
 .activity-time {
-    font-size: 0.8rem;
-    color: #777;
-    margin-top: 4px;
+    color: #808080;
+    font-size: 12px;
 }
 
-.link {
-    background: none;
-    border: none;
-    color: #2b6fff;
-    cursor: pointer;
+/* Empty State */
+.activity-tab .muted {
+    text-align: center;
+    padding: 40px 20px;
+    color: #808080;
+    font-size: 14px;
 }
 
-.muted {
-    color: #888;
+.activity-tab .error {
+    text-align: center;
+    padding: 20px;
+    color: #f44336;
+    background: #2a1a1a;
+    border: 1px solid #f44336;
+    border-radius: 6px;
 }
 
-.error {
-    color: #c00;
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+    .activity-item {
+        padding: 12px 14px;
+    }
+
+    .activity-header h3 {
+        font-size: 18px;
+    }
+
+    .activity-message {
+        font-size: 13px;
+    }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+.activity-item.clickable:focus-visible {
+    outline: 2px solid #2196f3;
+    outline-offset: 2px;
+}
+
+.activity-header .link:focus-visible {
+    outline: 2px solid #2196f3;
+    outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .activity-item,
+    .activity-header .link {
+        transition: none;
+    }
 }

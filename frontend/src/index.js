@@ -40,7 +40,7 @@ function App() {
     if (route === "#/home") Page = Home;
     else if (route.startsWith("#/post/")) Page = () => <PostDetailPage />;
 
-    else if (route === "#/profile") Page = ProfilePage;
+    else if (route.startsWith("#/profile")) Page = ProfilePage;
     else if (route === "#/admin/users") Page = AdminUsers;
     else if (route === "#/threads") Page = ThreadList;
     else if (route === "#/admin/threads") Page = ThreadList;

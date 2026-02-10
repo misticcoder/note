@@ -12,7 +12,6 @@ export default function ActivityTab() {
 
     /* ─────────────────────────────
        Load notifications
-       Backend marks them as read
     ───────────────────────────── */
 
     useEffect(() => {
@@ -38,7 +37,7 @@ export default function ActivityTab() {
                     setNotifications(Array.isArray(data) ? data : []);
                     setError("");
 
-                    // 🔔 tell Header that activity is now read
+                    // 🔔 tell Header that activity is loaded
                     window.dispatchEvent(new Event("activity:read"));
                 }
             } catch {
@@ -112,7 +111,6 @@ export default function ActivityTab() {
             case "CLUB_UPDATE": return "🏟️";
             case "CLUB_JOIN": return "👥";
             case "COMMENT_REPLY": return "💬";
-
             default: return "🔔";
         }
     };
@@ -120,16 +118,29 @@ export default function ActivityTab() {
     const handleClick = (n) => {
         if (!n.isRead) markAsRead(n.id);
 
+        // Navigate based on notification type and related content
         if (n.relatedEventId) {
-            window.location.hash =
-                `#/events/${n.relatedEventId}?comment=${n.relatedCommentId}`;
+            if (n.relatedCommentId) {
+                window.location.hash = `#/events/${n.relatedEventId}?comment=${n.relatedCommentId}`;
+            } else {
+                window.location.hash = `#/events/${n.relatedEventId}`;
+            }
         } else if (n.relatedClubId) {
-            window.location.hash =
-                `#/clubs/${n.relatedClubId}`;
+            window.location.hash = `#/clubs/${n.relatedClubId}`;
+        } else if (n.relatedThreadId) {
+            if (n.relatedCommentId) {
+                window.location.hash = `#/threads/${n.relatedThreadId}?comment=${n.relatedCommentId}`;
+            } else {
+                window.location.hash = `#/threads/${n.relatedThreadId}`;
+            }
+        } else if (n.relatedPostId) {
+            window.location.hash = `#/post/${n.relatedPostId}`;
         }
     };
 
-
+    const isClickable = (n) => {
+        return !!(n.relatedEventId || n.relatedClubId || n.relatedThreadId || n.relatedPostId);
+    };
 
     const ordered = [...notifications].sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
@@ -167,8 +178,9 @@ export default function ActivityTab() {
             {ordered.map(n => (
                 <div
                     key={n.id}
-                    className={`activity-item ${n.isRead ? "" : "unread"}`}
-                    onClick={() => handleClick(n)}
+                    className={`activity-item ${n.isRead ? "" : "unread"} ${isClickable(n) ? "clickable" : ""}`}
+                    onClick={() => isClickable(n) && handleClick(n)}
+                    style={{ cursor: isClickable(n) ? "pointer" : "default" }}
                 >
                     <div className="activity-message">
                         {iconFor(n.type)} {n.message}

@@ -36,17 +36,17 @@ public class Notification {
     @Column(name = "related_club_id")
     private Long relatedClubId;
 
-    @Column(nullable = true)
+    @Column(name = "related_comment_id")
     private Long relatedCommentId;
 
+    @Column(name = "related_thread_id")
+    private Long relatedThreadId;
 
-    public boolean isRead() {
-        return isRead;
-    }
+    @Column(name = "related_post_id")
+    private Long relatedPostId;
 
-    public void setRead(boolean read) {
-        isRead = read;
-    }
+
+    // ============= Getters and Setters =============
 
     public Long getId() {
         return id;
@@ -78,6 +78,14 @@ public class Notification {
 
     public void setType(NotificationType type) {
         this.type = type;
+    }
+
+    public boolean isRead() {
+        return isRead;
+    }
+
+    public void setRead(boolean read) {
+        isRead = read;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -112,5 +120,19 @@ public class Notification {
         this.relatedCommentId = relatedCommentId;
     }
 
+    public Long getRelatedThreadId() {
+        return relatedThreadId;
+    }
 
+    public void setRelatedThreadId(Long relatedThreadId) {
+        this.relatedThreadId = relatedThreadId;
+    }
+
+    public Long getRelatedPostId() {
+        return relatedPostId;
+    }
+
+    public void setRelatedPostId(Long relatedPostId) {
+        this.relatedPostId = relatedPostId;
+    }
 }
