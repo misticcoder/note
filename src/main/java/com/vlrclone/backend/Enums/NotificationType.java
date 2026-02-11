@@ -8,5 +8,6 @@ public enum NotificationType {
     CLUB_JOINED,
     THREAD_COMMENTED,
     POST_COMMENTED,
-    COMMENT_REPLY
+    COMMENT_REPLY,
+    EVENT_INTERESTED,
 }

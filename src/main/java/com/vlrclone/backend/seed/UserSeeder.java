@@ -2,9 +2,11 @@ package com.vlrclone.backend.seed;
 
 import com.vlrclone.backend.model.User;
 import com.vlrclone.backend.repository.UserRepository;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+@Order(1)
 @Component
 public class UserSeeder {
 

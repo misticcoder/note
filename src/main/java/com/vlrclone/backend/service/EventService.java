@@ -293,6 +293,69 @@ public class EventService {
                 .toList();
     }
 
+    public void notifyInterestedUsers(Event event) {
+
+        if (event.getTags() == null || event.getTags().isEmpty()) {
+            return;
+        }
+
+        // Normalize event tag names
+        Set<String> eventTagNames = event.getTags().stream()
+                .map(t -> t.getName().toLowerCase())
+                .collect(Collectors.toSet());
+
+        // Collect club member IDs (to avoid duplicate notifications)
+        Set<Long> clubMemberIds = new HashSet<>();
+
+        if (event.getClub() != null && event.getClub().getMembers() != null) {
+            clubMemberIds = event.getClub().getMembers().stream()
+                    .map(cm -> cm.getUser() != null ? cm.getUser().getId() : null)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+        }
+
+        List<User> allUsers = userRepo.findAll();
+
+        for (User user : allUsers) {
+
+            if (user.getTags() == null || user.getTags().isEmpty()) {
+                continue;
+            }
+
+            // 🔒 Skip event author
+            if (event.getAuthor() != null &&
+                    event.getAuthor().getId().equals(user.getId())) {
+                continue;
+            }
+
+            // 🔒 Skip club members (already notified via notifyClubMembers)
+            if (clubMemberIds.contains(user.getId())) {
+                continue;
+            }
+
+            boolean matches = user.getTags().stream()
+                    .map(t -> t.getName().toLowerCase())
+                    .anyMatch(eventTagNames::contains);
+
+            if (!matches) {
+                continue;
+            }
+
+            notificationService.notifyUser(
+                    user,
+                    NotificationType.EVENT_INTERESTED,
+                    "New event matching your interests: \"" + event.getTitle() + "\"",
+                    event.getId(),
+                    event.getClub() != null ? event.getClub().getId() : null,
+                    null,
+                    null,
+                    null
+            );
+        }
+    }
+
+
+
     public void notifyClubMembers(Event event) {
 
         if (event.getClub() == null) return;

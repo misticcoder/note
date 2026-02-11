@@ -4,6 +4,7 @@ package com.vlrclone.backend.controller;
 import com.vlrclone.backend.Enums.ClubCategory;
 import com.vlrclone.backend.Enums.ClubSort;
 import com.vlrclone.backend.Enums.LinkType;
+import com.vlrclone.backend.Enums.NotificationType;
 import com.vlrclone.backend.model.*;
 import com.vlrclone.backend.model.ClubMember.Role;
 import com.vlrclone.backend.model.JoinRequest.Status;
@@ -11,6 +12,7 @@ import com.vlrclone.backend.model.Club;
 import com.vlrclone.backend.repository.*;
 import com.vlrclone.backend.service.ClubLinkService;
 import com.vlrclone.backend.service.ClubService;
+import com.vlrclone.backend.service.NotificationService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,9 +36,12 @@ public class ClubController {
     private final EventRepository events;
     private final JoinRequestRepository joinRequestRepository;
     private final ClubLinkRepository clubLinks;
+    private final NotificationService notificationService;
 
 
-    public ClubController(ClubRepository c, ClubMemberRepository m, JoinRequestRepository r, ClubNewsRepository n, UserRepository u, ClubService clubService, EventRepository events, JoinRequestRepository joinRequestRepository, ClubLinkRepository clubLinks) {
+    public ClubController(ClubRepository c, ClubMemberRepository m, JoinRequestRepository r, ClubNewsRepository n,
+                          UserRepository u, ClubService clubService, EventRepository events, JoinRequestRepository joinRequestRepository,
+                          ClubLinkRepository clubLinks, NotificationService notificationService) {
         this.clubs = c;
         this.members = m;
         this.requests = r;
@@ -46,6 +51,7 @@ public class ClubController {
         this.events = events;
         this.joinRequestRepository = joinRequestRepository;
         this.clubLinks = clubLinks;
+        this.notificationService = notificationService;
     }
 
     /* Utility */
@@ -253,7 +259,40 @@ public class ClubController {
         n.setAuthorUserId(req.getId());
         n.setTitle(title);
         n.setContent(content);
-        return ResponseEntity.ok(news.save(n));
+
+        ClubNews saved = news.save(n);
+
+/* =========================
+   🔔 Notify Club Members
+========================= */
+
+        List<ClubMember> clubMembers = members.findByClubId(clubId);
+
+        for (ClubMember cm : clubMembers) {
+            User member = cm.getUser();
+            if (member == null) continue;
+
+            // 🔒 Skip the author
+            if (member.getId().equals(req.getId())) {
+                continue;
+            }
+
+            notificationService.notifyUser(
+                    member,
+                    NotificationType.CLUB_ANNOUNCEMENT, // create this enum value
+                    "New post in " + clubs.findById(clubId).map(Club::getName).orElse("club")
+                            + ": \"" + saved.getTitle() + "\"",
+                    null,               // eventId
+                    clubId,             // clubId
+                    saved.getId(),      // newsId (important)
+                    null,
+                    null
+            );
+        }
+
+        return ResponseEntity.ok(saved);
+
+
     }
 
     /* Leader/Admin: delete news */

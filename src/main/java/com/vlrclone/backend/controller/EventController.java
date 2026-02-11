@@ -277,6 +277,8 @@ public class EventController {
         Event saved = events.save(ev);
 
         service.notifyClubMembers(saved);
+        service.notifyInterestedUsers(saved);
+
 
 
         EventUpdateDto out = new EventUpdateDto(

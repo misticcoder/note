@@ -1,6 +1,8 @@
 package com.vlrclone.backend.repository;
 
+import com.vlrclone.backend.model.Club;
 import com.vlrclone.backend.model.ClubMember;
+import com.vlrclone.backend.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -14,5 +16,7 @@ public interface ClubMemberRepository extends JpaRepository<ClubMember, Long> {
     boolean existsByClubIdAndUserIdAndRole(Long clubId, Long userId, ClubMember.Role role);
     List<ClubMember> findByClubIdIn(List<Long> clubIds);
     List<ClubMember> findByUserId(Long userId);
+    boolean existsByClubAndUser(Club club, User user);
+
 
 }
