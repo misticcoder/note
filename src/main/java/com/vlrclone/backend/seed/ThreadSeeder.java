@@ -4,6 +4,7 @@ import com.vlrclone.backend.model.Thread;
 import com.vlrclone.backend.model.User;
 import com.vlrclone.backend.repository.ThreadRepository;
 import com.vlrclone.backend.repository.UserRepository;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+@Order(9)
 @Component
 public class ThreadSeeder {
 

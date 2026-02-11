@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-@Order(6)
+@Order(10)
 @Component
 public class EventRatingSeeder {
 

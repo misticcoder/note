@@ -4,10 +4,12 @@ import com.vlrclone.backend.model.Comment;
 import com.vlrclone.backend.model.Post;
 import com.vlrclone.backend.repository.CommentRepository;
 import com.vlrclone.backend.repository.PostRepository;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
+@Order(11)
 @Component
 public class CommentSeeder {
 
