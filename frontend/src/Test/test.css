@@ -1,0 +1,176 @@
+.usability-page {
+    min-height: 100vh;
+    background: #1f1f1f;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 16px;
+}
+
+.usability-card {
+    background: #2b2b2b;
+    width: 100%;
+    max-width: 720px;
+    padding: 32px;
+    border-radius: 10px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+    color: #f5f5f5;
+}
+
+h1 {
+    margin-bottom: 8px;
+}
+
+.progress {
+    font-size: 14px;
+    color: #aaa;
+    margin-bottom: 16px;
+}
+
+.task-category {
+    display: inline-block;
+    background: #3f3f3f;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    margin-bottom: 16px;
+}
+
+.scenario, .goal {
+    margin-bottom: 16px;
+}
+
+.timer {
+    margin: 16px 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.task-actions {
+    display: flex;
+    gap: 12px;
+}
+
+button {
+    padding: 10px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.primary-btn {
+    background: #4a90e2;
+    color: white;
+}
+
+.success-btn {
+    background: #2ecc71;
+    color: white;
+}
+
+.fail-btn {
+    background: #e74c3c;
+    color: white;
+}
+
+.finish-btn {
+    margin-top: 20px;
+    background: #9b59b6;
+    color: white;
+}
+
+.task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 20px;
+}
+
+.task-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #333;
+    padding: 16px;
+    border-radius: 8px;
+}
+
+.task-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.completed {
+    font-size: 14px;
+    color: #2ecc71;
+}
+
+
+.star-row {
+    display: flex;
+    gap: 8px;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+.star {
+    color: #555;
+    transition: 0.2s;
+}
+
+.star.active {
+    color: #f1c40f;
+}
+
+.difficulty-section {
+    margin: 20px 0;
+}
+
+.all-done {
+    margin-top: 20px;
+    color: #2ecc71;
+}
+
+.task-desc {
+    font-size: 14px;
+    color: #bbb;
+    margin-top: 4px;
+}
+
+.ready-message {
+    margin-top: 20px;
+    padding: 12px;
+    background: #2ecc71;
+    color: #000;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.reset-container {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.reset-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.reset-btn:hover {
+    opacity: 0.9;
+}
+
+.external-link {
+    color: #f1c40f;
+}
+
+.external-link:hover {
+    background: #3a3a3a;
+}

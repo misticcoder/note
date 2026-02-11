@@ -62,3 +62,18 @@
     background: #2f2f2f;
     color: #fff;
 }
+
+.sidenav-link {
+    background: none;
+    border: none;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+    padding: 12px 16px;
+    color: #ddd;
+    border-radius: 6px;
+}
+
+.sidenav-link:hover {
+    background: #3a3a3a;
+}

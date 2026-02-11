@@ -1,6 +1,20 @@
 import "../styles/SideNav.css";
 
 export default function SideNav({ open, onClose }) {
+
+    const surveyUrl = "https://forms.gle/YOUR_FORM_LINK";
+
+    const handleSurveyClick = () => {
+        const confirmed = window.confirm(
+            "You are about to open the usability survey in a new tab.\n\nContinue?"
+        );
+
+        if (confirmed) {
+            window.open(surveyUrl, "_blank", "noopener,noreferrer");
+        }
+    };
+
+
     return (
         <>
             {/* Backdrop */}
@@ -19,6 +33,15 @@ export default function SideNav({ open, onClose }) {
                     <a href="#/clubs">Clubs</a>
                     <a href="#/news">News</a>
                     <a href="#/threads">Threads</a>
+                    <a href="#/usability-tasks">🧪 Usability Tasks</a>
+                    <button
+                        onClick={handleSurveyClick}
+                        className="sidenav-link external-link"
+                    >
+                        📝 Usability Survey
+                    </button>
+
+
                 </nav>
             </aside>
         </>

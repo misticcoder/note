@@ -18,6 +18,7 @@ import TagPage from "./TagPage";
 import SearchResultsPage from "./SearchResultPage";
 import FrontPage from "./FrontPage";
 import ProfilePage from "./Profile/ProfilePage";
+import UsabilityTest from "./Test/Test";
 
 
 function App() {
@@ -48,6 +49,8 @@ function App() {
     else if (route === "#/admin/clubs") Page = Clubs;
     else if (route === "#/clubs") Page = Clubs;
     else if (route.startsWith("#/clubs/")) Page = () => <ClubDetail />
+    else if (route === "#/usability-tasks") Page = UsabilityTest;
+
 
 
     else if (route === "#/news") Page = NewsList;
