@@ -3,15 +3,10 @@ package com.vlrclone.backend.controller;
 
 import com.vlrclone.backend.Enums.EventCategory;
 import com.vlrclone.backend.Enums.EventVisibility;
+import com.vlrclone.backend.Enums.Status;
 import com.vlrclone.backend.dto.EventUpdateDto;
-import com.vlrclone.backend.model.Club;
-import com.vlrclone.backend.model.Event;
-import com.vlrclone.backend.model.EventRating;
-import com.vlrclone.backend.model.User;
-import com.vlrclone.backend.repository.ClubRepository;
-import com.vlrclone.backend.repository.EventRatingRepository;
-import com.vlrclone.backend.repository.EventRepository;
-import com.vlrclone.backend.repository.UserRepository;
+import com.vlrclone.backend.model.*;
+import com.vlrclone.backend.repository.*;
 import com.vlrclone.backend.service.EventService;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
@@ -28,19 +23,22 @@ public class EventController {
     private final EventRatingRepository ratings;
     private final EventService service;
     private final ClubRepository clubs;
+    private final EventAttendanceRepository attendances;
 
     public EventController(
             EventRepository events,
             UserRepository users,
             EventRatingRepository ratings,
             EventService service,
-            ClubRepository clubs
+            ClubRepository clubs,
+            EventAttendanceRepository attendances
     ) {
         this.events = events;
         this.users = users;
         this.ratings = ratings;
         this.service = service;
         this.clubs = clubs;
+        this.attendances = attendances;
     }
 
     /* =====================
@@ -458,11 +456,23 @@ public class EventController {
                     .body(Map.of("message", "Members only event"));
         }
 
+        // 1️⃣ Must be ended
         if (event.getStatus() != Event.EventStatus.ENDED) {
             return ResponseEntity.status(409)
                     .body(Map.of("message", "Event not ended"));
         }
 
+        // 2️⃣ Must have attendance record
+        EventAttendance attendance = attendances
+                .findByEventIdAndUserId(id, user.getId())
+                .orElse(null);
+
+        if (attendance == null || attendance.getStatus() != Status.ATTENDED) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "Only checked-in attendees can rate"));
+        }
+
+        // 3️⃣ Validate rating value
         int rating = body.getOrDefault("rating", 0);
         if (rating < 1 || rating > 5) {
             return ResponseEntity.badRequest()
@@ -470,8 +480,10 @@ public class EventController {
         }
 
         service.saveOrUpdateRating(event, user, rating);
+
         return getRating(id, requesterEmail);
     }
+
 
     @DeleteMapping("/{id}/rating")
     public ResponseEntity<?> deleteRating(

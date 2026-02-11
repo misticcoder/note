@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-@Order(9)
+@Order(7)
 @Component
 public class ThreadSeeder {
 

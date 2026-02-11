@@ -525,7 +525,7 @@ export default function EventPage() {
                                     }
                                     disabled={
                                         !user ||
-                                        rsvp !== "GOING" ||
+                                        rsvp !== "ATTENDED" ||
                                         eventStatus !== "ENDED"
                                     }
                                     onRate={submitRating}
@@ -543,11 +543,12 @@ export default function EventPage() {
                                     </div>
                                 )}
 
-                                {user && rsvp !== "GOING" && (
+                                {user && rsvp !== "ATTENDED" && (
                                     <div className="rating-hint muted">
-                                        Only attendees can rate
+                                        Only checked-in attendees can rate
                                     </div>
                                 )}
+
 
                                 {eventStatus !== "ENDED" && (
                                     <div className="rating-hint muted">

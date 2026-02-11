@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.*;
 
-@Order(2)
+@Order(3)
 @Component
 public class ClubSeeder {
 

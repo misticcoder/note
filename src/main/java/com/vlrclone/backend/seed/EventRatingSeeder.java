@@ -1,53 +1,84 @@
 package com.vlrclone.backend.seed;
 
 import com.vlrclone.backend.model.Event;
+import com.vlrclone.backend.model.EventAttendance;
 import com.vlrclone.backend.model.EventRating;
-import com.vlrclone.backend.model.User;
+import com.vlrclone.backend.repository.EventAttendanceRepository;
 import com.vlrclone.backend.repository.EventRatingRepository;
 import com.vlrclone.backend.repository.EventRepository;
-import com.vlrclone.backend.repository.UserRepository;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
 
-@Order(10)
+@Order(7)
 @Component
 public class EventRatingSeeder {
 
-    private final EventRepository eventRepo;
-    private final UserRepository userRepo;
     private final EventRatingRepository ratingRepo;
+    private final EventRepository eventRepo;
+    private final EventAttendanceRepository attendanceRepo;
+
+    private final Random random = new Random();
 
     public EventRatingSeeder(
+            EventRatingRepository ratingRepo,
             EventRepository eventRepo,
-            UserRepository userRepo,
-            EventRatingRepository ratingRepo
+            EventAttendanceRepository attendanceRepo
     ) {
-        this.eventRepo = eventRepo;
-        this.userRepo = userRepo;
         this.ratingRepo = ratingRepo;
+        this.eventRepo = eventRepo;
+        this.attendanceRepo = attendanceRepo;
     }
 
     public void seed() {
 
         if (ratingRepo.count() > 0) return;
 
-        Random random = new Random();
+        List<Event> events = eventRepo.findAll();
 
-        for (Event event : eventRepo.findAll()) {
+        for (Event event : events) {
 
-            List<User> users = userRepo.findAll();
-            Collections.shuffle(users);
+            // Only rate past events
+            if (event.getStartAt().isAfter(LocalDateTime.now())) {
+                continue;
+            }
 
-            for (int i = 0; i < 10 && i < users.size(); i++) {
+            // Get attendees who actually attended
+            List<EventAttendance> attendees = attendanceRepo.findAll().stream()
+                    .filter(a -> a.getEvent().getId().equals(event.getId()))
+                    .filter(a -> a.getStatus().name().equals("ATTENDED"))
+                    .toList();
+
+            // 60-80% of attendees leave ratings
+            int raterCount = (int) (attendees.size() * (0.6 + random.nextDouble() * 0.2));
+
+            for (int i = 0; i < raterCount && i < attendees.size(); i++) {
+
+                EventAttendance attendance = attendees.get(i);
 
                 EventRating rating = new EventRating();
                 rating.setEvent(event);
-                rating.setUser(users.get(i));
-                rating.setRating(1 + random.nextInt(5));
+                rating.setUser(attendance.getUser());
+
+                // Rating distribution: mostly positive (3-5 stars)
+                double rand = random.nextDouble();
+                if (rand < 0.50) {
+                    rating.setRating(5); // 50% give 5 stars
+                } else if (rand < 0.75) {
+                    rating.setRating(4); // 25% give 4 stars
+                } else if (rand < 0.90) {
+                    rating.setRating(3); // 15% give 3 stars
+                } else if (rand < 0.97) {
+                    rating.setRating(2); // 7% give 2 stars
+                } else {
+                    rating.setRating(1); // 3% give 1 star
+                }
+
+                rating.setCreatedAt(event.getEndAt().plusHours(random.nextInt(48)));
+                rating.setUpdatedAt(rating.getCreatedAt());
 
                 ratingRepo.save(rating);
             }

@@ -13,8 +13,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Random;
 
-@Order(4)
+@Order(5)
 @Component
 public class EventSeeder {
 
@@ -41,19 +42,51 @@ public class EventSeeder {
 
         List<Club> clubs = clubRepo.findAll();
 
-        int counter = 1;
+        if (clubs.isEmpty()) {
+            throw new IllegalStateException("No clubs found — ClubSeeder must run before EventSeeder");
+        }
 
-        // 🔹 10 INTERNAL club events
+        Random random = new Random();
+
+        // ================================
+        // 🔹 INTERNAL CLUB EVENTS
+        // ================================
+        String[] internalTitles = {
+                "Weekly Training Session",
+                "Strategy Workshop",
+                "Guest Speaker Talk",
+                "Beginner Bootcamp",
+                "Social Night",
+                "Skill Development Session",
+                "Team Practice",
+                "Project Collaboration Meetup",
+                "Leadership Meeting",
+                "Member Q&A Session"
+        };
+
+        String[] internalLocations = {
+                "Room 101",
+                "Seminar Room B2",
+                "Engineering Lab 3",
+                "Sports Hall",
+                "Innovation Hub",
+                "Library Study Room 4"
+        };
+
         for (int i = 0; i < 10; i++) {
 
             Club club = clubs.get(i % clubs.size());
 
+            LocalDateTime start = LocalDateTime.now().plusDays(i + 2);
+            LocalDateTime end = start.plusHours(2 + random.nextInt(2));
+
             eventRepo.save(new Event(
-                    "Internal Event " + counter,
-                    "Club organised session #" + counter,
-                    "Room " + (100 + i),
-                    LocalDateTime.now().plusDays(i + 1),
-                    LocalDateTime.now().plusDays(i + 1).plusHours(2),
+                    internalTitles[i],
+                    "Organised by " + club.getName() +
+                            ". Open to members for collaboration, networking and skill development.",
+                    internalLocations[random.nextInt(internalLocations.length)],
+                    start,
+                    end,
                     EventCategory.INTERNAL,
                     (i % 2 == 0)
                             ? EventVisibility.PUBLIC
@@ -61,26 +94,71 @@ public class EventSeeder {
                     club,
                     admin
             ));
-
-            counter++;
         }
 
-        // 🔹 10 EXTERNAL public events
+        // ================================
+        // 🔹 EXTERNAL / UNIVERSITY EVENTS
+        // ================================
+        String[] externalTitles = {
+                "University Hackathon 2026",
+                "Tech Industry Networking Fair",
+                "AI Research Symposium",
+                "Startup Pitch Competition",
+                "Women in Tech Panel",
+                "Cybersecurity Awareness Day",
+                "Careers in Software Engineering",
+                "Data Science Masterclass",
+                "Open Source Contribution Workshop",
+                "Entrepreneurship Bootcamp"
+        };
+
+        String[] externalLocations = {
+                "Main Auditorium",
+                "Conference Centre",
+                "Innovation Theatre",
+                "Central Campus Hall",
+                "Business School Atrium"
+        };
+
         for (int i = 0; i < 10; i++) {
 
+            LocalDateTime start = LocalDateTime.now().plusDays(15 + i * 3);
+            LocalDateTime end = start.plusHours(4);
+
             eventRepo.save(new Event(
-                    "External Event " + counter,
-                    "University-wide or external event #" + counter,
-                    "Main Hall " + (i + 1),
-                    LocalDateTime.now().plusDays(i + 15),
-                    LocalDateTime.now().plusDays(i + 15).plusHours(4),
+                    externalTitles[i],
+                    "A university-wide event open to all students. Includes networking, workshops and guest speakers.",
+                    externalLocations[random.nextInt(externalLocations.length)],
+                    start,
+                    end,
                     EventCategory.EXTERNAL,
                     EventVisibility.PUBLIC,
                     null,
                     admin
             ));
+        }
 
-            counter++;
+        // ================================
+        // 🔹 Some Past Events (for realism)
+        // ================================
+        for (int i = 0; i < 3; i++) {
+
+            Club club = clubs.get(i % clubs.size());
+
+            LocalDateTime start = LocalDateTime.now().minusDays(10 + i * 3);
+            LocalDateTime end = start.plusHours(2);
+
+            eventRepo.save(new Event(
+                    "Past Event " + (i + 1),
+                    "Previously held session for members.",
+                    "Room 2" + i,
+                    start,
+                    end,
+                    EventCategory.INTERNAL,
+                    EventVisibility.PUBLIC,
+                    club,
+                    admin
+            ));
         }
     }
 }

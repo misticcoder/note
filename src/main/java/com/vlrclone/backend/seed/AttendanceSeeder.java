@@ -10,26 +10,29 @@ import com.vlrclone.backend.repository.UserRepository;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-@Order(5)
+@Order(6)
 @Component
 public class AttendanceSeeder {
 
+    private final EventAttendanceRepository attendanceRepo;
     private final EventRepository eventRepo;
     private final UserRepository userRepo;
-    private final EventAttendanceRepository attendanceRepo;
+
+    private final Random random = new Random();
 
     public AttendanceSeeder(
+            EventAttendanceRepository attendanceRepo,
             EventRepository eventRepo,
-            UserRepository userRepo,
-            EventAttendanceRepository attendanceRepo
+            UserRepository userRepo
     ) {
+        this.attendanceRepo = attendanceRepo;
         this.eventRepo = eventRepo;
         this.userRepo = userRepo;
-        this.attendanceRepo = attendanceRepo;
     }
 
     public void seed() {
@@ -39,22 +42,46 @@ public class AttendanceSeeder {
         List<Event> events = eventRepo.findAll();
         List<User> users = userRepo.findAll();
 
-        Random random = new Random();
+        if (events.isEmpty() || users.isEmpty()) return;
 
         for (Event event : events) {
 
             Collections.shuffle(users);
 
-            for (int i = 0; i < Math.min(10, users.size()); i++) {
+            // Determine attendance count based on event timing
+            boolean isPast = event.getStartAt().isBefore(LocalDateTime.now());
+            int attendeeCount;
+
+            if (isPast) {
+                attendeeCount = 10 + random.nextInt(15);
+            } else {
+                attendeeCount = 5 + random.nextInt(10);
+            }
+
+            for (int i = 0; i < Math.min(attendeeCount, users.size()); i++) {
+
+                User user = users.get(i);
 
                 EventAttendance attendance = new EventAttendance();
                 attendance.setEvent(event);
-                attendance.setUser(users.get(i));
-                Status[] statuses = Status.values();
+                attendance.setUser(user);
 
-                attendance.setStatus(
-                        statuses[random.nextInt(statuses.length)]
-                );
+                if (isPast) {
+                    if (random.nextDouble() < 0.85) {
+                        attendance.setStatus(Status.ATTENDED);
+                    } else {
+                        attendance.setStatus(Status.MISSED);
+                    }
+                } else {
+                    double rand = random.nextDouble();
+                    if (rand < 0.60) {
+                        attendance.setStatus(Status.GOING);
+                    } else if (rand < 0.85) {
+                        attendance.setStatus(Status.MAYBE);
+                    } else {
+                        attendance.setStatus(Status.NOT_GOING);
+                    }
+                }
 
                 attendanceRepo.save(attendance);
             }

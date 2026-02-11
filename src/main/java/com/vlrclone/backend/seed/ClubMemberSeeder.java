@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-@Order(3)
+@Order(4)
 @Component
 public class ClubMemberSeeder {
 
