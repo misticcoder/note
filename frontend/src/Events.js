@@ -460,7 +460,7 @@ export default function Events() {
 
 
 
-                        {user && (
+                        { user?.role == "ADMIN" && (
                             <button
                                 title="Create new event"
                                 className="dbutton"
