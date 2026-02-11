@@ -18,8 +18,9 @@ public class ClubMember {
     private Club club;
 
 
-    @Column(nullable = false)
-    private Long userId;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Enumerated(EnumType.STRING)
     private Role role;
@@ -44,12 +45,12 @@ public class ClubMember {
         this.club = club;
     }
 
-    public Long getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public Role getRole() {

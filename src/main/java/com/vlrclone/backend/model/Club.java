@@ -83,11 +83,13 @@ public class Club {
         if (user == null || members == null) return false;
 
         return members.stream().anyMatch(m ->
-                m.getUserId().equals(user.getId()) &&
+                m.getUser() != null &&
+                        m.getUser().getId().equals(user.getId()) &&
                         (m.getRole() == ClubMember.Role.LEADER ||
                                 m.getRole() == ClubMember.Role.CO_LEADER)
         );
     }
+
 
     public List<ClubLink> getLinks() { return links; }
     public void setLinks(List<ClubLink> links) { this.links = links; }

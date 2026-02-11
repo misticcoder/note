@@ -25,9 +25,9 @@ public class Notification {
     private NotificationType type;
 
     @Column(name = "is_read", nullable = false)
-    private boolean isRead = false;
+    private boolean read = false;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "related_event_id")
@@ -81,11 +81,11 @@ public class Notification {
     }
 
     public boolean isRead() {
-        return isRead;
+        return read;
     }
 
     public void setRead(boolean read) {
-        isRead = read;
+        this.read = read;
     }
 
     public LocalDateTime getCreatedAt() {

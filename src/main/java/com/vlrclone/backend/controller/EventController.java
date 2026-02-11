@@ -28,22 +28,19 @@ public class EventController {
     private final EventRatingRepository ratings;
     private final EventService service;
     private final ClubRepository clubs;
-    private final EventService eventService;
 
     public EventController(
             EventRepository events,
             UserRepository users,
             EventRatingRepository ratings,
             EventService service,
-            ClubRepository clubs,
-            EventService eventService
+            ClubRepository clubs
     ) {
         this.events = events;
         this.users = users;
         this.ratings = ratings;
         this.service = service;
         this.clubs = clubs;
-        this.eventService = eventService;
     }
 
     /* =====================
@@ -110,7 +107,11 @@ public class EventController {
 
             // Check if user is a club member
             return club.getMembers().stream()
-                    .anyMatch(m -> m.getUserId().equals(user.getId()));
+                    .anyMatch(m ->
+                            m.getUser() != null &&
+                                    m.getUser().getId().equals(user.getId())
+                    );
+
         }
 
         // Default: deny access
@@ -275,7 +276,8 @@ public class EventController {
 
         Event saved = events.save(ev);
 
-        eventService.notifyClubMembers(ev);
+        service.notifyClubMembers(saved);
+
 
         EventUpdateDto out = new EventUpdateDto(
                 events.findWithClubAndTagsById(saved.getId()).orElse(saved)

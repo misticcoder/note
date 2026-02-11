@@ -65,6 +65,22 @@ export default function ClubDetail() {
     // UI: which member's action menu is open
     const [openMember, setOpenMember] = useState(null); // userId or null
 
+    // Add spinner animation styles
+    useEffect(() => {
+        const styleId = "club-detail-spinner-styles";
+        if (!document.getElementById(styleId)) {
+            const style = document.createElement("style");
+            style.id = styleId;
+            style.textContent = `
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }, []);
+
     const clubRoute = (() => {
         const m = (window.location.hash || "").match(/^#\/clubs\/(\d+)(?:\/(\w+))?/i);
         return {
@@ -79,9 +95,10 @@ export default function ClubDetail() {
 
     const isAdmin = String(user?.role || "").toUpperCase() === "ADMIN";
     const isCoLeader =
-        !!user && members.some((m) => m.userId === user.id && m.role === "CO_LEADER");
+        !!user && members.some((m) => m.user?.id === user.id && m.role === "CO_LEADER");
     const isLeader =
-        !!user && members.some((m) => m.userId === user.id && m.role === "LEADER");
+        !!user && members.some((m) => m.user?.id === user.id && m.role === "LEADER");
+
 
 
 
@@ -94,7 +111,7 @@ export default function ClubDetail() {
     const canApproveRequests = isAdmin || isLeader; // pending requests only for admin/leader
 
     // derive membership from both sources (status + members list)
-    const isMemberFromList = !!user && members.some((m) => m.userId === user.id);
+    const isMemberFromList = !!user && members.some((m) => m.user?.id === user.id);
     const effectiveIsMember = myStatus.isMember || isMemberFromList;
 
     const canCreateEvent = isAdmin || isLeader || isCoLeader;
@@ -168,7 +185,7 @@ export default function ClubDetail() {
             return;
         }
         setMyStatus({ isMember: myStatus.isMember, hasPending: false, requestId: null });
-        setPending((prev) => prev.filter((p) => p.id !== myStatus.requestId && p.userId !== user.id));
+        setPending((prev) => prev.filter((p) => p.id !== myStatus.requestId && p.user?.id !== user.id));
     };
 
     const leaveClub = async () => {
@@ -189,7 +206,8 @@ export default function ClubDetail() {
             return;
         }
         setMyStatus({ isMember: false, hasPending: false, requestId: null });
-        setMembers((prev) => prev.filter((m) => m.userId !== user.id));
+        setMembers(prev => prev.filter((m) => m.user?.id !== user.id));
+
     };
 
     // lookup: userId -> user
@@ -380,7 +398,7 @@ export default function ClubDetail() {
             }
             setMembers(prev =>
                 prev.map(m => {
-                    if (m.userId === targetUserId) {
+                    if (m.user?.id === targetUserId) {
                         return { ...m, role: "LEADER" };
                     }
                     if (m.role === "LEADER") {
@@ -412,7 +430,7 @@ export default function ClubDetail() {
                 return;
             }
             setMembers((prev) =>
-                prev.map((m) => (m.userId === targetUserId ? { ...m, role: "CO_LEADER" } : m))
+                prev.map((m) => (m.user?.id === targetUserId ? { ...m, role: "CO_LEADER" } : m))
             );
             setOpenMember(null);
         } catch {
@@ -436,7 +454,7 @@ export default function ClubDetail() {
                 return;
             }
             setMembers((prev) =>
-                prev.map((m) => (m.userId === targetUserId ? { ...m, role: "MEMBER" } : m))
+                prev.map((m) => (m.user?.id === targetUserId ? { ...m, role: "MEMBER" } : m))
             );
             setOpenMember(null);
         } catch {
@@ -461,7 +479,7 @@ export default function ClubDetail() {
                 return;
             }
 
-            setMembers((prev) => prev.filter((m) => m.userId !== targetUserId));
+            setMembers((prev) => prev.filter((m) => m.user?.id !== targetUserId));
             setOpenMember(null);
         } catch {
             alert("Failed to remove member");
@@ -470,16 +488,23 @@ export default function ClubDetail() {
 
     if (!clubId)
         return (
-            <div style={s.page}>
-                <a href="#/clubs" style={s.backLink}>
-                    ← Back
-                </a>
+            <div className={"page"}>
+                <div className={"container"}>
+                    <a href="#/clubs" style={s.backLink}>
+                        ← Back
+                    </a>
+                </div>
             </div>
         );
     if (!club)
         return (
-            <div style={s.page}>
-                <div style={s.card}>Loading…</div>
+            <div className={"page"}>
+                <div className={"container"}>
+                    <div style={s.loadingContainer}>
+                        <div style={s.loadingSpinner}></div>
+                        <p style={s.loadingText}>Loading club details...</p>
+                    </div>
+                </div>
             </div>
         );
 
@@ -491,7 +516,7 @@ export default function ClubDetail() {
 
     const leaderNames = sortedMembers
         .filter((m) => m.role === "LEADER")
-        .map((m) => userLabel(m.userId));
+        .map((m) => userLabel(m.user?.id));
 
     const addLink = async (e) => {
         e.preventDefault();
@@ -765,7 +790,7 @@ export default function ClubDetail() {
                                                                         ...link,
                                                                         _original: { type: link.type, url: link.url }
                                                                     })}
-                                                                        style={s.primaryBtnSm}
+                                                                    style={s.primaryBtnSm}
                                                                 >
                                                                     Edit
                                                                 </button>
@@ -870,8 +895,8 @@ export default function ClubDetail() {
                                         const isThisLeader = m.role === "LEADER";
                                         const isThisCoLeader = m.role === "CO_LEADER";
                                         const isThisMember = !isThisLeader && !isThisCoLeader;
-                                        const isSelf = user && m.userId === user.id;
-                                        const menuOpen = openMember === m.userId;
+                                        const isSelf = user && m.user?.id === user.id;
+                                        const menuOpen = openMember === m.user?.id;
 
                                         const badge = isThisLeader ? (
                                             <span style={s.badgeLeader}>LEADER</span>
@@ -895,17 +920,17 @@ export default function ClubDetail() {
                                         return (
                                             <li key={m.id} style={{...s.listItem, position: "relative"}}>
                     <span
-                        onClick={() => setOpenMember(menuOpen ? null : m.userId)}
+                        onClick={() => setOpenMember(menuOpen ? null : m.user?.id)}
                         style={{cursor: canSeeActionMenu ? "pointer" : "default"}}
                     >
-                      {userLabel(m.userId)}
+                      {userLabel(m.user?.id)}
                     </span>
 
                                                 <div style={{display: "flex", alignItems: "center", gap: 8}}>
                                                     {badge}
                                                     {canSeeActionMenu && !isSelf && (
                                                         <button
-                                                            onClick={() => setOpenMember(menuOpen ? null : m.userId)}
+                                                            onClick={() => setOpenMember(menuOpen ? null : m.user?.id)}
                                                             style={s.primaryBtnSm}
                                                             title="Manage member"
                                                         >
@@ -920,7 +945,7 @@ export default function ClubDetail() {
                                                         {isAdmin && !isThisLeader && (
                                                             <button
                                                                 style={s.menuItem}
-                                                                onClick={() => makeLeader(m.userId)}
+                                                                onClick={() => makeLeader(m.user?.id)}
                                                             >
                                                                 Make Leader (Admin)
                                                             </button>
@@ -928,7 +953,7 @@ export default function ClubDetail() {
                                                         {isAdmin && !isThisCoLeader && !isThisMember && (
                                                             <button
                                                                 style={s.menuItem}
-                                                                onClick={() => makeCoLeader(m.userId)}
+                                                                onClick={() => makeCoLeader(m.user?.id)}
                                                             >
                                                                 Demote to Co-leader
                                                             </button>
@@ -938,7 +963,7 @@ export default function ClubDetail() {
                                                         {canPromoteToCoLeader && (
                                                             <button
                                                                 style={s.menuItem}
-                                                                onClick={() => makeCoLeader(m.userId)}
+                                                                onClick={() => makeCoLeader(m.user?.id)}
                                                             >
                                                                 Promote to Co-leader
                                                             </button>
@@ -948,7 +973,7 @@ export default function ClubDetail() {
                                                         {canDemoteToMember && (
                                                             <button
                                                                 style={s.menuItem}
-                                                                onClick={() => makeMember(m.userId)}
+                                                                onClick={() => makeMember(m.user?.id)}
                                                             >
                                                                 Demote to Member
                                                             </button>
@@ -958,7 +983,7 @@ export default function ClubDetail() {
                                                         {canKickThisUser && (
                                                             <button
                                                                 style={{...s.menuItem, color: "#b00020"}}
-                                                                onClick={() => kickMember(m.userId)}
+                                                                onClick={() => kickMember(m.user?.id)}
                                                             >
                                                                 Kick
                                                             </button>
@@ -982,7 +1007,7 @@ export default function ClubDetail() {
                                         {pending.map((r) => (
                                             <div key={r.id} style={s.pendingRow}>
                                                 <div>
-                                                    <div style={{fontWeight: 600}}>{userLabel(r.userId)}</div>
+                                                    <div style={{fontWeight: 600}}>{userLabel(r.user?.id)}</div>
                                                     <div style={s.meta}>Request ID: {r.id}</div>
                                                 </div>
                                                 <div style={s.actions}>
@@ -1243,8 +1268,8 @@ export default function ClubDetail() {
                                         const isThisLeader = m.role === "LEADER";
                                         const isThisCoLeader = m.role === "CO_LEADER";
                                         const isThisMember = !isThisLeader && !isThisCoLeader;
-                                        const isSelf = user && m.userId === user.id;
-                                        const menuOpen = openMember === m.userId;
+                                        const isSelf = user && m.user?.id === user.id;
+                                        const menuOpen = openMember === m.user?.id;
 
                                         const badge = isThisLeader ? (
                                             <span style={s.badgeLeader}>LEADER</span>
@@ -1268,17 +1293,17 @@ export default function ClubDetail() {
                                         return (
                                             <li key={m.id} style={{...s.listItem, position: "relative"}}>
                     <span
-                        onClick={() => setOpenMember(menuOpen ? null : m.userId)}
+                        onClick={() => setOpenMember(menuOpen ? null : m.user?.id)}
                         style={{cursor: canSeeActionMenu ? "pointer" : "default"}}
                     >
-                      {userLabel(m.userId)}
+                      {userLabel(m.user?.id)}
                     </span>
 
                                                 <div style={{display: "flex", alignItems: "center", gap: 8}}>
                                                     {badge}
                                                     {canSeeActionMenu && !isSelf && (
                                                         <button
-                                                            onClick={() => setOpenMember(menuOpen ? null : m.userId)}
+                                                            onClick={() => setOpenMember(menuOpen ? null : m.user?.id)}
                                                             style={s.primaryBtnSm}
                                                             title="Manage member"
                                                         >
@@ -1293,7 +1318,7 @@ export default function ClubDetail() {
                                                         {isAdmin && !isThisLeader && (
                                                             <button
                                                                 style={s.menuItem}
-                                                                onClick={() => makeLeader(m.userId)}
+                                                                onClick={() => makeLeader(m.user?.id)}
                                                             >
                                                                 Make Leader (Admin)
                                                             </button>
@@ -1301,7 +1326,7 @@ export default function ClubDetail() {
                                                         {isAdmin && !isThisCoLeader && !isThisMember && (
                                                             <button
                                                                 style={s.menuItem}
-                                                                onClick={() => makeCoLeader(m.userId)}
+                                                                onClick={() => makeCoLeader(m.user?.id)}
                                                             >
                                                                 Demote to Co-leader
                                                             </button>
@@ -1311,7 +1336,7 @@ export default function ClubDetail() {
                                                         {canPromoteToCoLeader && (
                                                             <button
                                                                 style={s.menuItem}
-                                                                onClick={() => makeCoLeader(m.userId)}
+                                                                onClick={() => makeCoLeader(m.user?.id)}
                                                             >
                                                                 Promote to Co-leader
                                                             </button>
@@ -1321,7 +1346,7 @@ export default function ClubDetail() {
                                                         {canDemoteToMember && (
                                                             <button
                                                                 style={s.menuItem}
-                                                                onClick={() => makeMember(m.userId)}
+                                                                onClick={() => makeMember(m.user?.id)}
                                                             >
                                                                 Demote to Member
                                                             </button>
@@ -1331,7 +1356,7 @@ export default function ClubDetail() {
                                                         {canKickThisUser && (
                                                             <button
                                                                 style={{...s.menuItem, color: "#b00020"}}
-                                                                onClick={() => kickMember(m.userId)}
+                                                                onClick={() => kickMember(m.user?.id)}
                                                             >
                                                                 Kick
                                                             </button>
@@ -1355,7 +1380,7 @@ export default function ClubDetail() {
                                         {pending.map((r) => (
                                             <div key={r.id} style={s.pendingRow}>
                                                 <div>
-                                                    <div style={{fontWeight: 600}}>{userLabel(r.userId)}</div>
+                                                    <div style={{fontWeight: 600}}>{userLabel(r.user?.id)}</div>
                                                     <div style={s.meta}>Request ID: {r.id}</div>
                                                 </div>
                                                 <div style={s.actions}>
@@ -1411,9 +1436,33 @@ const s = {
         marginBottom: 10,
     },
 
+    loadingContainer: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "400px",
+        padding: "40px",
+    },
+
+    loadingSpinner: {
+        width: "40px",
+        height: "40px",
+        border: "4px solid #f3f3f3",
+        borderTop: "4px solid #0b57d0",
+        borderRadius: "50%",
+        animation: "spin 1s linear infinite",
+    },
+
+    loadingText: {
+        marginTop: "20px",
+        color: "#666",
+        fontSize: "16px",
+    },
+
     card: {
         background: "#fff",
-
+        color: "#000",
         border: "1px solid #e6e6e6",
         borderRadius: 12,
         padding: 16,

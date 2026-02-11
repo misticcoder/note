@@ -3,7 +3,10 @@ package com.vlrclone.backend.Enums;
 public enum NotificationType {
     EVENT_CREATED,
     EVENT_UPDATED,
+    EVENT_ANNOUNCEMENT,
     CLUB_ANNOUNCEMENT,
     CLUB_JOINED,
+    THREAD_COMMENTED,
+    POST_COMMENTED,
     COMMENT_REPLY
 }

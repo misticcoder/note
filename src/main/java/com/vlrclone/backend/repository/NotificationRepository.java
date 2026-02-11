@@ -12,8 +12,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findByUserOrderByCreatedAtDesc(User user);
 
     // Header badge
-    long countByUserAndIsReadFalse(User user);
+    long countByUserAndReadFalse(User user);
 
     // Used for mark-all-as-read
-    List<Notification> findByUserAndIsReadFalse(User user);
+    List<Notification> findByUserAndReadFalse(User user);
 }

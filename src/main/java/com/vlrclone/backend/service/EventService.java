@@ -294,30 +294,36 @@ public class EventService {
     }
 
     public void notifyClubMembers(Event event) {
+
         if (event.getClub() == null) return;
         if (event.getClub().getMembers() == null) return;
 
+        User creator = event.getAuthor();
+
         for (ClubMember cm : event.getClub().getMembers()) {
 
-            User member = userRepo.findById(cm.getUserId())
-                    .orElse(null);
-
+            User member = cm.getUser();
             if (member == null) continue;
+
+            // 🔒 Skip event creator
+            if (creator != null && creator.getId().equals(member.getId())) {
+                continue;
+            }
 
             notificationService.notifyUser(
                     member,
                     NotificationType.EVENT_CREATED,
-                    "New event \"" + event.getTitle() + "\" posted by " + event.getAuthor(),
-                    event.getId(),     // eventId
-                    event.getClub().getId(),  // clubId
-                    null,              // commentId - no comment involved
-                    null,              // threadId - not a thread notification
-                    null               // postId - not a post notification
+                    "New event \"" + event.getTitle() + "\" posted by " +
+                            (creator != null ? creator.getUsername() : "club"),
+                    event.getId(),
+                    event.getClub().getId(),
+                    null,
+                    null,
+                    null
             );
-
-
         }
     }
+
 
     public void validateExternalEvent(
             EventCategory category,

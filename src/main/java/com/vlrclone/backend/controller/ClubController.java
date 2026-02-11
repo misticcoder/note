@@ -153,11 +153,14 @@ public class ClubController {
         }
 
         // 🔹d Ensure membership exists
+        User targetUser = users.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         ClubMember member = members.findByClubIdAndUserId(clubId, userId)
                 .orElseGet(() -> {
                     ClubMember m = new ClubMember();
                     m.setClub(club);
-                    m.setUserId(userId);
+                    m.setUser(targetUser);
                     return m;
                 });
 
@@ -219,10 +222,11 @@ public class ClubController {
                     .orElseGet(() -> {
                         var m = new ClubMember();
                         m.setClub(clubs.getReferenceById(clubId));
-                        m.setUserId(jr.getUserId());
+                        m.setUser(users.getReferenceById(jr.getUserId()));
                         m.setRole(Role.MEMBER);
                         return members.save(m);
                     });
+
         } else if ("reject".equalsIgnoreCase(decision)) {
             jr.setStatus(Status.REJECTED);
         } else {
