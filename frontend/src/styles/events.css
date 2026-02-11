@@ -682,6 +682,7 @@
 }
 
 .event-rating-inline {
+    color: black;
     display: flex;
     align-items: center;
     gap: 4px;
