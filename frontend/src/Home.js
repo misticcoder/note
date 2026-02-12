@@ -259,6 +259,7 @@ function Home() {
                 <div className={"home-grid"}>
                     {/* Thread */}
                     <aside className={"column threads-column"}>
+                        <h3 className={"column-title"}>Discussion Threads</h3>
                         <ThreadSection
                             showAddButton={isAdmin}
                             onAddThread={() => setShowThreadModal(true)}
@@ -273,6 +274,7 @@ function Home() {
 
                     {/* Clubs */}
                     <aside className={"column clubs-column"}>
+                        <h3 className={"column-title"}>Communities</h3>
                         {isAdmin && (
                             <button className={"add-btn"} onClick={openClubModal}>
                                 Add Club
@@ -388,6 +390,7 @@ function Home() {
                     {/* Events */}
 
                     <aside className="column events-column">
+                        <h3 className={"column-title"}>Events</h3>
 
                         {isAdmin && (
                             <button
@@ -398,7 +401,7 @@ function Home() {
                             </button>
                         )}
 
-                        {EVENT_STATUSES.map(({ key, label, limit }) => {
+                        {EVENT_STATUSES.map(({key, label, limit}) => {
                             const list = eventsByStatus[key] || [];
 
                             return (
@@ -431,7 +434,6 @@ function Home() {
                                 </div>
                             );
                         })}
-
 
 
                     </aside>

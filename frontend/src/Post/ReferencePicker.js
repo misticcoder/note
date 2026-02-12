@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import "../styles/Posts.css";
-import "../styles/badges.css";
+
 import { getRefBadgeClass } from "../components/referenceBadges";
 
 import { apiFetch } from "../api";

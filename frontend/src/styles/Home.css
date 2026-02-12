@@ -115,8 +115,16 @@ body {
     border: 1px solid var(--color-border-subtle);
 }
 
+.column h3 {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    color: #ffffe3;
+}
+
 /* Column Headers - PROMINENT */
 .column-title {
+    display: flex;
     font-size: 13px;
     font-weight: 700;
     color: var(--color-text-muted);          /* Muted but visible */

@@ -4,6 +4,8 @@ import "../styles/Posts.css";
 import { useState, useRef, useEffect } from "react";
 import ShareIcon from "../components/Icons/share.png";
 import { getRefBadgeClass } from "../components/referenceBadges";
+import "../styles/badges.css";
+
 
 
 import { apiFetch } from "../api";
@@ -202,7 +204,7 @@ export default function PostCard({
                     )}
 
                     {post.references?.length > 0 && (
-                        <span className="post-references">
+                        <div className="post-references">
                             {post.references.map((ref) => (
                                 <a
                                     key={`${ref.type}-${ref.targetId}`}
@@ -210,10 +212,10 @@ export default function PostCard({
                                     className={`badge post-reference ${getRefBadgeClass(ref.type)}`}
                                     onClick={(e) => e.stopPropagation()}
                                 >
-                                    @{ref.displayText}
+                                    {ref.displayText}
                                 </a>
                             ))}
-                        </span>
+                        </div>
                     )}
 
                     {post.images?.length > 0 && (
