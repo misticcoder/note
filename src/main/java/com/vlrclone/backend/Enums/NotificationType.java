@@ -10,5 +10,5 @@ public enum NotificationType {
     POST_COMMENTED,
     COMMENT_REPLY,
     EVENT_INTERESTED,
-    CLUB_ESCALATION,
+    CLUB_ESCALATION
 }

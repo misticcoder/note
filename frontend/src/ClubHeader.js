@@ -11,7 +11,12 @@ export default function ClubHeader({
                                        onCancelRequest
                                    }) {
     const { user } = useContext(AuthContext);
-    const TABS = ["overview", "events", "news", "members"];
+
+    // Add settings tab for admins
+    const isAdmin = user && String(user.role || "").toUpperCase() === "ADMIN";
+    const TABS = isAdmin
+        ? ["overview", "events", "news", "members", "settings"]
+        : ["overview", "events", "news", "members"];
 
     return (
         <div className="club-header">
@@ -38,6 +43,16 @@ export default function ClubHeader({
                             <div className="club-leaders">
                                 ⭐ Leader{leaders.length > 1 ? "s" : ""}:{" "}
                                 {leaders.join(", ")}
+                            </div>
+                        )}
+
+                        {/* 🔔 Supervisor Badge */}
+                        {club.supervisor && (
+                            <div className="club-supervisor">
+                                👤 Supervisor:{" "}
+                                <span className="supervisor-badge">
+                                    {club.supervisor.username || club.supervisor.email}
+                                </span>
                             </div>
                         )}
 

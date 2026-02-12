@@ -29,6 +29,11 @@ export default function ClubDetail() {
 
     const [editingLink, setEditingLink] = useState(null);
 
+    // 🔔 Supervisor-related state
+    const [selectedSupervisor, setSelectedSupervisor] = useState(null);
+    const [showReportModal, setShowReportModal] = useState(false);
+    const [reportMessage, setReportMessage] = useState("");
+
     const [confirmState, setConfirmState] = useState({
         open: false,
         title: "",
@@ -486,6 +491,76 @@ export default function ClubDetail() {
         }
     };
 
+    // 🔔 Supervisor Management Functions
+
+    const assignSupervisor = async () => {
+        if (!selectedSupervisor) return;
+
+        const res = await apiFetch(
+            `/api/clubs/${clubId}/supervisor?requesterEmail=${encodeURIComponent(user.email)}`,
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: Number(selectedSupervisor) })
+            }
+        );
+
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            alert(body.message || "Failed to assign supervisor");
+            return;
+        }
+
+        // Reload club data to get updated supervisor
+        const updatedClub = await apiFetch(`/api/clubs/${clubId}`).then(r => r.json());
+        setClub(updatedClub);
+        setSelectedSupervisor(null);
+    };
+
+    const removeSupervisor = async () => {
+        if (!window.confirm("Remove supervisor from this club?")) return;
+
+        const res = await apiFetch(
+            `/api/clubs/${clubId}/supervisor?requesterEmail=${encodeURIComponent(user.email)}`,
+            { method: "DELETE" }
+        );
+
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            alert(body.message || "Failed to remove supervisor");
+            return;
+        }
+
+        // Reload club data
+        const updatedClub = await apiFetch(`/api/clubs/${clubId}`).then(r => r.json());
+        setClub(updatedClub);
+    };
+
+    const submitReport = async (e) => {
+        e.preventDefault();
+
+        if (!reportMessage.trim()) return;
+
+        const res = await apiFetch(
+            `/api/clubs/${clubId}/report?requesterEmail=${encodeURIComponent(user.email)}`,
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: reportMessage.trim() })
+            }
+        );
+
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            alert(body.message || "Failed to send report");
+            return;
+        }
+
+        alert("Report sent successfully to supervisor");
+        setShowReportModal(false);
+        setReportMessage("");
+    };
+
     if (!clubId)
         return (
             <div className={"page"}>
@@ -732,6 +807,26 @@ export default function ClubDetail() {
 
                         {/* Members & Pending */}
                         <div>
+                            {/* 🔔 Report to Supervisor (visible to members when supervisor exists) */}
+                            {effectiveIsMember && club.supervisor && (
+                                <div>
+                                    <div style={s.sectionHeader}>
+                                        <h3 style={s.h3}>Report Issue</h3>
+                                    </div>
+                                    <div style={s.card}>
+                                        <p style={s.muted}>
+                                            Have a concern? Report it to the club supervisor.
+                                        </p>
+                                        <button
+                                            onClick={() => setShowReportModal(true)}
+                                            style={s.primaryBtn}
+                                        >
+                                            Report to Supervisor
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Club Links */}
                             <div>
                                 <div style={s.sectionHeader}>
@@ -1117,6 +1212,61 @@ export default function ClubDetail() {
                     </div>
                 )}
 
+                {/* 🔔 Admin Settings Tab */}
+                {activeTab === "settings" && isAdmin && (
+                    <div style={{margin: "15px"}}>
+                        <div style={s.sectionHeader}>
+                            <h3 style={s.h3}>Supervisor Management</h3>
+                        </div>
+
+                        <div style={s.card}>
+                            {club.supervisor ? (
+                                <div>
+                                    <p style={{marginBottom: 12}}>
+                                        <strong>Current Supervisor:</strong> {userLabel(club.supervisor.id)}
+                                    </p>
+                                    <button
+                                        onClick={removeSupervisor}
+                                        style={s.dangerBtn}
+                                    >
+                                        Remove Supervisor
+                                    </button>
+                                </div>
+                            ) : (
+                                <div>
+                                    <p style={{marginBottom: 12, color: "#666"}}>
+                                        No supervisor assigned to this club.
+                                    </p>
+                                    <div style={{display: "flex", gap: 8, alignItems: "center"}}>
+                                        <select
+                                            value={selectedSupervisor || ""}
+                                            onChange={(e) => setSelectedSupervisor(e.target.value)}
+                                            style={{flex: 1, padding: "8px 12px", borderRadius: 8}}
+                                        >
+                                            <option value="">Select a user...</option>
+                                            {users
+                                                .filter(u => u.role === "ADMIN" || u.role === "USER")
+                                                .map(u => (
+                                                    <option key={u.id} value={u.id}>
+                                                        {u.username} ({u.email})
+                                                    </option>
+                                                ))
+                                            }
+                                        </select>
+                                        <button
+                                            onClick={assignSupervisor}
+                                            style={s.primaryBtn}
+                                            disabled={!selectedSupervisor}
+                                        >
+                                            Assign
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 {showCreateEvent && canManageEvents && (
                     <div className="modal-backdrop" onClick={() => setShowCreateEvent(false)}>
                         <div className="modal-card" onClick={(e) => e.stopPropagation()}>
@@ -1406,6 +1556,43 @@ export default function ClubDetail() {
                     </div>
                 )}
             </div>
+
+            {/* 🔔 Report Modal */}
+            {showReportModal && (
+                <div className="modal-backdrop" onClick={() => setShowReportModal(false)}>
+                    <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                        <h3>Report Issue to Supervisor</h3>
+                        <p style={s.muted}>
+                            This will send a notification to {club.supervisor ? userLabel(club.supervisor.id) : "the supervisor"}
+                        </p>
+
+                        <form className="modal-form" onSubmit={submitReport}>
+                            <textarea
+                                placeholder="Describe the issue you want to report..."
+                                value={reportMessage}
+                                onChange={(e) => setReportMessage(e.target.value)}
+                                required
+                                rows={6}
+                                style={s.textarea}
+                            />
+
+                            <div className="modal-actions">
+                                <button
+                                    type="button"
+                                    className="cancelBtn"
+                                    onClick={() => setShowReportModal(false)}
+                                >
+                                    Cancel
+                                </button>
+                                <button type="submit" className="saveBtn">
+                                    Send Report
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             <ConfirmDialog
                 open={confirmState.open}
                 title={confirmState.title}
