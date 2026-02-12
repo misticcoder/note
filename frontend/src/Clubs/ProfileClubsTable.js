@@ -11,6 +11,7 @@ export default function ProfileClubsTable({ clubs }) {
                 <div>#</div>
                 <div>Category</div>
                 <div>Name</div>
+                <div>Role</div>
                 <div>Members</div>
                 <div>Events</div>
                 <div>Upcoming</div>
@@ -23,6 +24,16 @@ export default function ProfileClubsTable({ clubs }) {
                     <div>
                         <a href={`#/clubs/${cl.id}`}>{cl.name}</a>
                     </div>
+                    <div>
+                        {cl.role ? (
+                            <span className={`role-badge role-${cl.role.toLowerCase()}`}>
+            {cl.role}
+        </span>
+                        ) : (
+                            <span className="muted">Member</span>
+                        )}
+                    </div>
+
                     <div>
                         {cl.memberCount
                             ? <span className="rating-count">{cl.memberCount}</span>

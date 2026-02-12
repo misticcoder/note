@@ -334,3 +334,31 @@
 .pill-btn.pill-success:hover {
     background-color: #57a85a;
 }
+
+
+.role-badge {
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.role-leader {
+    background: #fde68a;
+    color: #7c4a00;
+}
+
+.role-co_leader {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.role-member {
+    background: #eef2f7;
+    color: #374151;
+}
+
+.role-supervisor {
+    background: #e9d5ff;
+    color: #6b21a8;
+}
