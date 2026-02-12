@@ -4,16 +4,17 @@ import com.vlrclone.backend.Enums.EventCategory;
 import com.vlrclone.backend.Enums.EventVisibility;
 import com.vlrclone.backend.model.Club;
 import com.vlrclone.backend.model.Event;
+import com.vlrclone.backend.model.Tag;
 import com.vlrclone.backend.model.User;
 import com.vlrclone.backend.repository.ClubRepository;
 import com.vlrclone.backend.repository.EventRepository;
+import com.vlrclone.backend.repository.TagRepository;
 import com.vlrclone.backend.repository.UserRepository;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 @Order(5)
 @Component
@@ -22,15 +23,18 @@ public class EventSeeder {
     private final EventRepository eventRepo;
     private final ClubRepository clubRepo;
     private final UserRepository userRepo;
+    private final TagRepository tagRepo;
 
     public EventSeeder(
             EventRepository eventRepo,
             ClubRepository clubRepo,
-            UserRepository userRepo
+            UserRepository userRepo,
+            TagRepository tagRepo
     ) {
         this.eventRepo = eventRepo;
         this.clubRepo = clubRepo;
         this.userRepo = userRepo;
+        this.tagRepo = tagRepo;
     }
 
     public void seed() {
@@ -48,9 +52,40 @@ public class EventSeeder {
 
         Random random = new Random();
 
-        // ================================
-        // 🔹 INTERNAL CLUB EVENTS
-        // ================================
+        // ========================================
+        // 🔹 TAG GROUPS
+        // ========================================
+
+        String[][] internalTagGroups = {
+                {"football", "futsal", "5-a-side"},
+                {"machine learning", "ai", "data"},
+                {"networking", "careers"},
+                {"beginner", "workshop"},
+                {"social", "community"},
+                {"software", "development"},
+                {"teamwork", "practice"},
+                {"project", "collaboration"},
+                {"leadership"},
+                {"q&a", "discussion"}
+        };
+
+        String[][] externalTagGroups = {
+                {"hackathon", "coding", "competition"},
+                {"networking", "industry"},
+                {"ai", "research"},
+                {"startup", "entrepreneurship"},
+                {"diversity", "women in tech"},
+                {"cybersecurity", "security"},
+                {"careers", "software engineering"},
+                {"data science"},
+                {"open source", "github"},
+                {"entrepreneurship", "business"}
+        };
+
+        // ========================================
+        // 🔹 INTERNAL EVENTS
+        // ========================================
+
         String[] internalTitles = {
                 "Weekly Training Session",
                 "Strategy Workshop",
@@ -80,7 +115,11 @@ public class EventSeeder {
             LocalDateTime start = LocalDateTime.now().plusDays(i + 2);
             LocalDateTime end = start.plusHours(2 + random.nextInt(2));
 
-            eventRepo.save(new Event(
+            Set<Tag> tags = resolveTags(
+                    internalTagGroups[i % internalTagGroups.length]
+            );
+
+            Event event = new Event(
                     internalTitles[i],
                     "Organised by " + club.getName() +
                             ". Open to members for collaboration, networking and skill development.",
@@ -92,13 +131,17 @@ public class EventSeeder {
                             ? EventVisibility.PUBLIC
                             : EventVisibility.CLUB_MEMBERS,
                     club,
-                    admin
-            ));
+                    admin,
+                    tags
+            );
+
+            eventRepo.save(event);
         }
 
-        // ================================
-        // 🔹 EXTERNAL / UNIVERSITY EVENTS
-        // ================================
+        // ========================================
+        // 🔹 EXTERNAL EVENTS
+        // ========================================
+
         String[] externalTitles = {
                 "University Hackathon 2026",
                 "Tech Industry Networking Fair",
@@ -125,7 +168,11 @@ public class EventSeeder {
             LocalDateTime start = LocalDateTime.now().plusDays(15 + i * 3);
             LocalDateTime end = start.plusHours(4);
 
-            eventRepo.save(new Event(
+            Set<Tag> tags = resolveTags(
+                    externalTagGroups[i % externalTagGroups.length]
+            );
+
+            Event event = new Event(
                     externalTitles[i],
                     "A university-wide event open to all students. Includes networking, workshops and guest speakers.",
                     externalLocations[random.nextInt(externalLocations.length)],
@@ -134,13 +181,17 @@ public class EventSeeder {
                     EventCategory.EXTERNAL,
                     EventVisibility.PUBLIC,
                     null,
-                    admin
-            ));
+                    admin,
+                    tags
+            );
+
+            eventRepo.save(event);
         }
 
-        // ================================
-        // 🔹 Some Past Events (for realism)
-        // ================================
+        // ========================================
+        // 🔹 PAST EVENTS
+        // ========================================
+
         for (int i = 0; i < 3; i++) {
 
             Club club = clubs.get(i % clubs.size());
@@ -148,7 +199,9 @@ public class EventSeeder {
             LocalDateTime start = LocalDateTime.now().minusDays(10 + i * 3);
             LocalDateTime end = start.plusHours(2);
 
-            eventRepo.save(new Event(
+            Set<Tag> tags = resolveTags(new String[]{"community", "archive"});
+
+            Event event = new Event(
                     "Past Event " + (i + 1),
                     "Previously held session for members.",
                     "Room 2" + i,
@@ -157,8 +210,32 @@ public class EventSeeder {
                     EventCategory.INTERNAL,
                     EventVisibility.PUBLIC,
                     club,
-                    admin
-            ));
+                    admin,
+                    tags
+            );
+
+            eventRepo.save(event);
         }
+    }
+
+    // ==========================================================
+    // 🔹 RESOLVE TAGS (Ensures Reuse + No Duplicates)
+    // ==========================================================
+
+    private Set<Tag> resolveTags(String[] tagNames) {
+
+        Set<Tag> tags = new HashSet<>();
+
+        for (String raw : tagNames) {
+
+            String normalized = raw.trim().toLowerCase();
+
+            Tag tag = tagRepo.findByNameIgnoreCase(normalized)
+                    .orElseGet(() -> tagRepo.save(new Tag(normalized)));
+
+            tags.add(tag);
+        }
+
+        return tags;
     }
 }

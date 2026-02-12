@@ -145,7 +145,8 @@ public class Event {
             EventCategory category,
             EventVisibility visibility,
             Club club,
-            User author
+            User author,
+            Set<Tag> tags
     ) {
         this.title = title;
         this.content = content;
@@ -156,6 +157,7 @@ public class Event {
         this.visibility = visibility;
         this.club = club;
         this.author = author;
+        this.tags = tags;
     }
 
 

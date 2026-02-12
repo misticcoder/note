@@ -182,6 +182,8 @@ export default function ProfilePage() {
                         {activeTab === "events" && (
                             <EventsTab
                                 events={events}
+                                recommendedEvents={recommendedEvents}
+                                hasTags={profile?.tags?.length > 0}
                                 eventsView={eventsView}
                                 setEventsView={setEventsView}
                             />
@@ -434,7 +436,14 @@ function TabButton({ label, tab, active }) {
 }
 
 
-function EventsTab({ events, eventsView, setEventsView }) {
+function EventsTab({
+                       events,
+                       recommendedEvents,
+                       hasTags,
+                       eventsView,
+                       setEventsView
+                   }) {
+
     const attended = events.filter(e => e.status === "ATTENDED");
     const going = events.filter(e => e.status === "GOING");
     const maybe = events.filter(e => e.status === "MAYBE");
@@ -453,6 +462,9 @@ function EventsTab({ events, eventsView, setEventsView }) {
             break;
         case "missed":
             list = missed;
+            break;
+        case "recommended":
+            list = recommendedEvents;
             break;
         default:
             list = attended;
@@ -488,15 +500,29 @@ function EventsTab({ events, eventsView, setEventsView }) {
                 >
                     Missed ({missed.length})
                 </button>
+
+                <button
+                    className={`events-subtab ${eventsView === "recommended" ? "active" : ""}`}
+                    onClick={() => setEventsView("recommended")}
+                >
+                    Recommended ({recommendedEvents.length})
+                </button>
+
             </div>
 
             {list.length ? (
                 <EventTable events={list} showClub />
             ) : (
                 <div className="muted" style={{ marginTop: 12 }}>
-                    No events in this category.
+                    {eventsView === "recommended"
+                        ? hasTags
+                            ? "No recommendations available right now."
+                            : "Add Interested Tags from the Edit Profile tab to receive recommendations."
+                        : "No events in this category."
+                    }
                 </div>
             )}
+
         </div>
     );
 }

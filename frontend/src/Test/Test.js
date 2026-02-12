@@ -5,10 +5,17 @@ import "./test.css";
 
 const tasks = [
     { id: 1, title: "Explore This Week’s Events", description: "Navigate to Events and filter by week." },
-    { id: 2, title: "Check a Sports Fixture", description: "Find the 5-a-side football fixtures." },
-    { id: 3, title: "Browse a Community", description: "Open a club page and explore join options." },
+    { id: 2, title: "Browse a Community", description: "Open a club page and explore join options." },
+    { id: 3, title: "Check Community Announcement/Members/Events/Social Groups", description: "Find the new news from the leader, and upcoming events from a specific club, and checks if it has existing social waypoints" },
     { id: 4, title: "Review Notifications", description: "Visit your profile activity tab." },
-    { id: 5, title: "View Your Profile", description: "Review your profile overview." }
+    { id: 5, title: "View Your Profile", description: "Review your profile overview." },
+    { id: 6, title: "Search for a Specific Event", description: "Use the search bar to find a Hackathon or ML-related event." },
+    { id: 7, title: "Filter Events by Tag", description: "Filter events by a specific tag (e.g. Sports or Academic)." },
+    { id: 8, title: "Sign Up for an Event", description: "Open an event page and use the Join/Interest button." },
+    { id: 9, title: "Leave Feedback on an Event", description: "Submit a short rating or comment on an event." },
+    { id: 10, title: "Find a Community to Join", description: "Search or browse the community directory." },
+    { id: 11, title: "Compare With Current System", description: "Think about how you would normally find this information (WhatsApp/Email/etc)." },
+
 ];
 
 export default function UsabilityTest() {

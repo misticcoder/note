@@ -19,7 +19,7 @@ import SearchResultsPage from "./SearchResultPage";
 import FrontPage from "./FrontPage";
 import ProfilePage from "./Profile/ProfilePage";
 import UsabilityTest from "./Test/Test";
-
+import "./styles/badges.css";
 
 function App() {
     const [route, setRoute] = useState(window.location.hash || "#/");

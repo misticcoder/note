@@ -4,7 +4,7 @@ import "../styles/Posts.css";
 import { useState, useRef, useEffect } from "react";
 import ShareIcon from "../components/Icons/share.png";
 import { getRefBadgeClass } from "../components/referenceBadges";
-import "../styles/badges.css";
+
 
 
 
