@@ -180,8 +180,8 @@ export default function Clubs() {
                     <div className="events-top">
                         <h2>Clubs</h2>
 
-                        <div>
-                            <select className={"filter"} value={category} onChange={e => setCategory(e.target.value)}>
+                        <div className={"events-controls"}>
+                            <select className={"sort-select"} value={category} onChange={e => setCategory(e.target.value)}>
                                 <option value="ALL">All categories</option>
                                 <option value="SPORTS">Sports</option>
                                 <option value="ACADEMIC">Academic</option>
@@ -191,7 +191,7 @@ export default function Clubs() {
                                 <option value="OTHER">Other</option>
                             </select>
 
-                            <select className={"filter"} value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                            <select className={"sort-select"} value={sortBy} onChange={e => setSortBy(e.target.value)}>
                                 <option value="NAME_ASC">Name (A–Z)</option>
                                 <option value="NAME_DESC">Name (Z–A)</option>
                                 <option value="CREATED_NEW">Newest first</option>
@@ -201,7 +201,7 @@ export default function Clubs() {
                             </select>
 
                             <input
-                                className={"filter"}
+                                className={"search-input"}
                                 placeholder="Search by name / description / ID…"
                                 value={q}
                                 onChange={e => setQ(e.target.value)}
