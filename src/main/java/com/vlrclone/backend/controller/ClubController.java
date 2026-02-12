@@ -627,5 +627,101 @@ public class ClubController {
         return ResponseEntity.ok(clubLinks.save(link));
     }
 
+    @PostMapping("/{clubId}/supervisor")
+    public ResponseEntity<?> assignSupervisor(
+            @PathVariable Long clubId,
+            @RequestParam String requesterEmail,
+            @RequestBody Map<String, Long> body
+    ) {
+        var requester = users.findByEmail(requesterEmail).orElse(null);
+        if (requester == null || requester.getRole() != User.Role.ADMIN) {
+            return ResponseEntity.status(403).body(Map.of("message", "Admin only"));
+        }
+
+        Long userId = body.get("userId");
+        if (userId == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "userId required"));
+        }
+
+        var clubOpt = clubs.findById(clubId);
+        if (clubOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("message", "Club not found"));
+        }
+
+        var userOpt = users.findById(userId);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("message", "User not found"));
+        }
+
+        Club club = clubOpt.get();
+        club.setSupervisor(userOpt.get());
+        clubs.save(club);
+
+        return ResponseEntity.ok(Map.of(
+                "status", "supervisor_assigned",
+                "clubId", clubId,
+                "supervisorId", userId
+        ));
+    }
+
+    @DeleteMapping("/{clubId}/supervisor")
+    public ResponseEntity<?> removeSupervisor(
+            @PathVariable Long clubId,
+            @RequestParam String requesterEmail
+    ) {
+        var requester = users.findByEmail(requesterEmail).orElse(null);
+        if (requester == null || requester.getRole() != User.Role.ADMIN) {
+            return ResponseEntity.status(403).body(Map.of("message", "Admin only"));
+        }
+
+        var clubOpt = clubs.findById(clubId);
+        if (clubOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("message", "Club not found"));
+        }
+
+        Club club = clubOpt.get();
+        club.setSupervisor(null);
+        clubs.save(club);
+
+        return ResponseEntity.ok(Map.of("status", "supervisor_removed"));
+    }
+
+    @PostMapping("/{clubId}/report")
+    public ResponseEntity<?> reportToSupervisor(
+            @PathVariable Long clubId,
+            @RequestParam String requesterEmail,
+            @RequestBody Map<String, String> body
+    ) {
+        var reporter = users.findByEmail(requesterEmail).orElse(null);
+        if (reporter == null) return ResponseEntity.status(403).body(Map.of("message", "Login required"));
+
+        var clubOpt = clubs.findById(clubId);
+        if (clubOpt.isEmpty()) return ResponseEntity.status(404).body(Map.of("message", "Club not found"));
+
+        Club club = clubOpt.get();
+        User supervisor = club.getSupervisor();
+
+        if (supervisor == null) {
+            return ResponseEntity.status(400).body(Map.of("message", "No supervisor assigned"));
+        }
+
+        String message = body.getOrDefault("message", "").trim();
+        if (message.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Message required"));
+        }
+
+        notificationService.notifyUser(
+                supervisor,
+                NotificationType.CLUB_ESCALATION,
+                "Escalation in " + club.getName() + ": " + message,
+                null,
+                clubId,
+                null,
+                reporter.getId(),
+                null
+        );
+
+        return ResponseEntity.ok(Map.of("status", "reported"));
+    }
 
 }

@@ -43,6 +43,11 @@ public class Club {
     @JsonManagedReference
     private List<ClubLink> links = new ArrayList<>();
 
+    @ManyToOne
+    @JoinColumn(name = "supervisor_id")
+    private User supervisor;
+
+
     public Club() {
         // Required by JPA
     }
@@ -94,4 +99,6 @@ public class Club {
     public List<ClubLink> getLinks() { return links; }
     public void setLinks(List<ClubLink> links) { this.links = links; }
 
+    public User getSupervisor() { return supervisor; }
+    public void setSupervisor(User supervisor) { this.supervisor = supervisor; }
 }

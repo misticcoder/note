@@ -10,5 +10,10 @@ public record ClubDto(
         ClubCategory category,
         LocalDateTime createdAt,
         long memberCount,
-        long eventCount
+        long eventCount,
+
+        // 🔹 Supervisor fields
+        Long supervisorId,
+        String supervisorName,
+        String supervisorEmail
 ) {}
