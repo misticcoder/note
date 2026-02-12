@@ -55,31 +55,32 @@ export default function GlobalSearch() {
                 onKeyDown={e => {
                     if (e.key === "Enter") {
                         window.location.href = `#/search?q=${encodeURIComponent(query)}`;
+                        setOpen(false);
                     }}}
                 className={"input"}
             />
 
 
             {open && results && (
-                <SearchDropdown results={results} />
+                <SearchDropdown results={results} onClose={() => setOpen(false)} />
             )}
         </div>
     );
 }
 
-function SearchDropdown({ results }) {
+function SearchDropdown({ results, onClose }) {
     return (
         <div className={"global-search-dropdown"}>
-            <SearchSection title="Events" items={results.events} />
-            <SearchSection title="Clubs" items={results.clubs} />
-            <SearchSection title="Threads" items={results.threads} />
-            <SearchSection title="Posts" items={results.posts} />
-            <SearchSection title="Tags" items={results.tags} />
+            <SearchSection title="Events" items={results.events} onClose={onClose} />
+            <SearchSection title="Clubs" items={results.clubs} onClose={onClose} />
+            <SearchSection title="Threads" items={results.threads} onClose={onClose} />
+            <SearchSection title="Posts" items={results.posts} onClose={onClose} />
+            <SearchSection title="Tags" items={results.tags} onClose={onClose} />
         </div>
     );
 }
 
-function SearchSection({ title, items }) {
+function SearchSection({ title, items, onClose }) {
     if (!items || items.length === 0) return null;
 
     return (
@@ -93,13 +94,16 @@ function SearchSection({ title, items }) {
                     key={item.id}
                     href={item.url}
                     className={"search-row"}
+                    onClick={onClose}
                 >
-                    <div className={"search-title"}>{item.title}</div>
-                    {item.subtitle && (
-                        <div className={"search-subtitle"}>
-                            {item.subtitle}
-                        </div>
-                    )}
+                    <div>
+                        <div className={"search-title"}>{item.title}</div>
+                        {item.subtitle && (
+                            <div className={"search-subtitle"}>
+                                {item.subtitle}
+                            </div>
+                        )}
+                    </div>
                     {item.status && (
                         <div className={`search-status ${item.status}`}>
                             {item.status}

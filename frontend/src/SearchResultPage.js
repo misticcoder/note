@@ -45,7 +45,7 @@ export default function SearchResultsPage() {
             <div className={"container"}>
                 <div className="search-page">
                     <div className="search-page-title">
-                        Search results for “{q}”
+                        Search results for "{q}"
                     </div>
 
                     {/* Filters */}
@@ -144,7 +144,7 @@ function sortItems(items, sortBy, section) {
             }
             if (sortBy === "participants") {
                 return sorted.sort(
-                    (a, b) => (b.atte ?? 0) - (a.participants ?? 0)
+                    (a, b) => (b.participants ?? 0) - (a.participants ?? 0)
                 );
             }
             break;
@@ -164,7 +164,7 @@ function sortItems(items, sortBy, section) {
 
         case "Threads":
         case "Posts":
-            if (sortBy === "newest") {
+            if (sortBy === "time") {
                 return sorted.sort(
                     (a, b) =>
                         new Date(b.createdAt || 0) -
@@ -182,4 +182,3 @@ function sortItems(items, sortBy, section) {
 
     return items;
 }
-
