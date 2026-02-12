@@ -6,7 +6,9 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 public class EventSpecifications {
@@ -105,6 +107,52 @@ public class EventSpecifications {
                                 )
                         );
 
+                default -> cb.conjunction();
+            };
+        };
+    }
+
+    /* =========================
+       TIME PERIOD FILTER (NEW)
+       Filter events by when they start
+    ========================= */
+    public static Specification<Event> inTimePeriod(String timePeriod, LocalDateTime now) {
+        return (root, query, cb) -> {
+            if (timePeriod == null || "all".equalsIgnoreCase(timePeriod)) {
+                return cb.conjunction();
+            }
+
+            return switch (timePeriod.toLowerCase()) {
+                case "today" -> {
+                    LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+                    LocalDateTime endOfDay = startOfDay.plusDays(1);
+                    yield cb.and(
+                            cb.greaterThanOrEqualTo(root.get("startAt"), startOfDay),
+                            cb.lessThan(root.get("startAt"), endOfDay)
+                    );
+                }
+                case "week" -> {
+                    // Start of current week (Monday)
+                    LocalDateTime startOfWeek = now.toLocalDate()
+                            .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                            .atStartOfDay();
+                    LocalDateTime endOfWeek = startOfWeek.plusWeeks(1);
+                    yield cb.and(
+                            cb.greaterThanOrEqualTo(root.get("startAt"), startOfWeek),
+                            cb.lessThan(root.get("startAt"), endOfWeek)
+                    );
+                }
+                case "month" -> {
+                    // Start of current month
+                    LocalDateTime startOfMonth = now.toLocalDate()
+                            .with(TemporalAdjusters.firstDayOfMonth())
+                            .atStartOfDay();
+                    LocalDateTime endOfMonth = startOfMonth.plusMonths(1);
+                    yield cb.and(
+                            cb.greaterThanOrEqualTo(root.get("startAt"), startOfMonth),
+                            cb.lessThan(root.get("startAt"), endOfMonth)
+                    );
+                }
                 default -> cb.conjunction();
             };
         };

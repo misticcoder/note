@@ -125,7 +125,8 @@ public class EventController {
             @RequestParam(required = false) String requesterEmail,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String tags,
-            @RequestParam(defaultValue = "all") String status
+            @RequestParam(defaultValue = "all") String status,
+            @RequestParam(required = false) String timePeriod
     ) {
         List<String> tagList = (tags == null || tags.isBlank())
                 ? null
@@ -137,7 +138,7 @@ public class EventController {
         User user = byEmail(requesterEmail);
 
         List<EventUpdateDto> visible = service
-                .searchEvents(q, tagList, normalizeStatus(status))
+                .searchEvents(q, tagList, normalizeStatus(status), timePeriod)
                 .stream()
                 .filter(dto -> {
                     Event e = events.findById(dto.id).orElse(null);

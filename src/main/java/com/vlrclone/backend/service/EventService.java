@@ -57,15 +57,19 @@ public class EventService {
     public List<EventUpdateDto> searchEvents(
             String q,
             List<String> tags,
-            String status
+            String status,
+            String timePeriod
     ) {
+        LocalDateTime now = LocalDateTime.now();
+
         Specification<Event> spec = Specification
                 .where(EventSpecifications.searchText(q))
-                .and(EventSpecifications.hasTags(tags));
+                .and(EventSpecifications.hasTags(tags))
+                .and(EventSpecifications.inTimePeriod(timePeriod, now));
 
         if (status != null && !"ALL".equalsIgnoreCase(status)) {
             spec = spec.and(
-                    EventSpecifications.hasStatus(status, LocalDateTime.now())
+                    EventSpecifications.hasStatus(status, now)
             );
         }
 

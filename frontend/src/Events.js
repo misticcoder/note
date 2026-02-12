@@ -52,6 +52,7 @@ export default function Events() {
 
 
     const [status, setStatus] = useState("all");      // upcoming | ongoing | past | all
+    const [timePeriod, setTimePeriod] = useState("all"); // today | week | month | all
     const [allTags, setAllTags] = useState([]);            // list of tag names from backend
     const [selectedTags, setSelectedTags] = useState([]);  // selected tag names
 
@@ -159,6 +160,11 @@ export default function Events() {
                     if (selectedTags.length) params.set("tags", selectedTags.join(","));
                     params.set("status", status);
 
+                    // Add time period filter
+                    if (timePeriod !== "all") {
+                        params.set("timePeriod", timePeriod);
+                    }
+
                     url = `/api/events?${params.toString()}`;
                 }
 
@@ -183,6 +189,7 @@ export default function Events() {
         q,
         selectedTags,
         status,
+        timePeriod,
         tagFromRoute,
         clubFromRoute,
         user?.email,
@@ -379,16 +386,30 @@ export default function Events() {
             <div className="container">
                 <div className={"table-wrap"}>
                     <div className="events-top">
-                        <h1>Events</h1>
+                        <div className="events-title-row">
+                            <h1>Events</h1>
+
+                            {user?.role == "ADMIN" && (
+                                <button
+                                    title="Create new event"
+                                    className="dbutton add-event-btn"
+                                    onClick={() => setShowAdd(true)}
+                                >
+                                    + Add Event
+                                </button>
+                            )}
+                        </div>
 
                         <div className="events-controls">
                             <input
+                                className="search-input"
                                 placeholder="Search events…"
                                 value={q}
                                 onChange={(e) => setQ(e.target.value)}
                             />
 
                             <select
+                                className="sort-select"
                                 value={sort}
                                 onChange={(e) => setSort(e.target.value)}
                                 aria-label="Sort events"
@@ -399,22 +420,48 @@ export default function Events() {
                             </select>
                         </div>
 
-                        <div className="event-status-tabs">
-                            {[
-                                {key: "upcoming", label: "Upcoming"},
-                                {key: "ongoing", label: "Ongoing"},
-                                {key: "past", label: "Past"},
-                                {key: "all", label: "All"},
-                            ].map(t => (
-                                <button
-                                    key={t.key}
-                                    type="button"
-                                    className={status === t.key ? "active" : ""}
-                                    onClick={() => setStatus(t.key)}
-                                >
-                                    {t.label}
-                                </button>
-                            ))}
+                        <div className="event-filters-container">
+                            <div className="filter-group">
+                                <label className="filter-label">Status:</label>
+                                <div className="event-status-tabs">
+                                    {[
+                                        {key: "upcoming", label: "Upcoming"},
+                                        {key: "ongoing", label: "Ongoing"},
+                                        {key: "past", label: "Past"},
+                                        {key: "all", label: "All"},
+                                    ].map(t => (
+                                        <button
+                                            key={t.key}
+                                            type="button"
+                                            className={status === t.key ? "active" : ""}
+                                            onClick={() => setStatus(t.key)}
+                                        >
+                                            {t.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="filter-group">
+                                <label className="filter-label">Time:</label>
+                                <div className="event-time-period-tabs">
+                                    {[
+                                        {key: "today", label: "Today"},
+                                        {key: "week", label: "This Week"},
+                                        {key: "month", label: "This Month"},
+                                        {key: "all", label: "All Time"},
+                                    ].map(t => (
+                                        <button
+                                            key={t.key}
+                                            type="button"
+                                            className={timePeriod === t.key ? "active" : ""}
+                                            onClick={() => setTimePeriod(t.key)}
+                                        >
+                                            {t.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
 
                         {allTags.length > 0 && (
@@ -456,19 +503,6 @@ export default function Events() {
                                     Clear
                                 </button>
                             </div>
-                        )}
-
-
-
-                        { user?.role == "ADMIN" && (
-                            <button
-                                title="Create new event"
-                                className="dbutton"
-                                style={{ color: "#ffffe3" }}
-                                onClick={() => setShowAdd(true)}
-                            >
-                                + Add Event
-                            </button>
                         )}
 
 
