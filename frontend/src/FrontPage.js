@@ -3,6 +3,18 @@ import "./styles/frontpage.css";
 
 export default function FrontPage() {
 
+    const surveyUrl = "https://forms.gle/YOUR_FORM_LINK";
+
+    const handleSurveyClick = () => {
+        const confirmed = window.confirm(
+            "You are about to open the usability survey in a new tab.\n\nContinue?"
+        );
+
+        if (confirmed) {
+            window.open(surveyUrl, "_blank", "noopener,noreferrer");
+        }
+    };
+
 
     return (
         <div className="front-page">
@@ -28,7 +40,13 @@ export default function FrontPage() {
                 </div>
                 <p></p>
                 <p>
-                    Find Tasks: <br></br>Click <b>"Tasks"</b> or Look at <b> Header -> SideNavigation -> Usability Tasks</b>
+                    Find Tasks: <br></br>Click <b>"Tasks"</b> or Go to <b>"Home"</b> -> Look at <b> Header ->
+                    SideNavigation -> Usability
+                    Tasks</b>
+                </p>
+
+                <p>
+                    Find Survey: <br></br>Go to <b>"Home"</b> -> Look at <b> Header -> SideNavigation -> Usability Survey</b>
                 </p>
 
             </div>

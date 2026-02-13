@@ -1,5 +1,5 @@
 /* ===============================
-   PAGE
+   EVENT PAGE
 ================================ */
 .event-page {
     min-height: 100vh;
@@ -11,10 +11,9 @@
     gap: 20px;
 }
 
-.event-page-title{
+.event-page-title {
     color: #ffffe3;
 }
-
 
 /* ===============================
    EVENT HEADER
@@ -24,7 +23,7 @@
     width: 100%;
     background: #3f3f3f;
     border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     overflow: hidden;
     margin-bottom: 24px;
 }
@@ -94,7 +93,6 @@
 }
 
 /* Time + Location */
-
 .event-time,
 .event-location {
     font-size: 14px;
@@ -110,8 +108,13 @@
 }
 
 /* ===============================
-   RSVP PILL
+   RIGHT SIDE - RSVP PILL
 ================================ */
+
+.event-header-right {
+    display: flex;
+    align-items: flex-start;
+}
 
 .event-rsvp-pill {
     display: flex;
@@ -149,7 +152,7 @@
 
 .pill-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
 
 /* Going */
@@ -209,42 +212,19 @@
 }
 
 /* ===============================
-   RESPONSIVE
+   EVENT CONTENT BELOW HEADER
 ================================ */
 
-@media (max-width: 768px) {
-    .event-header-top {
-        flex-direction: column;
-        gap: 16px;
-    }
-
-    .event-header-left {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .event-banner {
-        width: 100%;
-        height: 180px;
-    }
-
-    .event-description {
-        max-width: 100%;
-    }
-
-    .event-rsvp-pill {
-        align-self: flex-start;
-    }
-}
-
-/* ===============================
-   CONTENT BELOW HEADER
-================================ */
 .event-content {
     background: #3f3f3f;
     border-radius: 8px;
     padding: 20px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.event-overview {
+    color: #ffffe3;
+    line-height: 1.6;
 }
 
 .event-actions {
@@ -252,7 +232,6 @@
     gap: 12px;
     background-color: #ffffe3;
     border-radius: 15px;
-
 }
 
 .event-actions button {
@@ -264,58 +243,26 @@
     cursor: pointer;
 }
 
-
 /* ===============================
    ATTENDEES
 ================================ */
-.attendee-row {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    padding: 10px 8px;
-    border-bottom: 1px solid #555;
-}
-
-.attendee-row .avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: #d50032;
-    color: #fff;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.attendee-row .name {
-    font-weight: 700;
-}
-
-/* ===============================
-   EVENT CONTENT
-================================ */
-
-.event-content {
-    background: #3f3f3f;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
-}
-
-.event-overview {
-    color: #ffffe3;
-    line-height: 1.6;
-}
 
 .event-attendees {
     display: flex;
     flex-direction: column;
 }
 
-/* ===============================
-   ATTENDEE ROW
-================================ */
+.event-attendees-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.attendee-column {
+    background: #353535;
+    border-radius: 8px;
+    padding: 16px;
+}
 
 .attendee-row {
     display: flex;
@@ -346,64 +293,7 @@
     color: #ffffe3;
 }
 
-.muted {
-    color: #9aa0a6;
-    font-style: italic;
-}
-
-
-/* ===============================
-   ATTENDEES — TWO COLUMN LAYOUT
-================================ */
-
-.event-attendees-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-}
-
-/* Individual column */
-.attendee-column {
-    background: #353535;
-    border-radius: 8px;
-    padding: 16px;
-}
-
-/* Responsive: collapse to one column */
-@media (max-width: 768px) {
-    .event-attendees-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-
-/* ===============================
-   ATTENDEE SEARCH
-================================ */
-
-.attendee-search {
-    margin-bottom: 16px;
-}
-
-.attendee-search input {
-    width: 100%;
-    max-width: 320px;
-    padding: 8px 12px;
-    border-radius: 6px;
-    border: 1px solid #555;
-    background: #2f2f2f;
-    color: #ffffe3;
-    font-size: 14px;
-}
-
-.attendee-search input::placeholder {
-    color: #9aa0a6;
-}
-
-/* ===============================
-   HIGHLIGHT CURRENT USER
-================================ */
-
+/* Highlight current user */
 .attendee-row.is-me {
     background: rgba(213, 0, 50, 0.12);
     border-radius: 6px;
@@ -423,18 +313,335 @@
     color: #fff;
 }
 
-/* =========================
-   PAGE WRAPPER
-========================= */
+/* Attended status */
+.attendee-column.attended .avatar {
+    background: #2ecc71;
+    color: white;
+    font-weight: bold;
+}
+
+/* Attendee search */
+.attendee-search {
+    margin-bottom: 16px;
+}
+
+.attendee-search input {
+    width: 100%;
+    max-width: 320px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #555;
+    background: #2f2f2f;
+    color: #ffffe3;
+    font-size: 14px;
+}
+
+.attendee-search input::placeholder {
+    color: #9aa0a6;
+}
+
+/* Attendance code */
+.attendance-code-box {
+    color: #1e293b;
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px dashed #ccc;
+    border-radius: 6px;
+    background: #fafafa;
+}
+
+.attendance-code {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    margin: 8px 0;
+}
+
+/* ===============================
+   EVENT RATING
+================================ */
+
+.event-rating {
+    margin-top: 16px;
+}
+
+.rating-meta {
+    font-size: 13px;
+    color: #555;
+    margin-top: 4px;
+}
+
+.rating-hint {
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.event-rating-inline {
+    color: black;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.event-rating-inline .star {
+    color: #f59e0b;
+    font-size: 14px;
+}
+
+.rating-count {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+/* ===============================
+   EVENT TAGS (Event Page)
+================================ */
+
+.event-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-top: 12px;
+}
+
+.event-tags .event-tag {
+    display: inline-block;
+    padding: 6px 12px;
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.event-tags .event-tag:hover {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.4);
+    transform: translateY(-1px);
+}
+
+/* ===============================
+   EXTERNAL EVENT LINKS
+================================ */
+
+.external-link-btn {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: #0b57d0;
+    color: #fff;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.external-link-btn:hover {
+    opacity: 0.85;
+}
+
+.event-external-link {
+    margin-top: 6px;
+    font-size: 0.95rem;
+}
+
+.event-external-link a {
+    color: #0b57d0;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.event-external-link a:hover {
+    text-decoration: underline;
+}
+
+/* ===============================
+   VISIBILITY BADGE
+================================ */
+
+.visibility-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.visibility-badge.public {
+    background: #e6f4ea;
+    color: #1e7e34;
+}
+
+.visibility-badge.restricted {
+    background: #fff3cd;
+    color: #856404;
+}
+
+/* ===============================
+   TAG SEARCH FILTER (HORIZONTAL)
+================================ */
+
+/* Container for the entire table with filter */
+.events-table-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.tag-search-bar {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.tag-search-header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.tag-search-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #374151;
+    background: #f9fafb;
+    transition: all 0.2s ease;
+}
+
+.tag-search-input:focus {
+    outline: none;
+    border-color: #6366f1;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.tag-search-input::placeholder {
+    color: #9ca3af;
+}
+
+.clear-filter-btn-inline {
+    padding: 10px 20px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.clear-filter-btn-inline:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.filter-status {
+    padding: 8px 12px;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 6px;
+    font-size: 14px;
+    color: #374151;
+}
+
+.filter-status strong {
+    color: #6366f1;
+    font-weight: 600;
+}
+
+/* Horizontal scrollable tag chips container */
+.tag-chips-container {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 0;
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db #f3f4f6;
+}
+
+/* Custom scrollbar for webkit browsers */
+.tag-chips-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.tag-chips-container::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 4px;
+}
+
+.tag-chips-container::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
+}
+
+.tag-chips-container::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+.tag-filter-chip {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #f3f4f6;
+    color: #374151;
+    border: 2px solid transparent;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.tag-filter-chip:hover {
+    background: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+.tag-filter-chip.active {
+    background: rgba(99, 102, 241, 0.15);
+    color: #6366f1;
+    border-color: #6366f1;
+    font-weight: 600;
+}
+
+.no-tags-found {
+    color: #9ca3af;
+    font-size: 14px;
+    font-style: italic;
+    padding: 8px 0;
+}
+
+/* ===============================
+   EVENTS DIRECTORY PAGE
+================================ */
+
 .events-page {
     width: 100%;
     max-width: 1100px;
     margin: 0 auto;
 }
 
-/* =========================
-   HEADER / TOOLBAR - UPDATED CLEAN LAYOUT
-========================= */
+/* ===============================
+   HEADER / TOOLBAR
+================================ */
+
 .events-top {
     margin-bottom: 1.5rem;
 }
@@ -462,6 +669,7 @@
     display: flex;
     gap: 0.75rem;
     margin-bottom: 1rem;
+    align-items: center;
 }
 
 .search-input {
@@ -478,6 +686,57 @@
     color: #9aa0a6;
 }
 
+/* Tag search inline with controls */
+.tag-search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.tag-search-input {
+    width: 100%;
+    padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+    border: 1px solid #555;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background: #2f2f2f;
+    color: #ffffe3;
+    transition: all 0.2s ease;
+}
+
+.tag-search-input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+.tag-search-input::placeholder {
+    color: #9aa0a6;
+}
+
+.clear-search-btn {
+    position: absolute;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s ease;
+}
+
+.clear-search-btn:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
 .sort-select {
     padding: 0.5rem 0.75rem;
     border: 1px solid #555;
@@ -486,6 +745,7 @@
     background: #2f2f2f;
     color: #ffffe3;
     cursor: pointer;
+    min-width: 180px;
 }
 
 .sort-select option {
@@ -493,7 +753,10 @@
     color: #ffffe3;
 }
 
-/* Filters container */
+/* ===============================
+   FILTERS CONTAINER
+================================ */
+
 .event-filters-container {
     display: flex;
     gap: 2rem;
@@ -581,142 +844,60 @@
     cursor: not-allowed;
 }
 
-/* Tag filter section */
-.event-tags-filter {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    align-items: center;
-    margin-bottom: 1rem;
-    padding: 0.75rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 6px;
-    border: 1px solid #555;
-}
+/* ===============================
+   EVENT TABLE
+================================ */
 
-.tag-chip {
-    padding: 0.35rem 0.75rem;
-    background: #2f2f2f;
-    border: 1px solid #555;
-    color: #d1d5db;
-    border-radius: 16px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-}
-
-.tag-chip:hover {
-    background: #3f3f3f;
-    border-color: #666;
-}
-
-.tag-chip.active {
-    background: #6c757d;
-    color: white;
-    border-color: #6c757d;
-}
-
-.cancel-btn {
-    padding: 0.35rem 0.75rem;
-    background: #dc3545;
-    color: white;
-    border: 1px solid #dc3545;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.2s ease;
-}
-
-.cancel-btn:hover:not(:disabled) {
-    background: #c82333;
-    border-color: #bd2130;
-}
-
-.cancel-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* =========================
-   TABLE CONTAINER
-========================= */
 .events-table {
     background: #ffffff;
     border: 1px solid #ddd;
-    border-radius: 2px;
-
+    border-radius: 8px;
+    overflow: hidden;
 }
 
-/* =========================
-   HEADER + ROW (SHARED)
-========================= */
+/* ===============================
+   HEADER + ROW (SHARED GRID)
+================================ */
+
+.events-header,
+.events-row {
+    display: grid;
+    grid-template-columns:
+        48px                /* index */
+        minmax(220px, 2fr)  /* event */
+        minmax(120px, 1fr)  /* club */
+        minmax(90px, 1fr)   /* status */
+        minmax(110px, 1fr); /* rating */
+    align-items: center;
+    padding: 12px 14px;
+    column-gap: 12px;
+}
+
+/* Privileged view with actions column */
+.events-header.has-actions,
+.events-row.has-actions {
+    grid-template-columns:
+        48px                /* index */
+        minmax(220px, 2fr)  /* event */
+        minmax(120px, 1fr)  /* club */
+        minmax(90px, 1fr)   /* status */
+        minmax(110px, 1fr)  /* rating */
+        minmax(110px, 1fr)  /* visibility */
+        minmax(120px, 1fr); /* actions */
+}
+
+/* ===============================
+   HEADER STYLING
+================================ */
 
 .events-header {
     background: #f4f4f4;
     font-weight: 600;
     font-size: 13px;
     color: #555;
-    height: 2em;
+    height: 2.5em;
 }
 
-/* =========================
-   DATA ROW
-========================= */
-.events-row {
-    border-top: 1px solid #eee;
-}
-.events-header,
-.events-row {
-    display: grid;
-    grid-template-columns:
-        48px                /* index */
-        minmax(220px, 2fr)  /* event */
-        minmax(120px, 1fr)  /* club */
-        minmax(90px, 1fr)   /* status */
-        minmax(110px, 1fr)  /* rating */
-        minmax(120px, 1fr); /* actions */
-    align-content: center;
-    padding: 12px 14px;
-    column-gap: 12px;
-}
-
-.events-row {
-    border-top: 1px solid #eee;
-}
-.events-header {
-    height: 1cm;
-}
-.events-header,
-.events-row {
-    display: grid;
-    grid-template-columns:
-        48px                /* index */
-        minmax(220px, 2fr)  /* event */
-        minmax(120px, 1fr)  /* club */
-        minmax(90px, 1fr)   /* status */
-        minmax(110px, 1fr);  /* rating */
-
-    align-items: center;
-    padding: 12px 14px;
-    column-gap: 12px;
-}
-
-.events-header.has-actions,
-.events-row.has-actions {
-    display: grid;
-    grid-template-columns:
-        48px                /* index */
-        minmax(220px, 2fr)  /* event */
-        minmax(120px, 1fr)  /* club */
-        minmax(90px, 1fr)   /* status */
-        minmax(110px, 1fr)  /* rating */
-        minmax(110px, 1fr)  /* rating */
-        minmax(120px, 1fr); /* actions */
-    align-content: center;
-    padding: 12px 14px;
-    column-gap: 12px;
-}
 .events-header .club-col,
 .events-row .club-col {
     white-space: nowrap;
@@ -724,30 +905,55 @@
     text-overflow: ellipsis;
 }
 
-.events-row .actions-col:empty {
-    visibility: hidden;
-}
+/* ===============================
+   ROW STYLING
+================================ */
 
+.events-row {
+    border-top: 1px solid #eee;
+    background: white;
+    transition: background 0.15s ease;
+}
 
 .events-row:hover {
     background: #fafafa;
 }
 
-/* =========================
+.events-row.clickable {
+    cursor: pointer;
+}
+
+.events-row.clickable:hover {
+    background: #f9fafb;
+}
+
+.events-row.clickable:hover .event-title {
+    text-decoration: underline;
+}
+
+/* Prevent text selection feeling */
+.events-row * {
+    user-select: none;
+}
+
+/* ===============================
    RANK COLUMN
-========================= */
+================================ */
+
 .rank {
     padding-right: 10px;
     font-weight: 600;
     color: #666;
 }
 
-/* =========================
-   EVENT MAIN INFO
-========================= */
+/* ===============================
+   EVENT MAIN INFO (in table)
+================================ */
+
 .event-main {
     display: flex;
     flex-direction: column;
+    gap: 4px;
 }
 
 .event-title {
@@ -762,144 +968,54 @@
     margin-top: 2px;
 }
 
-/* =========================
-   STATUS COLUMN
-========================= */
-.event-status {
-    font-weight: 600;
-    font-size: 13px;
-}
-
-/* Status colors */
-.event-status.upcoming {
-    color: #2563eb;
-}
-
-.event-status.live {
-    color: #16a34a;
-}
-
-.event-status.ended {
-    color: #9ca3af;
-}
-
-/* =========================
-   ACTIONS COLUMN
-========================= */
-.event-actions {
-    justify-content: center;
-    gap: 30px;
-}
-.table-actions{
-    margin-left: 90px;
-}
-
-.event-actions button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 15px;
-    padding: 4px;
-    color: #1f1f1f;
-}
-
-.event-actions button:hover {
-    opacity: 0.7;
-}
-
-.event-actions .danger {
-    color: #b91c1c;
-}
-
-/* =========================
-   STATES
-========================= */
-.muted {
-    color: #777;
-}
-
-.error {
-    color: #b91c1c;
-}
-
-/* Clickable rows */
-.events-row.clickable {
-    cursor: pointer;
-}
-
-.events-row.clickable:hover {
-    background: #f9fafb;
-}
-
-/* Prevent text selection feeling */
-.events-row * {
-    user-select: none;
-}
-
-.events-row.clickable:hover .event-title {
-    text-decoration: underline;
-}
-
-
-.event-rating {
-    margin-top: 16px;
-}
-
-.rating-meta {
-    font-size: 13px;
-    color: #555;
-    margin-top: 4px;
-}
-
-.rating-hint {
-    font-size: 12px;
-    margin-top: 4px;
-}
-
-.event-rating-inline {
-    color: black;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 13px;
-    white-space: nowrap;
-}
-
-.event-rating-inline .star {
-    color: #f59e0b;
-    font-size: 14px;
-}
-
-.rating-count {
-    color: #6b7280;
-    font-size: 12px;
-}
-
-.event-tags {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-top: 6px;
-}
-
-.event-tag {
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 2px;
-    background: rgba(255,255,255,0.10);
-    color: #ffffe3;
-}
-
-.clear-tags {
-    margin-left: 6px;
-}
-
 .event-title-row {
     display: flex;
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
 }
+
+/* ===============================
+   EVENT TAGS (in table rows)
+================================ */
+
+.event-tags-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.events-row .event-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.events-row .event-tag:hover {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.4);
+    transform: translateY(-1px);
+}
+
+/* Selected tag styling */
+.events-row .event-tag.tag-selected {
+    background: #6366f1;
+    color: #ffffff;
+    border-color: #6366f1;
+    font-weight: 600;
+}
+
+/* ===============================
+   CLUB BADGE
+================================ */
 
 .event-club {
     display: flex;
@@ -921,12 +1037,128 @@
     background: #1e293b;
     color: #e5e7eb;
     border: 1px solid #334155;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.event-club-badge:hover {
+    opacity: 0.8;
 }
 
 .event-club-badge.muted {
     opacity: 0.6;
 }
 
+/* ===============================
+   STATUS COLUMN
+================================ */
+
+.event-status {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+/* Status colors */
+.event-status.upcoming {
+    color: #2563eb;
+}
+
+.event-status.live {
+    color: #16a34a;
+}
+
+.event-status.ended {
+    color: #9ca3af;
+}
+
+/* ===============================
+   ACTIONS COLUMN
+================================ */
+
+.actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.table-actions {
+    margin-left: 90px;
+}
+
+.event-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    padding: 4px;
+    color: #1f1f1f;
+}
+
+.event-actions button:hover {
+    opacity: 0.7;
+}
+
+.event-actions .danger {
+    color: #b91c1c;
+}
+
+.events-row .actions-col:empty {
+    visibility: hidden;
+}
+
+/* ===============================
+   UTILITY STATES
+================================ */
+
+.muted {
+    color: #777;
+    font-style: italic;
+}
+
+.error {
+    color: #b91c1c;
+}
+
+.comment-username {
+    color: #0f172a;
+}
+
+/* ===============================
+   RESPONSIVE - EVENT PAGE
+================================ */
+
+@media (max-width: 768px) {
+    .event-header-top {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .event-header-left {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .event-banner {
+        width: 100%;
+        height: 180px;
+    }
+
+    .event-description {
+        max-width: 100%;
+    }
+
+    .event-rsvp-pill {
+        align-self: flex-start;
+    }
+
+    .event-attendees-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===============================
+   RESPONSIVE - EVENTS DIRECTORY
+================================ */
 
 @media (max-width: 900px) {
     .events-header,
@@ -946,7 +1178,6 @@
     }
 }
 
-/* Responsive adjustments for filters */
 @media (max-width: 768px) {
     .events-title-row {
         flex-direction: column;
@@ -968,79 +1199,47 @@
 
     .events-controls {
         flex-direction: column;
+        width: 100%;
     }
-}
 
-.comment-username{
-    color: #0f172a;
-}
+    .search-input,
+    .sort-select {
+        width: 100%;
+    }
 
+    .tag-search-bar {
+        padding: 16px;
+    }
 
-.attendance-code-box {
-    color: #1e293b;
-    margin-top: 12px;
-    padding: 12px;
-    border: 1px dashed #ccc;
-    border-radius: 6px;
-    background: #fafafa;
-}
+    .tag-search-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
 
-.attendance-code {
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    margin: 8px 0;
-}
+    .tag-search-input {
+        font-size: 14px;
+        padding: 10px 14px;
+    }
 
-.attendee-column.attended .avatar {
-    background: #2ecc71;
-    color: white;
-    font-weight: bold;
-}
+    .clear-filter-btn-inline {
+        width: 100%;
+    }
 
-.visibility-badge {
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    white-space: nowrap;
-}
+    .filter-status {
+        font-size: 13px;
+    }
 
-.visibility-badge.public {
-    background: #e6f4ea;
-    color: #1e7e34;
-}
+    .tag-filter-chip {
+        font-size: 13px;
+        padding: 6px 12px;
+    }
 
-.visibility-badge.restricted {
-    background: #fff3cd;
-    color: #856404;
-}
+    .event-tags-inline {
+        gap: 4px;
+    }
 
-.external-link-btn {
-    font-size: 12px;
-    padding: 4px 8px;
-    border-radius: 6px;
-    background: #0b57d0;
-    color: #fff;
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.external-link-btn:hover {
-    opacity: 0.85;
-}
-
-.event-external-link {
-    margin-top: 6px;
-    font-size: 0.95rem;
-}
-
-.event-external-link a {
-    color: #0b57d0;
-    font-weight: 600;
-    text-decoration: none;
-}
-
-.event-external-link a:hover {
-    text-decoration: underline;
+    .events-row .event-tag {
+        font-size: 11px;
+        padding: 3px 8px;
+    }
 }

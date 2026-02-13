@@ -759,7 +759,7 @@ export default function ClubDetail() {
                         {/* News */}
                         <div>
                             <div style={s.sectionHeader}>
-                                <h3 style={s.h3}>Club News</h3>
+                                <h3 style={s.h3}>Club Announcements</h3>
                             </div>
 
                             {canPostNews && (
@@ -786,7 +786,7 @@ export default function ClubDetail() {
                                 </form>
                             )}
 
-                            {news.length === 0 && <div style={s.card}>No news yet.</div>}
+                            {news.length === 0 && <div style={s.card}>No Announcements yet.</div>}
 
                             {news.map((n) => (
                                 <div key={n.id} style={s.card}>
@@ -1131,7 +1131,7 @@ export default function ClubDetail() {
                 {activeTab === "news" && (
                     <div>
                         <div style={s.sectionHeader}>
-                            <h3 style={s.h3}>Club News</h3>
+                            <h3 style={s.h3}>Club Announcements</h3>
                         </div>
 
                         {canPostNews && (
@@ -1158,7 +1158,7 @@ export default function ClubDetail() {
                             </form>
                         )}
 
-                        {news.length === 0 && <div style={s.card}>No news yet.</div>}
+                        {news.length === 0 && <div style={s.card}>No Announcements yet.</div>}
 
                         {news.map((n) => (
                             <div key={n.id} style={s.card}>
