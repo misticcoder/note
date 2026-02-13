@@ -6,7 +6,7 @@ import EventTable from "./Events/EventTable";
 import "./styles/index.css"
 import "./styles/modal.css";
 
-import { apiFetch } from "./api"; // adjust path
+import { apiFetch } from "./api";
 import { useEventActions } from "./hooks/useEventActions";
 
 
@@ -28,12 +28,7 @@ export default function Events() {
         deleteEvent
     } = useEventActions({ user, setEvents });
 
-    const [ratings, setRatings] = useState({});
-
     const [clubs, setClubs] = useState([]);
-
-
-
 
     const [showAdd, setShowAdd] = useState(false);
     const [form, setForm] = useState({
@@ -49,36 +44,10 @@ export default function Events() {
         externalUrl: ""
     });
 
+    const [status, setStatus] = useState("all");
+    const [timePeriod, setTimePeriod] = useState("all");
 
-
-    const [status, setStatus] = useState("all");      // upcoming | ongoing | past | all
-    const [timePeriod, setTimePeriod] = useState("all"); // today | week | month | all
-    const [allTags, setAllTags] = useState([]);            // list of tag names from backend
-    const [selectedTags, setSelectedTags] = useState([]);  // selected tag names
-
-
-    /* =====================
-      HASH ROUTING
-   ===================== */
-    const [hash, setHash] = useState(window.location.hash);
-
-    useEffect(() => {
-        const onHashChange = () => setHash(window.location.hash);
-        window.addEventListener("hashchange", onHashChange);
-        return () => window.removeEventListener("hashchange", onHashChange);
-    }, []);
-
-    const tagFromRoute = useMemo(() => {
-        const m = hash.match(/^#\/events\/tag\/([^/]+)/);
-        return m ? decodeURIComponent(m[1]) : null;
-    }, [hash]);
-
-    const clubFromRoute = useMemo(() => {
-        const m = hash.match(/^#\/events\/club\/(\d+)/);
-        return m ? Number(m[1]) : null;
-    }, [hash]);
-
-
+    // Load clubs
     useEffect(() => {
         (async () => {
             try {
@@ -92,57 +61,14 @@ export default function Events() {
         })();
     }, []);
 
-
-    /* =====================
-       SYNC TAG ROUTE
-    ===================== */
-    useEffect(() => {
-        if (!tagFromRoute) return;
-
-        setSelectedTags(prev =>
-            prev.length === 1 && prev[0] === tagFromRoute
-                ? prev
-                : [tagFromRoute]
-        );
-
-        setStatus("all");
-    }, [tagFromRoute]);
-
-    useEffect(() => {
-        if (!clubFromRoute) return;
-
-        setSelectedTags([]);
-        setQ("");
-        setStatus("all");
-    }, [clubFromRoute]);
-
-
+    // Auto-adjust visibility when club changes
     useEffect(() => {
         if (!form.clubId) {
             setForm(f => ({ ...f, visibility: "PUBLIC" }));
         }
     }, [form.clubId]);
 
-
-    /* =====================
-       HELPERS
-    ===================== */
-
-
-    async function fetchRating(eventId) {
-        try {
-            const res = await apiFetch(`/api/events/${eventId}/rating`);
-            if (!res.ok) return { average: 0, count: 0 };
-            return await res.json();
-        } catch {
-            return { average: 0, count: 0 };
-        }
-    }
-
-
-    /* =====================
-       LOAD EVENTS
-    ===================== */
+    // Load events
     useEffect(() => {
         document.title = "Events | InfCom";
 
@@ -150,28 +76,19 @@ export default function Events() {
             try {
                 setLoading(true);
 
-                let url;
+                const params = new URLSearchParams();
+                if (q.trim()) params.set("q", q.trim());
+                params.set("status", status);
 
-                if (clubFromRoute) {
-                    url = `/api/events/club/${clubFromRoute}`;
-                } else {
-                    const params = new URLSearchParams();
-                    if (q.trim()) params.set("q", q.trim());
-                    if (selectedTags.length) params.set("tags", selectedTags.join(","));
-                    params.set("status", status);
-
-                    // Add time period filter
-                    if (timePeriod !== "all") {
-                        params.set("timePeriod", timePeriod);
-                    }
-
-                    url = `/api/events?${params.toString()}`;
+                if (timePeriod !== "all") {
+                    params.set("timePeriod", timePeriod);
                 }
+
+                let url = `/api/events?${params.toString()}`;
 
                 const finalUrl = user
                     ? `${url}${url.includes("?") ? "&" : "?"}requesterEmail=${encodeURIComponent(user.email)}`
                     : url;
-
 
                 const res = await apiFetch(finalUrl);
                 if (!res.ok) throw new Error("Failed to load events");
@@ -185,82 +102,9 @@ export default function Events() {
                 setLoading(false);
             }
         })();
-    }, [
-        q,
-        selectedTags,
-        status,
-        timePeriod,
-        tagFromRoute,
-        clubFromRoute,
-        user?.email,
-    ]);
+    }, [q, status, timePeriod, user?.email]);
 
-
-    /* =====================
-      LOAD TAGS
-   ===================== */
-    useEffect(() => {
-        (async () => {
-            try {
-                const res = await apiFetch("/api/tags");
-                if (!res.ok) return;
-                const data = await res.json();
-                setAllTags(Array.isArray(data) ? data : []);
-            } catch {}
-        })();
-    }, []);
-
-    /* =====================
-       LOAD RATINGS (per event)
-    ===================== */
-    useEffect(() => {
-        if (events.length === 0) return;
-
-        let cancelled = false;
-
-        (async () => {
-            const entries = await Promise.all(
-                events.map(async (e) => {
-                    const r = await fetchRating(e.id);
-                    return [e.id, r];
-                })
-            );
-
-            if (!cancelled) {
-                // keep only successful payloads
-                const next = Object.fromEntries(entries.filter(([, v]) => v));
-                setRatings(next);
-            }
-        })();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [events]);
-
-    /* =====================
-       Local SEARCH
-
-       const filtered = useMemo(() => {
-        const t = q.toLowerCase();
-        return events.filter((e) =>
-            (e.title || "").toLowerCase().includes(t) ||
-            (e.content || "").toLowerCase().includes(t) ||
-            (e.location || "").toLowerCase().includes(t)
-        );
-    }, [events, q]);
-
-    ===================== */
-
-
-    /* =====================
-       SORT (IMDb STYLE)
-       - Default grouping: LIVE -> UPCOMING -> ENDED
-       - Then applies selected sort within each group
-    ===================== */
-    /* =====================
-      SORT
-   ===================== */
+    // Sort events
     const visibleEvents = useMemo(() => {
         if (status === "all") return events;
 
@@ -272,7 +116,6 @@ export default function Events() {
 
         return events.filter(ev => ev.status === map[status]);
     }, [events, status]);
-
 
     const sorted = useMemo(() => {
         const arr = [...visibleEvents];
@@ -299,20 +142,19 @@ export default function Events() {
         return arr;
     }, [visibleEvents, sort]);
 
-
-    // FORM HANDLER
+    // Form handler
     const handleChange = e => {
         const { name, value } = e.target;
         setForm(prev => ({ ...prev, [name]: value }));
     };
 
-    // CREATE EVENT — EXACT BACKEND CONTRACT
+    // Create event
     const createEvent = async e => {
         e.preventDefault();
         if (!isAdmin) return;
 
         if (!form.title.trim() || !form.startAt) {
-            alert("name and startAt are required");
+            alert("Title and start date are required");
             return;
         }
 
@@ -333,16 +175,8 @@ export default function Events() {
                 : [],
             clubId: form.clubId !== "" ? Number(form.clubId) : null,
             category: form.category,
-            externalUrl:
-                form.category === "EXTERNAL"
-                    ? form.externalUrl.trim()
-                    : null
+            externalUrl: form.category === "EXTERNAL" ? form.externalUrl.trim() : null
         };
-
-
-
-
-        console.log("CREATE EVENT PAYLOAD:", payload);
 
         try {
             const res = await apiFetch(
@@ -378,9 +212,6 @@ export default function Events() {
         }
     };
 
-    /* =====================
-       RENDER
-    ===================== */
     return (
         <div className={"page"}>
             <div className="container">
@@ -389,7 +220,7 @@ export default function Events() {
                         <div className="events-title-row">
                             <h1>Events</h1>
 
-                            {user?.role == "ADMIN" && (
+                            {isAdmin && (
                                 <button
                                     title="Create new event"
                                     className="dbutton add-event-btn"
@@ -416,7 +247,6 @@ export default function Events() {
                             >
                                 <option value="date">Sort by Start Date</option>
                                 <option value="title">Sort by Title</option>
-                                <option value="status">Sort by Status</option>
                             </select>
                         </div>
 
@@ -464,54 +294,12 @@ export default function Events() {
                             </div>
                         </div>
 
-                        {allTags.length > 0 && (
-                            <div className="event-tags-filter">
-                                {allTags.map(tag => {
-                                    const tagName = typeof tag === "string" ? tag : tag.name;
-                                    const active = selectedTags.includes(tagName);
-
-                                    return (
-                                        <span
-                                            key={tagName}
-                                            className={`tag-chip ${active ? "active" : ""}`}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-
-                                                setSelectedTags([tagName]);   // 🔑 THIS WAS MISSING
-                                                setStatus("all");
-                                                setQ("");
-
-                                                window.location.hash = "#/events"; // optional: keep URL clean
-                                            }}
-                                        >
-                                            {tagName}
-                                        </span>
-
-                                    );
-                                })}
-
-                                <button
-                                    type="button"
-                                    className="cancel-btn"
-                                    disabled={selectedTags.length === 0}
-                                    onClick={() => {
-                                        setSelectedTags([]);
-                                        setStatus("all");
-                                        window.location.hash = "#/events";
-                                    }}
-                                >
-                                    Clear
-                                </button>
-                            </div>
-                        )}
-
-
                         {/* ADD MODAL */}
                         {isAdmin && showAdd && (
                             <div className="modal-backdrop" onClick={() => setShowAdd(false)}>
                                 <div
                                     className="modal-card"
-                                    onClick={(e) => e.stopPropagation()} // prevent close when clicking inside
+                                    onClick={(e) => e.stopPropagation()}
                                 >
                                     <h3>Add Event</h3>
 
@@ -522,7 +310,6 @@ export default function Events() {
                                                 setForm(f => ({
                                                     ...f,
                                                     category: e.target.value,
-                                                    // clear link if switching back to INTERNAL
                                                     externalUrl: e.target.value === "INTERNAL" ? "" : f.externalUrl
                                                 }))
                                             }
@@ -625,7 +412,6 @@ export default function Events() {
                                 </div>
                             </div>
                         )}
-
                     </div>
 
                     {loading && <p className="muted">Loading…</p>}
@@ -633,11 +419,11 @@ export default function Events() {
 
                     {!loading && !err && sorted.length === 0 && (
                         <p className="muted">
-                            No public events available. Log in to see members-only events.
+                            No events found.
                         </p>
                     )}
 
-                    {!loading && !err && (
+                    {!loading && !err && sorted.length > 0 && (
                         <EventTable
                             events={sorted}
                             loading={loading}
@@ -648,7 +434,6 @@ export default function Events() {
                             onDelete={deleteEvent}
                         />
                     )}
-
 
                     {/* EDIT MODAL */}
                     {editingEvent && (

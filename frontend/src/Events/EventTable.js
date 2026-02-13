@@ -15,6 +15,7 @@ export default function EventTable({
 
     const [selectedTag, setSelectedTag] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showAllTags, setShowAllTags] = useState(false);
 
     if (loading) return <p className="muted">Loading…</p>;
     if (error) return <p className="error">{error}</p>;
@@ -65,52 +66,61 @@ export default function EventTable({
 
     return (
         <div className="events-table-container">
-            {/* TAG SEARCH FILTER */}
+            {/* COMPACT TAG FILTER */}
             {allTags.length > 0 && (
-                <div className="tag-search-bar">
-                    <div className="tag-search-header">
+                <div className="compact-tag-filter">
+                    <div className="compact-tag-filter-header">
                         <input
                             type="text"
-                            placeholder="Search tags..."
+                            placeholder="🔍 Quick tag filter..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="tag-search-input"
+                            className="compact-tag-search-input"
                         />
                         {selectedTag && (
                             <button
-                                className="clear-filter-btn-inline"
                                 onClick={() => {
                                     setSelectedTag(null);
                                     setSearchQuery('');
                                 }}
+                                className="compact-clear-btn"
                             >
-                                Clear filter ✕
+                                Clear ✕
                             </button>
                         )}
+                        <button
+                            onClick={() => setShowAllTags(!showAllTags)}
+                            className="compact-toggle-btn"
+                        >
+                            {showAllTags ? '▲ Hide' : '▼ Show all'}
+                        </button>
                     </div>
 
                     {selectedTag && (
-                        <div className="filter-status">
-                            Showing {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''} with tag: <strong>{selectedTag}</strong>
+                        <div className="compact-filter-status">
+                            Filtered: {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''} with <strong>{selectedTag}</strong>
                         </div>
                     )}
 
-                    {/* Horizontal scrollable tag chips */}
-                    <div className="tag-chips-container">
-                        {filteredTags.length > 0 ? (
-                            filteredTags.map(tag => (
-                                <button
-                                    key={tag}
-                                    className={`tag-filter-chip ${selectedTag === tag ? 'active' : ''}`}
-                                    onClick={() => handleTagSelect(tag)}
-                                >
-                                    {tag}
-                                </button>
-                            ))
-                        ) : (
-                            <span className="no-tags-found">No tags found matching "{searchQuery}"</span>
-                        )}
-                    </div>
+                    {(showAllTags || searchQuery.trim()) && (
+                        <div className="compact-tags-container">
+                            {filteredTags.length > 0 ? (
+                                filteredTags.map(tag => (
+                                    <button
+                                        key={tag}
+                                        onClick={() => handleTagSelect(tag)}
+                                        className={`compact-tag-chip ${selectedTag === tag ? 'active' : ''}`}
+                                    >
+                                        {tag}
+                                    </button>
+                                ))
+                            ) : (
+                                <span className="compact-no-tags">
+                                    No tags found matching "{searchQuery}"
+                                </span>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -126,7 +136,7 @@ export default function EventTable({
                     {isPrivileged && <div className="actions-col">Actions</div>}
                 </div>
 
-                {filteredEvents.length === 0 ? (
+                {filteredEvents.length === 0 && selectedTag ? (
                     <div className="muted" style={{ padding: 20, textAlign: "center" }}>
                         No events found with tag "{selectedTag}".
                     </div>

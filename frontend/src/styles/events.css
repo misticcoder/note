@@ -493,13 +493,13 @@
 }
 
 .tag-search-bar {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
+    background: #0f172a;
+    border: 1px solid #000000;
     border-radius: 12px;
-    padding: 20px;
+    padding: 30px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 15px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -555,7 +555,7 @@
     background: rgba(99, 102, 241, 0.1);
     border-radius: 6px;
     font-size: 14px;
-    color: #374151;
+    color: #ffffe3;
 }
 
 .filter-status strong {
@@ -701,7 +701,6 @@
     border-radius: 6px;
     font-size: 0.9rem;
     background: #2f2f2f;
-    color: #ffffe3;
     transition: all 0.2s ease;
 }
 
@@ -1242,4 +1241,151 @@
         font-size: 11px;
         padding: 3px 8px;
     }
+}
+
+/* Add these styles to your events.css file - place them after the TAG SEARCH FILTER section */
+
+/* ===============================
+   COMPACT TAG FILTER (DARK THEME)
+================================ */
+
+.compact-tag-filter {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #2a2a2a;
+    border-radius: 8px;
+    border: 1px solid #3a3a3a;
+}
+
+.compact-tag-filter-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.compact-tag-search-input {
+    flex: 1;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #4a4a4a;
+    background: #1a1a1a;
+    color: #e0e0e0;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.compact-tag-search-input:focus {
+    border-color: #66bb6a;
+}
+
+.compact-tag-search-input::placeholder {
+    color: #888;
+}
+
+.compact-clear-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    background: #d32f2f;
+    color: white;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s ease;
+}
+
+.compact-clear-btn:hover {
+    background: #f44336;
+}
+
+.compact-toggle-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #4a4a4a;
+    background: #3a3a3a;
+    color: #e0e0e0;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.compact-toggle-btn:hover {
+    background: #4a4a4a;
+}
+
+.compact-filter-status {
+    font-size: 13px;
+    color: #81c784;
+    margin-bottom: 8px;
+}
+
+.compact-filter-status strong {
+    font-weight: 600;
+}
+
+.compact-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 2px;
+}
+
+.compact-tags-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.compact-tags-container::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 4px;
+}
+
+.compact-tags-container::-webkit-scrollbar-thumb {
+    background: #4a4a4a;
+    border-radius: 4px;
+}
+
+.compact-tags-container::-webkit-scrollbar-thumb:hover {
+    background: #5a5a5a;
+}
+
+.compact-tag-chip {
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: none;
+    background: #3a3a3a;
+    color: #e0e0e0;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.compact-tag-chip:hover {
+    background: #4a4a4a;
+}
+
+.compact-tag-chip.active {
+    background: #66bb6a;
+    color: #1a1a1a;
+    font-weight: 600;
+}
+
+.compact-no-tags {
+    font-size: 13px;
+    color: #888;
+    font-style: italic;
+}
+
+/* Update existing event tag styles to match when selected in table rows */
+.events-row .event-tag.tag-selected {
+    background: #66bb6a !important;
+    color: #1a1a1a !important;
+    border-color: #66bb6a !important;
+    font-weight: 600;
 }

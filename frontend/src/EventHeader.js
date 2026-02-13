@@ -14,7 +14,7 @@ export default function EventHeader({
                                         canEdit,
                                         onEdit,
                                         onDelete
-}) {
+                                    }) {
 
     const { user } = useContext(AuthContext);
 
@@ -114,8 +114,19 @@ export default function EventHeader({
                                             key={label}
                                             className="event-tag clickable"
                                             onClick={() => {
-                                                window.location.hash = `#/search?q=${encodeURIComponent(label)}`;
+                                                // Navigate to events page
+                                                window.location.hash = `#/events`;
 
+                                                // Wait for page to load, then click the matching tag chip
+                                                setTimeout(() => {
+                                                    const tagChips = document.querySelectorAll('.tag-chip');
+                                                    tagChips.forEach(chip => {
+                                                        if (chip.textContent.trim() === label) {
+                                                            chip.click();
+                                                            chip.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                        }
+                                                    });
+                                                }, 300);
                                             }}
                                         >
                                             {label}
