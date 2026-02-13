@@ -16,6 +16,18 @@ const Header = () => {
     const [isSignup, setIsSignup] = useState(false);
     const [error, setError] = useState("");
 
+    const surveyUrl = "https://forms.gle/YOUR_FORM_LINK";
+
+    const handleSurveyClick = () => {
+        const confirmed = window.confirm(
+            "You are about to open the usability survey in a new tab.\n\nContinue?"
+        );
+
+        if (confirmed) {
+            window.open(surveyUrl, "_blank", "noopener,noreferrer");
+        }
+    };
+
     /* ─────────────────────────────
        🔔 Activity unread count
     ───────────────────────────── */
@@ -108,7 +120,12 @@ const Header = () => {
                     <a href="#/threads">Threads</a>
                     <a href="#/clubs">Clubs</a>
                     <a href="#/events">Events</a>
-                    <a href="#/news">News</a>
+                    <a href="#/usability-tasks">Tasks</a>
+                    <a onClick={handleSurveyClick}
+                       className="survey-btn"
+                    >
+                        Survey
+                    </a>
                     {isAdmin && <a href="#/admin/users">Users</a>}
                 </nav>
 
