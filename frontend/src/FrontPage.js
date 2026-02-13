@@ -41,12 +41,11 @@ export default function FrontPage() {
                 <p></p>
                 <p>
                     Find Tasks: <br></br>Click <b>"Tasks"</b> or Go to <b>"Home"</b> -> Look at <b> Header ->
-                    SideNavigation -> Usability
                     Tasks</b>
                 </p>
 
                 <p>
-                    Find Survey: <br></br>Go to <b>"Home"</b> -> Look at <b> Header -> SideNavigation -> Usability Survey</b>
+                    Find Survey: <br></br>Go to <b>"Home"</b> -> Look at <b> Header -> Survey </b>
                 </p>
 
             </div>

@@ -584,6 +584,7 @@ export default function ClubDetail() {
         );
 
     const userLabel = (uid) => {
+        if (!uid) return "Unknown User";  // Add this check
         const u = userMap.get(uid);
         if (!u) return `User #${uid}`;
         return `${u.username} (${u.email})`;
@@ -980,6 +981,39 @@ export default function ClubDetail() {
                                 </div>
                             </div>
 
+                            {canApproveRequests && (
+                                <>
+                                    <div style={s.sectionHeader}>
+                                        <h3 style={s.h3}>Pending Requests</h3>
+                                    </div>
+                                    <div style={s.card}>
+                                        {pending.length === 0 && <div style={s.muted}>No pending requests.</div>}
+                                        {pending.map((r) => (
+                                            <div key={r.id} style={s.pendingRow}>
+                                                <div>
+                                                    <div style={{fontWeight: 600}}>{userLabel(r.userId || r.user?.id)}</div>
+                                                    <div style={s.meta}>Request ID: {r.id}</div>
+                                                </div>
+                                                <div style={s.actions}>
+                                                    <button
+                                                        onClick={() => decide(r.id, "approve")}
+                                                        style={s.primaryBtnSm}
+                                                    >
+                                                        Approve
+                                                    </button>
+                                                    <button
+                                                        onClick={() => decide(r.id, "reject")}
+                                                        style={s.dangerBtnSm}
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+
                             <div style={s.sectionHeader}>
                                 <h3 style={s.h3}>Members</h3>
                             </div>
@@ -1014,12 +1048,12 @@ export default function ClubDetail() {
 
                                         return (
                                             <li key={m.id} style={{...s.listItem, position: "relative"}}>
-                    <span
-                        onClick={() => setOpenMember(menuOpen ? null : m.user?.id)}
-                        style={{cursor: canSeeActionMenu ? "pointer" : "default"}}
-                    >
-                      {userLabel(m.user?.id)}
-                    </span>
+                                                <span
+                                                    onClick={() => setOpenMember(menuOpen ? null : m.user?.id)}
+                                                    style={{cursor: canSeeActionMenu ? "pointer" : "default"}}
+                                                >
+                                                    {userLabel(m.user?.id)}
+                                                </span>
 
                                                 <div style={{display: "flex", alignItems: "center", gap: 8}}>
                                                     {badge}
@@ -1092,38 +1126,6 @@ export default function ClubDetail() {
                                 </ul>
                             </div>
 
-                            {canApproveRequests && (
-                                <>
-                                    <div style={s.sectionHeader}>
-                                        <h3 style={s.h3}>Pending Requests</h3>
-                                    </div>
-                                    <div style={s.card}>
-                                        {pending.length === 0 && <div style={s.muted}>No pending requests.</div>}
-                                        {pending.map((r) => (
-                                            <div key={r.id} style={s.pendingRow}>
-                                                <div>
-                                                    <div style={{fontWeight: 600}}>{userLabel(r.user?.id)}</div>
-                                                    <div style={s.meta}>Request ID: {r.id}</div>
-                                                </div>
-                                                <div style={s.actions}>
-                                                    <button
-                                                        onClick={() => decide(r.id, "approve")}
-                                                        style={s.primaryBtnSm}
-                                                    >
-                                                        Approve
-                                                    </button>
-                                                    <button
-                                                        onClick={() => decide(r.id, "reject")}
-                                                        style={s.dangerBtnSm}
-                                                    >
-                                                        Reject
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
                         </div>
                     </div>
                 )}
