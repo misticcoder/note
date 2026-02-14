@@ -19,7 +19,7 @@ public class UserSeeder {
     private final TagRepository tagRepo;
     private final PasswordEncoder encoder;
 
-    private final Random random = new Random();
+    private final Random random = new Random(42);
 
     public UserSeeder(
             UserRepository userRepo,
@@ -39,7 +39,12 @@ public class UserSeeder {
         List<Tag> tags = tagRepo.findAll();
 
         // =========================================
-        // 🔹 REGULAR STUDENTS (Admin is created by AdminBootstrap @Order(1))
+        // 🔹 ADMIN USERS
+        // =========================================
+        seedAdminUsers();
+
+        // =========================================
+        // 🔹 REGULAR STUDENTS
         // =========================================
         String[] firstNames = {
                 "James", "Emma", "Oliver", "Sophia", "Liam",
@@ -106,5 +111,37 @@ public class UserSeeder {
         }
 
         System.out.println("✅ Seeded " + 40 + " student users");
+    }
+
+    private void seedAdminUsers() {
+        String[][] adminData = {
+                {"admin1", "Sarah Johnson", "Platform administrator and community manager."},
+                {"admin2", "Michael Chen", "Technical admin managing system operations."},
+                {"admin3", "Emily Rodriguez", "Content moderation and user support lead."}
+        };
+
+        for (String[] data : adminData) {
+            String username = data[0];
+            String email = username + "@uni.ac.uk";
+
+            if (userRepo.findByEmail(email).isPresent()) continue;
+
+            User admin = new User(
+                    username,
+                    email,
+                    encoder.encode("password"),
+                    User.Role.ADMIN
+            );
+
+            admin.setDisplayName(data[1]);
+            admin.setBio(data[2]);
+            admin.setProtectedAccount(false);
+            admin.setParticipationScore(500); // High score for admins
+            admin.setAvatarUrl("https://i.pravatar.cc/150?img=" + (random.nextInt(70) + 1));
+
+            userRepo.save(admin);
+        }
+
+        System.out.println("✅ Seeded 3 admin users");
     }
 }

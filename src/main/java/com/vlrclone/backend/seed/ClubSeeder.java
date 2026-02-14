@@ -43,6 +43,9 @@ public class ClubSeeder {
         List<User> users = userRepo.findAll();
         if (users.size() < 5) return;
 
+        // Get admin users for supervisor assignment
+        List<User> admins = userRepo.findByRole(User.Role.ADMIN);
+
         String[] names = {
                 "Informatics Football",
                 "AI & Machine Learning Society",
@@ -85,12 +88,19 @@ public class ClubSeeder {
                     "https://picsum.photos/200?random=" + random.nextInt(1000)
             );
 
+            // Assign supervisor from admin users
+            if (!admins.isEmpty()) {
+                club.setSupervisor(admins.get(i % admins.size()));
+            }
+
             clubRepo.save(club);
 
             seedMembers(club, users);
             seedLinks(club);
             seedAnnouncements(club, users);
         }
+
+        System.out.println("✅ Seeded " + names.length + " clubs with supervisors");
     }
 
     // =========================================

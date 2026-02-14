@@ -13,7 +13,8 @@ import ActivityTab from "../Notifications/ActivityTab";
 
 
 export default function ProfilePage() {
-    const { user, setUser } = useContext(AuthContext);
+    const { user, saveUser } = useContext(AuthContext);
+
 
 
     const [profile, setProfile] = useState(null);
@@ -59,23 +60,76 @@ export default function ProfilePage() {
 
 
     useEffect(() => {
-        if (!user?.email) return;
+        if (!user?.email) {
+            // Reset state when user logs out
+            setProfile(null);
+            setEvents([]);
+            setClubs([]);
+            setRecommendedEvents([]);
+            setLoading(false);
+            return;
+        }
 
         setLoading(true);
+        setError("");
+
+        const headers = { "X-User-Email": user.email };
 
         Promise.all([
-            apiFetch(`/api/me/profile`, { headers: { "X-User-Email": user.email } }).then(r => r.json()),
-            apiFetch(`/api/me/events`, { headers: { "X-User-Email": user.email } }).then(r => r.json()),
-            apiFetch(`/api/me/clubs`, { headers: { "X-User-Email": user.email } }).then(r => r.json()),
-            apiFetch(`/api/me/recommendations`, { headers: { "X-User-Email": user.email } }).then(r => r.json())
-        ]).then(([profileData, eventsData, clubsData, recommended]) => {
-            setProfile(profileData);
-            setEvents(eventsData);
-            setClubs(clubsData);
-            setRecommendedEvents(recommended);
-        })
-            .catch(() => {
+            apiFetch(`/api/me/profile`, { headers })
+                .then(r => {
+                    if (!r.ok) throw new Error('Profile fetch failed');
+                    return r.json();
+                })
+                .catch(err => {
+                    console.error("Profile error:", err);
+                    return null;
+                }),
+
+            apiFetch(`/api/me/events`, { headers })
+                .then(r => {
+                    if (!r.ok) throw new Error('Events fetch failed');
+                    return r.json();
+                })
+                .catch(err => {
+                    console.error("Events error:", err);
+                    return [];
+                }),
+
+            apiFetch(`/api/me/clubs`, { headers })
+                .then(r => {
+                    if (!r.ok) throw new Error('Clubs fetch failed');
+                    return r.json();
+                })
+                .catch(err => {
+                    console.error("Clubs error:", err);
+                    return [];
+                }),
+
+            apiFetch(`/api/me/recommendations`, { headers })
+                .then(r => {
+                    if (!r.ok) throw new Error('Recommendations fetch failed');
+                    return r.json();
+                })
+                .catch(err => {
+                    console.error("Recommendations error:", err);
+                    return [];
+                })
+        ])
+            .then(([profileData, eventsData, clubsData, recommended]) => {
+                // Ensure we always have valid data
+                setProfile(profileData);
+                setEvents(Array.isArray(eventsData) ? eventsData : []);
+                setClubs(Array.isArray(clubsData) ? clubsData : []);
+                setRecommendedEvents(Array.isArray(recommended) ? recommended : []);
+            })
+            .catch((err) => {
+                console.error("Unexpected error:", err);
                 setError("Failed to load profile");
+                // Keep arrays initialized even on error
+                setEvents([]);
+                setClubs([]);
+                setRecommendedEvents([]);
             })
             .finally(() => {
                 setLoading(false);
@@ -208,13 +262,12 @@ export default function ProfilePage() {
                                 onAvatarUpdated={(updated) => {
                                     setProfile(updated);
 
-                                    setUser(prev => ({
-                                        ...prev,
+                                    saveUser({
+                                        ...user,
                                         avatarUrl: updated.avatarUrl,
                                         displayName: updated.displayName,
-                                    }));
+                                    });
                                 }}
-
 
                             />
                         )}
@@ -310,9 +363,9 @@ function ProfileHeader({profile}) {
 
 function OverviewTab({
                          profile,
-                         events,
-                         clubs,
-                         recommendedEvents,
+                         events = [],
+                         clubs = [],
+                         recommendedEvents = [],
                          onGoToEvents,
                          onGoToClubs,
                          onEditProfile
@@ -437,17 +490,17 @@ function TabButton({ label, tab, active }) {
 
 
 function EventsTab({
-                       events,
-                       recommendedEvents,
+                       events = [],
+                       recommendedEvents = [],
                        hasTags,
                        eventsView,
                        setEventsView
                    }) {
-
-    const attended = events.filter(e => e.status === "ATTENDED");
-    const going = events.filter(e => e.status === "GOING");
-    const maybe = events.filter(e => e.status === "MAYBE");
-    const missed = events.filter(e => e.status === "MISSED");
+    // Now guaranteed to be arrays
+    const attended = events.filter(e => e?.status === "ATTENDED");
+    const going = events.filter(e => e?.status === "GOING");
+    const maybe = events.filter(e => e?.status === "MAYBE");
+    const missed = events.filter(e => e?.status === "MISSED");
 
     let list;
     switch (eventsView) {
