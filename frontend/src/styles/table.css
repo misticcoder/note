@@ -87,7 +87,6 @@
 .table-row > div {
     display: flex;
     align-items: center;
-    overflow: hidden;
     text-overflow: ellipsis;
 }
 

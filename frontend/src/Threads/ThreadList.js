@@ -1,9 +1,9 @@
 // frontend/src/AdminThreads.jsx
 import { useContext, useEffect, useMemo, useState } from "react";
-import { AuthContext } from "../AuthContext";
+import { AuthContext } from "../AuthContext";  // ✅ Fixed path
 import "../styles/table.css";
 import "../styles/Threads.css";
-import Dropdown from "../components/Dropdown";
+import Dropdown from "../components/Dropdown";  // ✅ Fixed path - was "../components/Dropdown"
 import { apiFetch } from "../api";
 
 export default function ThreadList() {
@@ -59,27 +59,37 @@ export default function ThreadList() {
         );
     }, [threads, q]);
 
-    /* ================= ADMIN ACTIONS ================= */
+    /* ================= PERMISSION CHECK ================= */
+    // ✅ User can edit/delete if they're admin OR author
+    const canModify = (thread) => {
+        if (!user) return false;
+        return isAdmin || thread.author === user.username;
+    };
+
+    /* ================= ADMIN/AUTHOR ACTIONS ================= */
 
     const openEdit = (th) => {
-        if (!isAdmin) return;
+        if (!canModify(th)) return;
         setEditThread({ ...th });
         setShowEdit(true);
     };
 
     const saveEdit = async (e) => {
         e.preventDefault();
-        if (!isAdmin || !editThread) return;
+        if (!editThread || !canModify(editThread)) return;
 
         try {
-            const res = await apiFetch(`/api/threads/${editThread.id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    title: editThread.title,
-                    content: editThread.content
-                })
-            });
+            const res = await apiFetch(
+                `/api/threads/${editThread.id}?requesterEmail=${encodeURIComponent(user.email)}`,
+                {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title: editThread.title,
+                        content: editThread.content
+                    })
+                }
+            );
 
             const body = await res.json().catch(() => ({}));
             if (!res.ok) {
@@ -100,13 +110,16 @@ export default function ThreadList() {
     };
 
     const deleteThread = async (th) => {
-        if (!isAdmin) return;
+        if (!canModify(th)) return;
         if (!window.confirm(`Delete thread "${th.title}"?`)) return;
 
         try {
-            const res = await apiFetch(`/api/threads/${th.id}`, {
-                method: "DELETE"
-            });
+            const res = await apiFetch(
+                `/api/threads/${th.id}?requesterEmail=${encodeURIComponent(user.email)}`,
+                {
+                    method: "DELETE"
+                }
+            );
 
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}));
@@ -120,6 +133,9 @@ export default function ThreadList() {
     };
 
     /* ================= RENDER ================= */
+
+    // ✅ Show actions column if user can modify ANY thread
+    const showActionsColumn = threads.some(th => canModify(th));
 
     return (
         <div className="page">
@@ -143,18 +159,18 @@ export default function ThreadList() {
 
                     {!loading && !err && (
                         <div className="table">
-                            <div className={`table-header ${isAdmin ? "admin" : "user"}`}>
+                            <div className={`table-header ${showActionsColumn ? "admin" : "user"}`}>
                                 <div>#</div>
                                 <div>Title</div>
                                 <div>Author</div>
                                 <div>Content</div>
-                                {isAdmin && <div style={{ textAlign: "right" }}>Actions</div>}
+                                {showActionsColumn && <div>Actions</div>}
                             </div>
 
                             {filtered.map((th, i) => (
                                 <div
                                     key={th.id}
-                                    className={`table-row ${isAdmin ? "admin" : "user"}`}
+                                    className={`table-row ${showActionsColumn ? "admin" : "user"}`}
                                     onClick={() =>
                                         (window.location.hash = `#/threads/${th.id}`)
                                     }
@@ -164,15 +180,21 @@ export default function ThreadList() {
                                     <div>{th.author}</div>
                                     <div>{th.content}</div>
 
-                                    {isAdmin && (
+                                    {/* ✅ Show actions if user can modify THIS thread */}
+                                    {showActionsColumn && (
                                         <div
                                             style={{ textAlign: "right" }}
                                             onClick={(e) => e.stopPropagation()}
                                         >
-                                            <Dropdown
-                                                onEdit={() => openEdit(th)}
-                                                onDelete={() => deleteThread(th)}
-                                            />
+                                            {canModify(th) ? (
+                                                <Dropdown
+                                                    onEdit={() => openEdit(th)}
+                                                    onDelete={() => deleteThread(th)}
+                                                />
+                                            ) : (
+                                                // Empty cell for threads user can't modify
+                                                <span></span>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -186,7 +208,8 @@ export default function ThreadList() {
                         </div>
                     )}
 
-                    {isAdmin && showEdit && editThread && (
+                    {/* ✅ Anyone who can modify threads can see edit modal */}
+                    {showEdit && editThread && canModify(editThread) && (
                         <div className="modal-backdrop">
                             <div className="modal-card">
                                 <h3>Edit Thread</h3>

@@ -5,6 +5,7 @@ import ThreadSection from "./ThreadSection";
 import CommentSection from "../CommentSection";
 import ConfirmDialog from "../hooks/ConfirmDialog";
 import { useConfirm } from "../hooks/useConfirm";
+import Dropdown from "../components/Dropdown";  // ✅ Import Dropdown
 import "../styles/Threads.css";
 import "../styles/buttons.css";
 import "../styles/index.css";
@@ -18,6 +19,11 @@ export default function ThreadPage() {
     const [newComment, setNewComment] = useState("");
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState("");
+
+    // Edit modal state
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editTitle, setEditTitle] = useState("");
+    const [editContent, setEditContent] = useState("");
 
     const role = String(user?.role || "").toUpperCase();
     const isAdmin = role === "ADMIN";
@@ -37,6 +43,10 @@ export default function ThreadPage() {
         const m = (window.location.hash || "").match(/^#\/threads\/(\d+)/i);
         return m ? Number(m[1]) : null;
     })();
+
+    /* ===================== PERMISSION CHECK ===================== */
+    // User can edit if they're admin OR author
+    const canEdit = thread && user && (isAdmin || thread.author === user.username);
 
     /* ===================== DOCUMENT TITLE ===================== */
 
@@ -108,6 +118,77 @@ export default function ThreadPage() {
 
         return () => controller.abort();
     }, [threadId, fetchComments]);
+
+    /* ===================== EDIT THREAD ===================== */
+
+    const openEditModal = () => {
+        if (!canEdit) return;
+        setEditTitle(thread.title);
+        setEditContent(thread.content);
+        setShowEditModal(true);
+    };
+
+    const saveEdit = async (e) => {
+        e.preventDefault();
+        if (!canEdit) return;
+
+        try {
+            const res = await apiFetch(
+                `/api/threads/${threadId}?requesterEmail=${encodeURIComponent(user.email)}`,
+                {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title: editTitle,
+                        content: editContent
+                    })
+                }
+            );
+
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(body.message || "Update failed");
+            }
+
+            // Update local state
+            setThread(prev => ({
+                ...prev,
+                title: editTitle,
+                content: editContent
+            }));
+
+            setShowEditModal(false);
+        } catch (e) {
+            alert(e.message || "Failed to update thread");
+        }
+    };
+
+    /* ===================== DELETE THREAD ===================== */
+
+    const requestDeleteThread = () => {
+        if (!canEdit) return;
+
+        confirm(null, async () => {
+            try {
+                const res = await apiFetch(
+                    `/api/threads/${threadId}?requesterEmail=${encodeURIComponent(user.email)}`,
+                    {
+                        method: "DELETE"
+                    }
+                );
+
+                if (!res.ok) {
+                    const body = await res.json().catch(() => ({}));
+                    throw new Error(body.message || "Delete failed");
+                }
+
+                // Redirect back to threads list
+                window.location.hash = "#/threads";
+            } catch (e) {
+                alert(e.message || "Failed to delete thread");
+            }
+        });
+    };
 
     /* ===================== POST COMMENT ===================== */
 
@@ -226,9 +307,24 @@ export default function ThreadPage() {
 
                             {thread && (
                                 <div className="thread-card">
-                                    <h2 className="thread-title">
-                                        {thread.title}
-                                    </h2>
+                                    <div style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "start",
+                                        marginBottom: "12px"
+                                    }}>
+                                        <h2 className="thread-title" style={{ margin: 0 }}>
+                                            {thread.title}
+                                        </h2>
+
+                                        {/* ✅ DROPDOWN for admin or author */}
+                                        {canEdit && (
+                                            <Dropdown
+                                                onEdit={openEditModal}
+                                                onDelete={requestDeleteThread}
+                                            />
+                                        )}
+                                    </div>
 
                                     <div className="thread-meta">
                                         <span>
@@ -250,7 +346,7 @@ export default function ThreadPage() {
                                 </div>
                             )}
 
-                            {<CommentSection
+                            <CommentSection
                                 comments={comments}
                                 user={user}
                                 newComment={newComment}
@@ -258,16 +354,58 @@ export default function ThreadPage() {
                                 onSubmit={postComment}
                                 onDelete={requestDeleteComment}
                                 refreshComments={fetchComments}
-                            />}
+                            />
                         </div>
-
                     </div>
+
+                    {/* EDIT MODAL */}
+                    {showEditModal && (
+                        <div className="modal-backdrop">
+                            <div className="modal-card">
+                                <h3>Edit Thread</h3>
+                                <form onSubmit={saveEdit} className="modal-form">
+                                    <label>
+                                        Title
+                                        <input
+                                            value={editTitle}
+                                            onChange={e => setEditTitle(e.target.value)}
+                                            required
+                                        />
+                                    </label>
+                                    <label>
+                                        Content
+                                        <textarea
+                                            value={editContent}
+                                            onChange={e => setEditContent(e.target.value)}
+                                            rows={6}
+                                        />
+                                    </label>
+                                    <div className="modal-actions">
+                                        <button
+                                            type="button"
+                                            className="cancelBtn"
+                                            onClick={() => setShowEditModal(false)}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button type="submit" className="saveBtn">
+                                            Save
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
 
                     {/* CONFIRM DIALOG */}
                     <ConfirmDialog
                         open={confirmState.open}
-                        title="Delete Comment"
-                        message="Are you sure you want to delete this comment? This action cannot be undone."
+                        title={confirmState.data === null ? "Delete Thread" : "Delete Comment"}
+                        message={
+                            confirmState.data === null
+                                ? "Are you sure you want to delete this thread? This action cannot be undone."
+                                : "Are you sure you want to delete this comment? This action cannot be undone."
+                        }
                         onConfirm={handleConfirm}
                         onCancel={handleCancel}
                     />
