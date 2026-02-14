@@ -138,16 +138,15 @@ public class EventController {
         User user = byEmail(requesterEmail);
 
         List<EventUpdateDto> visible = service
-                .searchEvents(q, tagList, normalizeStatus(status), timePeriod)
+                .searchEventsEntities(q, tagList, normalizeStatus(status), timePeriod)
                 .stream()
-                .filter(dto -> {
-                    Event e = events.findById(dto.id).orElse(null);
-                    return e != null && canViewEvent(e, user);
-                })
+                .filter(e -> canViewEvent(e, user))
+                .map(EventUpdateDto::new)
                 .toList();
 
         return ResponseEntity.ok(visible);
     }
+
 
     /* =====================
        GET SINGLE EVENT (FIXED)
@@ -516,18 +515,17 @@ public class EventController {
     ) {
         User user = byEmail(requesterEmail);
 
-        List<EventUpdateDto> allEvents = service.findByClub(clubId, normalizeStatus(status));
+        List<Event> eventsList = service
+                .findByClubEntities(clubId, normalizeStatus(status));
 
-        // Filter based on visibility
-        List<EventUpdateDto> visible = allEvents.stream()
-                .filter(dto -> {
-                    Event e = events.findById(dto.id).orElse(null);
-                    return e != null && canViewEvent(e, user);
-                })
+        List<EventUpdateDto> visible = eventsList.stream()
+                .filter(e -> canViewEvent(e, user))
+                .map(EventUpdateDto::new)
                 .toList();
 
         return ResponseEntity.ok(visible);
     }
+
 
     @PostMapping("/{id}/attendance-code/rotate")
     public ResponseEntity<?> rotateAttendanceCode(
@@ -576,17 +574,15 @@ public class EventController {
                     .body(Map.of("message", "Unauthorized"));
         }
 
-        List<EventUpdateDto> recommended =
-                service.getRecommendedEventsForUser(user);
+        List<Event> recommendedEvents =
+                service.getRecommendedEventEntities(user);
 
-        // Apply visibility rules (important!)
-        List<EventUpdateDto> visible = recommended.stream()
-                .filter(dto -> {
-                    Event e = events.findById(dto.id).orElse(null);
-                    return e != null && canViewEvent(e, user);
-                })
+        List<EventUpdateDto> visible = recommendedEvents.stream()
+                .filter(e -> canViewEvent(e, user))
+                .map(EventUpdateDto::new)
                 .toList();
 
         return ResponseEntity.ok(visible);
     }
+
 }

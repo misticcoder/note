@@ -17,44 +17,112 @@ public interface EventRepository
         extends JpaRepository<Event, Long>, JpaSpecificationExecutor<Event> {
 
     /* =====================
-       SIMPLE SEARCHES
-    ===================== */
+       CORE SEARCH (USED BY searchEventsEntities)
+       ===================== */
 
+    @Override
+    @EntityGraph(attributePaths = {
+            "club",
+            "club.members",
+            "club.members.user",
+            "tags",
+            "author"
+    })
+    List<Event> findAll(Specification<Event> spec, Sort sort);
+
+
+    /* =====================
+       SIMPLE SEARCHES
+       ===================== */
+
+    @EntityGraph(attributePaths = {
+            "club",
+            "club.members",
+            "club.members.user",
+            "tags",
+            "author"
+    })
     List<Event> findByStartAtAfter(LocalDateTime now);
 
+    @EntityGraph(attributePaths = {
+            "club",
+            "tags",
+            "author"
+    })
     List<Event> findTop10ByTitleContainingIgnoreCase(String name);
 
+    @EntityGraph(attributePaths = {
+            "club",
+            "tags",
+            "author"
+    })
     List<Event> findByStartAtAfterOrderByStartAtAsc(
             LocalDateTime now,
             Pageable pageable
     );
 
+    @EntityGraph(attributePaths = {
+            "club",
+            "tags",
+            "author"
+    })
     List<Event> findByTitleContainingIgnoreCaseOrderByStartAtDesc(
             String title,
             Pageable pageable
     );
 
+
     /* =====================
        TAG SEARCHES
-    ===================== */
+       ===================== */
 
-    @EntityGraph(attributePaths = {"club", "tags"})
+    @EntityGraph(attributePaths = {
+            "club",
+            "club.members",
+            "club.members.user",
+            "tags",
+            "author"
+    })
     List<Event> findByTagsContaining(Tag tag);
 
-    @EntityGraph(attributePaths = {"club", "tags"})
+    @EntityGraph(attributePaths = {
+            "club",
+            "club.members",
+            "club.members.user",
+            "tags",
+            "author"
+    })
     List<Event> findByTags_NameIgnoreCase(String name);
 
-    @EntityGraph(attributePaths = {"club", "tags"})
+    @EntityGraph(attributePaths = {
+            "club",
+            "club.members",
+            "club.members.user",
+            "tags",
+            "author"
+    })
     List<Event> findByTags_NameIgnoreCaseOrderByStartAtAsc(
-            String name, Pageable pageable
+            String name,
+            Pageable pageable
     );
 
+    @EntityGraph(attributePaths = {
+            "club",
+            "tags",
+            "author"
+    })
     List<Event> findByTags_NameIgnoreCaseAndStartAtAfter(
             String tag,
             LocalDateTime time
     );
 
-    @EntityGraph(attributePaths = {"club", "tags"})
+    @EntityGraph(attributePaths = {
+            "club",
+            "club.members",
+            "club.members.user",
+            "tags",
+            "author"
+    })
     List<Event> findDistinctByTitleContainingIgnoreCaseOrTags_NameIgnoreCaseOrderByStartAtDesc(
             String title,
             String tagName,
@@ -64,26 +132,47 @@ public interface EventRepository
 
     /* =====================
        CLUB SEARCHES
-    ===================== */
+       ===================== */
 
-    @EntityGraph(attributePaths = {"club", "tags"})
+    @EntityGraph(attributePaths = {
+            "club",
+            "club.members",
+            "club.members.user",
+            "tags",
+            "author"
+    })
     List<Event> findByClubId(Long clubId);
 
-    @EntityGraph(attributePaths = {"club", "tags"})
+    @EntityGraph(attributePaths = {
+            "club",
+            "club.members",
+            "club.members.user",
+            "tags",
+            "author"
+    })
     List<Event> findByClubIdIn(List<Long> clubIds);
 
+
     /* =====================
-       SPEC + ID
-    ===================== */
+       SINGLE EVENT FETCH
+       ===================== */
 
-    // 🔥 CRITICAL: used by searchEvents(...)
-    @Override
-    @EntityGraph(attributePaths = {"club", "tags"})
-    List<Event> findAll(Specification<Event> spec, Sort sort);
-
-    @EntityGraph(attributePaths = {"club", "tags"})
+    @EntityGraph(attributePaths = {
+            "club",
+            "club.members",
+            "club.members.user",
+            "tags",
+            "author"
+    })
     Optional<Event> findWithClubAndTagsById(Long id);
 
-    List<Event> findByClubIdInAndStartAtAfter(List<Long> clubIds, LocalDateTime time);
 
+    /* =====================
+       LIGHTWEIGHT QUERY
+       ===================== */
+
+    List<Event> findByClubIdInAndStartAtAfter(
+            List<Long> clubIds,
+            LocalDateTime time
+    );
 }

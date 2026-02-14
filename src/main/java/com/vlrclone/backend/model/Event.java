@@ -83,7 +83,7 @@ public class Event {
     @Column(length = 64)
     private String attendanceCodeHash;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_user_id")
     private User author;
 

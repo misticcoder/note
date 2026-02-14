@@ -414,5 +414,87 @@ public class EventService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public List<Event> searchEventsEntities(String q, List<String> tags, String status, String timePeriod) {
+        LocalDateTime now = LocalDateTime.now();
+
+        Specification<Event> spec = Specification
+                .where(EventSpecifications.searchText(q))
+                .and(EventSpecifications.hasTags(tags))
+                .and(EventSpecifications.inTimePeriod(timePeriod, now));
+
+        if (status != null && !"ALL".equalsIgnoreCase(status)) {
+            spec = spec.and(EventSpecifications.hasStatus(status, now));
+        }
+
+        return eventRepo.findAll(spec, Sort.by(Sort.Direction.ASC, "startAt"));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Event> findByClubEntities(Long clubId, String status) {
+        List<Event> events = eventRepo.findByClubId(clubId);
+
+        if (status == null || "ALL".equalsIgnoreCase(status)) {
+            return events;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        return events.stream()
+                .filter(ev -> {
+                    LocalDateTime start = ev.getStartAt();
+                    LocalDateTime end = ev.getEndAt() != null
+                            ? ev.getEndAt()
+                            : (start != null ? start.plusHours(2) : null);
+
+                    return switch (status.toUpperCase()) {
+                        case "UPCOMING" ->
+                                start != null && now.isBefore(start);
+                        case "LIVE" ->
+                                start != null && end != null &&
+                                        !now.isBefore(start) &&
+                                        now.isBefore(end);
+                        case "ENDED" ->
+                                end != null && now.isAfter(end);
+                        default -> true;
+                    };
+                })
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Event> getRecommendedEventEntities(User user) {
+
+        if (user == null || user.getTags().isEmpty()) {
+            return List.of();
+        }
+
+        Set<String> userTagNames = user.getTags().stream()
+                .map(t -> t.getName().toLowerCase())
+                .collect(Collectors.toSet());
+
+        LocalDateTime now = LocalDateTime.now();
+
+        return eventRepo.findByStartAtAfter(now)
+                .stream()
+                .map(e -> {
+                    long matches = e.getTags().stream()
+                            .map(t -> t.getName().toLowerCase())
+                            .filter(userTagNames::contains)
+                            .count();
+                    return new AbstractMap.SimpleEntry<>(e, matches);
+                })
+                .filter(entry -> entry.getValue() > 0)
+                .sorted((a, b) -> {
+                    int byMatches = Long.compare(b.getValue(), a.getValue());
+                    if (byMatches != 0) return byMatches;
+                    return a.getKey().getStartAt()
+                            .compareTo(b.getKey().getStartAt());
+                })
+                .map(Map.Entry::getKey)
+                .toList();
+    }
+
+
 
 }
