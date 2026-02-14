@@ -1,18 +1,28 @@
 package com.vlrclone.backend.repository.spec;
 
+import com.vlrclone.backend.Enums.EventVisibility;
 import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.model.Tag;
+import com.vlrclone.backend.model.User;
+import com.vlrclone.backend.repository.EventRepository;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
+
 public class EventSpecifications {
 
+    private final EventRepository eventRepository;
+    public EventSpecifications(final EventRepository eventRepository) {
+        this.eventRepository = eventRepository;
+    }
     /* =========================
        SEARCH (title, content, location, tag, club)
     ========================= */
@@ -157,4 +167,79 @@ public class EventSpecifications {
             };
         };
     }
+
+    /* =========================
+   VISIBILITY FILTER (DB-LEVEL)
+   ========================= */
+    public static Specification<Event> visibleToUser(User user) {
+        return (root, query, cb) -> {
+
+            query.distinct(true);
+
+            // PUBLIC events are always visible
+            var publicEvents =
+                    cb.equal(root.get("visibility"), EventVisibility.PUBLIC);
+
+            // Admin sees everything
+            if (user != null && user.getRole() == User.Role.ADMIN) {
+                return cb.conjunction();
+            }
+
+            // Not logged in → only public
+            if (user == null) {
+                return publicEvents;
+            }
+
+            // Author can see own events
+            var isAuthor =
+                    cb.equal(root.get("author").get("id"), user.getId());
+
+            // Join club + members
+            var clubJoin = root.join("club", JoinType.LEFT);
+            var memberJoin = clubJoin.join("members", JoinType.LEFT);
+            var memberUserJoin = memberJoin.join("user", JoinType.LEFT);
+
+            var isClubMember =
+                    cb.equal(memberUserJoin.get("id"), user.getId());
+
+            var clubMembersOnly =
+                    cb.and(
+                            cb.equal(root.get("visibility"),
+                                    EventVisibility.CLUB_MEMBERS),
+                            isClubMember
+                    );
+
+            return cb.or(publicEvents, isAuthor, clubMembersOnly);
+        };
+    }
+
+    @Transactional(readOnly = true)
+    public List<Event> searchEventsEntities(
+            String q,
+            List<String> tags,
+            String status,
+            String timePeriod,
+            User user
+    ) {
+        LocalDateTime now = LocalDateTime.now();
+
+        Specification<Event> spec = Specification
+                .where(EventSpecifications.searchText(q))
+                .and(EventSpecifications.hasTags(tags))
+                .and(EventSpecifications.inTimePeriod(timePeriod, now))
+                .and(EventSpecifications.visibleToUser(user));
+
+        if (status != null && !"ALL".equalsIgnoreCase(status)) {
+            spec = spec.and(
+                    EventSpecifications.hasStatus(status, now)
+            );
+        }
+
+        return eventRepository.findAll(
+                spec,
+                Sort.by(Sort.Direction.ASC, "startAt")
+        );
+    }
+
+
 }

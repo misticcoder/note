@@ -137,15 +137,22 @@ public class EventController {
 
         User user = byEmail(requesterEmail);
 
-        List<EventUpdateDto> visible = service
-                .searchEventsEntities(q, tagList, normalizeStatus(status), timePeriod)
+        List<EventUpdateDto> result = service
+                .searchEventsEntities(
+                        q,
+                        tagList,
+                        normalizeStatus(status),
+                        timePeriod,
+                        user
+                )
                 .stream()
-                .filter(e -> canViewEvent(e, user))
                 .map(EventUpdateDto::new)
                 .toList();
 
-        return ResponseEntity.ok(visible);
+        return ResponseEntity.ok(result);
     }
+
+
 
 
     /* =====================

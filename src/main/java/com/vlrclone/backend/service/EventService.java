@@ -495,6 +495,33 @@ public class EventService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<Event> searchEventsEntities(
+            String q,
+            List<String> tags,
+            String status,
+            String timePeriod,
+            User user
+    ) {
+        LocalDateTime now = LocalDateTime.now();
+
+        Specification<Event> spec = Specification
+                .where(EventSpecifications.searchText(q))
+                .and(EventSpecifications.hasTags(tags))
+                .and(EventSpecifications.inTimePeriod(timePeriod, now));
+
+        if (status != null && !"ALL".equalsIgnoreCase(status)) {
+            spec = spec.and(
+                    EventSpecifications.hasStatus(status, now)
+            );
+        }
+
+        // 🔥 IMPORTANT: repository must use EntityGraph
+        return eventRepo.findAll(
+                spec,
+                Sort.by(Sort.Direction.ASC, "startAt")
+        );
+    }
 
 
 }
