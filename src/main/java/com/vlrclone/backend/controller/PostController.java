@@ -45,7 +45,7 @@ public class PostController {
             @PathVariable Long id,
             @RequestParam(required = false) String username
     ) {
-        Post post = posts.findById(id).orElse(null);
+        Post post = posts.findDetailedById(id).orElse(null);
         if (post == null) return ResponseEntity.notFound().build();
 
         return ResponseEntity.ok(service.toFeedDto(post, username));

@@ -53,36 +53,66 @@ public class PostService {
     /* ===================== FEED ===================== */
 
     public List<PostFeedDto> getFeed(String username, Long eventId) {
-        List<Post> rawPosts;
-
-        if (eventId != null) {
-            rawPosts = posts.findByEventIdOrderByCreatedAtDesc(eventId);
-        } else {
-            rawPosts = posts.findByEventIsNullOrderByCreatedAtDesc();
-        }
+        List<Post> rawPosts = (eventId != null)
+                ? posts.findByEventIdOrderByCreatedAtDesc(eventId)
+                : posts.findByEventIsNullOrderByCreatedAtDesc();
 
         LocalDateTime now = LocalDateTime.now();
-        boolean isAdmin = username != null && isAdmin(username);
+        boolean admin = username != null && isAdmin(username);
 
-        return rawPosts.stream()
-                .filter(p -> {
-                    // always visible
-                    if (p.getPublishAt() == null) return true;
-
-                    // already published
-                    if (!p.getPublishAt().isAfter(now)) return true;
-
-                    // scheduled — admins only
-                    return isAdmin;
-                })
+        List<Post> filtered = rawPosts.stream()
+                .filter(p -> p.getPublishAt() == null
+                        || !p.getPublishAt().isAfter(now)
+                        || admin)
                 .sorted((a, b) -> {
                     if (a.isAnnouncement() && !b.isAnnouncement()) return -1;
                     if (!a.isAnnouncement() && b.isAnnouncement()) return 1;
                     return b.getCreatedAt().compareTo(a.getCreatedAt());
                 })
-                .map(p -> toFeedDto(p, username))
+                .toList();
+
+        List<Long> ids = filtered.stream().map(Post::getId).toList();
+
+        // Batch counts
+        Map<Long, Long> likeCounts = likes.countLikesByPostIds(ids).stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
+
+        Map<Long, Long> commentCounts = comments.countTopLevelCommentsByPostIds(ids).stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
+
+        java.util.Set<Long> likedIds = (username == null)
+                ? java.util.Set.of()
+                : new java.util.HashSet<>(likes.likedPostIdsForUser(ids, username));
+
+        return filtered.stream()
+                .map(p -> new PostFeedDto(
+                        p.getId(),
+                        p.getAuthor(),
+                        p.getContent(),
+                        p.getImages().stream()
+                                .sorted(Comparator.comparingInt(PostImage::getPosition))
+                                .map(img -> new PostFeedDto.ImageDto(img.getId(), img.getUrl()))
+                                .toList(),
+                        p.getReferences().stream()
+                                .map(ref -> new PostFeedDto.ReferenceDto(ref.getType(), ref.getTargetId(), ref.getDisplayText()))
+                                .toList(),
+                        p.getCreatedAt(),
+                        p.getPublishAt(),
+                        likeCounts.getOrDefault(p.getId(), 0L),
+                        likedIds.contains(p.getId()),
+                        commentCounts.getOrDefault(p.getId(), 0L).intValue(),
+                        p.isPinned(),
+                        p.getShareCount()
+                ))
                 .toList();
     }
+
 
 
 
