@@ -1193,26 +1193,22 @@ export default function ClubDetail() {
                             </div>
                         )}
 
-                        <EventTable
-                            events={events}
-                            showClub={false}
-                            isPrivileged={isAdmin || isLeader}
-                            onEdit={setEditingEvent}
-                            onDelete={deleteEvent}
-                        />
-
-                        {editingEvent && (
-                            <EditEventModal
-                                event={editingEvent}
-                                clubs={[club]}          // or full clubs list if you prefer
-                                onSave={saveEvent}
-                                onClose={() => setEditingEvent(null)}
+                        {events.length > 0 ? (
+                            <EventTable
+                                events={events}
+                                showClub={false}
+                                isPrivileged={isAdmin || isLeader}
+                                onEdit={setEditingEvent}
+                                onDelete={deleteEvent}
                             />
+                        ) : (
+                            <div style={{ padding: "20px", textAlign: "center", color: "#777" }}>
+                                No events yet for this club.
+                            </div>
                         )}
-
-
                     </div>
                 )}
+
 
                 {/* 🔔 Admin Settings Tab */}
                 {activeTab === "settings" && isAdmin && (

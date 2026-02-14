@@ -7,7 +7,7 @@ const tasks = [
     {
         id: 1,
         title: "Explore This Week's Events",
-        description: "Navigate to Events and filter by week.",
+        description: "Navigate to Events Directory and Use filters",
         requiredRole: null,
         answer: "1. Click on 'Events' in the navigation menu\n2. Look for the filter options\n3. Select 'This Week' or use the date filter to show only this week's events"
     },
@@ -16,28 +16,28 @@ const tasks = [
         title: "Browse a Community",
         description: "Open a club page and explore join options.",
         requiredRole: null,
-        answer: "1. Navigate to 'Communities' or 'Clubs' section\n2. Select any community from the list\n3. Look for the 'Join' or 'Request to Join' button on the community page"
+        answer: "1. Navigate to 'Communities' in Home page or click 'Clubs' section in the navigation bar\n2. Select any community from the list\n3. Look for the 'Join' or 'Request to Join' button on the community page\n4. Log in as an admin or the club leader to view you pending request inside club overview (Optional)"
     },
     {
         id: 3,
-        title: "Check Community Announcement/Members/Events/Social Groups",
+        title: "Check Community Announcement/Members/Events/Social Groups/Report to Supervisor",
         description: "Find the new news from the leader, and upcoming events from a specific club, and checks if it has existing social waypoints",
         requiredRole: null,
         answer: "1. Open a specific community page\n2. Look for tabs like 'Announcements', 'Members', 'Events', and 'Social Groups'\n3. Click through each tab to view the content\n4. Check if social waypoints/groups are listed"
     },
     {
         id: 4,
-        title: "Review Notifications",
+        title: "Review Notifications (Partially Implemented, may notice few bugs)" ,
         description: "Visit your profile activity tab.",
         requiredRole: null,
-        answer: "1. Click on your profile icon or avatar\n2. Navigate to the 'Activity' or 'Notifications' tab\n3. Review your recent notifications and activity"
+        answer: "1. Click on your profile icon or avatar\n2. Navigate to the 'Activity' tab\n3. Review your recent notifications and activity"
     },
     {
         id: 5,
         title: "View Your Profile",
         description: "Review your profile overview.",
         requiredRole: null,
-        answer: "1. Click on your profile icon/avatar in the navigation\n2. Select 'View Profile' or 'My Profile'\n3. Review your profile information, joined communities, and events"
+        answer: "1. Click on your profile icon/avatar in the navigation\n2. Select 'View Profile' or 'My Profile'\n3. Review your profile information, joined communities, and events, Edit Profile\n4. Try adding interest tags from the edit profile tab and see if you get recommended more events in the events tab or overview (optional)\n Note: You can find example Tags in the Events Directory under each event or the tag filter show all option. "
     },
     {
         id: 6,
@@ -51,42 +51,42 @@ const tasks = [
         title: "Filter Events by Tag",
         description: "Filter events by a specific tag (e.g. Sports or Academic).",
         requiredRole: null,
-        answer: "1. Go to the Events page\n2. Look for filter options or tags section\n3. Click on a tag like 'Sports', 'Academic', or any other category\n4. View the filtered results"
+        answer: "1. Go to the Events page\n2. Look for filter options or tags section\n3. Search/Click on a tag like 'Sports', 'Academic', or any other category\n4. View the filtered results"
     },
     {
         id: 8,
         title: "Sign Up for an Event",
         description: "Open an event page and use the Join/Interest button.",
         requiredRole: null,
-        answer: "1. Navigate to Events and select any event\n2. Open the event details page\n3. Look for 'Join', 'Register', or 'Express Interest' button\n4. Click the button to sign up for the event"
+        answer: "1. Navigate to Events and select any event\n2. Open the event details page\n3. Look for 'going', 'maybe' button\n4. Click the button to sign up for the event\n5. Check the attendees tab in the Event Page and find yourself"
     },
     {
         id: 9,
         title: "Leave Feedback on an Event",
         description: "Submit a short rating or comment on an event.",
         requiredRole: null,
-        answer: "1. Go to an event page (preferably one that has already occurred)\n2. Look for 'Leave Feedback', 'Rate', or 'Review' section\n3. Provide a rating and/or comment\n4. Submit your feedback"
+        answer: "1. Go to an event page (preferably one that has already occurred)\n2. Look for 'Comments', and 'Rate' section\n3. Provide a rating and/or comment\n\n Note: Rating is only allowed by an Attendee. So You can go to your profile, in events tab you can find an event that you have attended and try adding rating on that event."
     },
     {
         id: 10,
-        title: "Find a Community to Join",
-        description: "Search or browse the community directory.",
+        title: "Explore Threads/Posts | P.S: DO NOT PROVIDE ANY PERSONAL/INAPPROPRIATE INFORMATION" ,
+        description: "Add/Review existing thread or post | Add reaction/comment/reply | Try the reference Tags",
         requiredRole: null,
-        answer: "1. Navigate to 'Communities' or 'Clubs' section\n2. Use the search bar or browse categories\n3. Look through available communities\n4. Select one that interests you and click to view details"
+        answer: "1. Navigate to 'Discussion Threads' or 'Feed' section on Home Page\n2. Open a Thread/Post of your choice\n3. Review the information: Reactions/Contents/Reference tags/ Comments\n4. Add Reaction/Comment/Reply\n5. Create Your own Thread/Post\n\n Note: Post is allowed by any user only for testing purposes, Actual System will only allow admin and community leaders to advertise/announce contents."
     },
     {
         id: 11,
         title: "Create a New Event",
         description: "Create and publish a new event for your community.",
         requiredRole: "Community Leader",
-        answer: "1. Navigate to your community page where you are a leader\n2. Look for 'Create Event' or '+' button\n3. Fill in event details (title, description, date, location)\n4. Set event visibility and registration options\n5. Click 'Publish' or 'Create Event'"
+        answer: "1. Navigate to your community page where you are a leader\n2. Look for 'Create Event' or '+' button\n3. Fill in event details (title, description, date, location)\n4. Set event visibility and registration options\n5. Click 'Publish' or 'Create Event'\n\n Note: You can find your clubs and role from the clubs tab of your profile page. If you dont have a club with the roles you want to explore, use a different login."
     },
     {
         id: 12,
         title: "Post a Community Announcement",
         description: "Share important news with your community members.",
         requiredRole: "Community Leader",
-        answer: "1. Go to your community page (where you have leader permissions)\n2. Navigate to the 'Announcements' section\n3. Click 'New Announcement' or similar button\n4. Write your announcement message\n5. Choose notification settings (optional)\n6. Post the announcement"
+        answer: "1. Go to your community page (where you have leader permissions)\n2. Navigate to the 'Announcements' section\n3. Click 'New Announcement' or similar button\n4. Write your announcement message\n5. Post the announcement\n6. You can login as a different member and check the activity tab to see if the members received a notification."
     },
     {
         id: 13,
@@ -114,14 +114,14 @@ const tasks = [
         title: "Manage User Roles",
         description: "Assign or modify user permissions across the platform.",
         requiredRole: "Admin",
-        answer: "1. Access the Admin Panel\n2. Go to 'Users' or 'User Management' section\n3. Search for or select a user\n4. Click 'Edit Roles' or 'Permissions'\n5. Assign roles (Admin, Community Leader, Member)\n6. Save changes"
+        answer: "1. Access the Admin Panel\n2. Go to 'Users' section\n3. Search for or select a user\n4. Click 'Edit Roles' or 'Permissions'\n5. Assign roles (Admin, Student)\n6. Save changes"
     },
     {
         id: 17,
-        title: "Review Flagged Content",
-        description: "Moderate reported posts, comments, or events.",
+        title: "Moderate Content",
+        description: "Moderate posts, comments, or events.",
         requiredRole: "Admin",
-        answer: "1. Navigate to Admin Panel\n2. Click on 'Moderation' or 'Flagged Content'\n3. Review reported items with reasons\n4. Take action: approve, remove, or warn user\n5. Document moderation decision"
+        answer: "1.Browse Through the platform\n 2. \n3. Review reported items with reasons\n4. Take action: approve, remove, or warn user\n5. Document moderation decision"
     },
     {
         id: 18,

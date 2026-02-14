@@ -208,6 +208,8 @@ export default function PostDetailPage() {
                                 removeImageIds = [],
                                 newImages = [],
                                 imageOrder = [],
+                                references = [],
+                                publishAt,
                             }) => {
         const form = new FormData();
 
@@ -225,6 +227,13 @@ export default function PostDetailPage() {
         newImages.forEach(file =>
             form.append("images", file)
         );
+
+        form.append("references", JSON.stringify(references ?? []));
+
+        // Send schedule for admin scheduled announcements
+        if (publishAt !== undefined) {
+            form.append("publishAt", publishAt);
+        }
 
         const res = await apiFetch(
             `/api/posts/${post.id}`,

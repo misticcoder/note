@@ -380,25 +380,206 @@
 
 
 /* ===============================
-   CONFIRM MODAL
+   EDIT POST MODAL (IMPROVED)
 ================================ */
 
 .modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0, 0, 0, 0.75);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 10000;
+    padding: 20px;
+    backdrop-filter: blur(4px);
 }
 
 .modal {
-    background: white;
-    color: black;
-    padding: 20px;
-    border-radius: var(--radius-sm);
-    width: 360px;
+    background: #1f1f1f;
+    color: #e0e0e0;
+    padding: 24px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    border: 1px solid #374151;
+}
+
+.modal h3 {
+    margin: 0 0 20px 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff;
+    border-bottom: 1px solid #374151;
+    padding-bottom: 12px;
+}
+
+.modal textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    resize: vertical;
+    transition: all 0.2s ease;
+    background: #2a2a2a;
+    color: #e0e0e0;
+    margin-bottom: 16px;
+}
+
+.modal textarea:focus {
+    outline: none;
+    border-color: #546e7a;
+    background: #242424;
+    box-shadow: 0 0 0 3px rgba(84, 110, 122, 0.2);
+}
+
+.modal textarea::placeholder {
+    color: #808080;
+}
+
+.modal input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px dashed #3a3a3a;
+    border-radius: 8px;
+    background: #2a2a2a;
+    color: #e0e0e0;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+}
+
+.modal input[type="file"]:hover {
+    border-color: #546e7a;
+    background: #242424;
+}
+
+.modal .image-grid {
+    margin-bottom: 16px;
+}
+
+.modal .image-item.draggable {
+    cursor: move;
+    transition: transform 0.2s ease;
+}
+
+.modal .image-item.draggable:hover {
+    transform: scale(1.02);
+}
+
+/* ===================== SCHEDULE CONTROL ===================== */
+
+.edit-schedule {
+    margin: 16px 0;
+    padding: 12px;
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+}
+
+.edit-schedule label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #b0b0b0;
+}
+
+.edit-schedule input[type="datetime-local"] {
+    padding: 8px 12px;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    background: #1a1a1a;
+    color: #e0e0e0;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.edit-schedule input[type="datetime-local"]:focus {
+    outline: none;
+    border-color: #546e7a;
+    box-shadow: 0 0 0 3px rgba(84, 110, 122, 0.2);
+}
+
+.edit-schedule .muted {
+    font-size: 12px;
+    color: #808080;
+    font-style: italic;
+}
+
+/* ===================== MODAL ACTIONS ===================== */
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #374151;
+}
+
+.modal-actions button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modal-actions button:first-child {
+    background: #2a2a2a;
+    color: #e0e0e0;
+    border: 1px solid #3a3a3a;
+}
+
+.modal-actions button:first-child:hover {
+    background: #3a3a3a;
+    border-color: #4a4a4a;
+}
+
+.modal-actions button:last-child {
+    background: #3b82f6;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.modal-actions button:last-child:hover {
+    background: #2563eb;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
+}
+
+.modal-actions button:last-child:active {
+    transform: translateY(0);
+}
+
+/* ===================== SCROLLBAR FOR MODAL ===================== */
+
+.modal::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 4px;
+}
+
+.modal::-webkit-scrollbar-thumb {
+    background: #3a3a3a;
+    border-radius: 4px;
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+    background: #4a4a4a;
 }
 
 /* ===================== PINNED POST ===================== */
@@ -570,28 +751,58 @@
    SCHEDULED ANNOUNCEMENTS
 ================================ */
 
-.schedule-row {
-    margin-top: 8px;
-    font-size: 12px;
-    color: #ffffe3;
+.announcement-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #b0b0b0;
+    cursor: pointer;
+    user-select: none;
 }
 
-.schedule-row input {
-    margin-left: 6px;
-    padding: 4px 6px;
-    border-radius: 4px;
-    border: 1px solid #555;
-    background: #2f2f2f;
-    color: #ffffe3;
+.announcement-toggle input[type="checkbox"] {
+    cursor: pointer;
+    accent-color: #3b82f6;
+}
+
+.schedule-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #b0b0b0;
+}
+
+.schedule-row label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.schedule-row input[type="datetime-local"] {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #3a3a3a;
+    background: #2a2a2a;
+    color: #e0e0e0;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.schedule-row input[type="datetime-local"]:focus {
+    outline: none;
+    border-color: #546e7a;
+    box-shadow: 0 0 0 2px rgba(84, 110, 122, 0.2);
 }
 
 .scheduled-badge {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     color: #3ea6ff;
     background: rgba(62,166,255,0.12);
     border: 1px solid #3ea6ff;
-    padding: 4px 8px;
+    padding: 3px 8px;
     border-radius: 999px;
     margin-bottom: 6px;
     display: inline-block;
@@ -607,4 +818,34 @@
 
 .x-post.scheduled-post:hover {
     opacity: 1;
+}
+
+/* ===============================
+   RESPONSIVE DESIGN
+================================ */
+
+@media (max-width: 640px) {
+    .modal {
+        padding: 16px;
+        max-width: 95vw;
+        max-height: 95vh;
+    }
+
+    .modal h3 {
+        font-size: 18px;
+        margin-bottom: 16px;
+    }
+
+    .modal textarea {
+        min-height: 100px;
+        font-size: 14px;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+
+    .modal-actions button {
+        width: 100%;
+    }
 }

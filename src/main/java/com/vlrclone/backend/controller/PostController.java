@@ -188,7 +188,11 @@ public class PostController {
         Post post = posts.findById(id).orElse(null);
         if (post == null) return ResponseEntity.notFound().build();
 
-        if (!post.getAuthor().equals(username)) {
+        // ✅ FIX: Check if user is admin OR author
+        boolean isAdmin = service.isAdmin(username);
+        boolean isAuthor = post.getAuthor().equals(username);
+
+        if (!isAdmin && !isAuthor) {
             return ResponseEntity.status(403).body(Map.of("message", "Not allowed"));
         }
 
@@ -263,8 +267,9 @@ public class PostController {
             }
         }
 
+        // ✅ publishAt check already uses isAdmin, so this is fine
         if (publishAt != null) {
-            if (!service.isAdmin(username)) {
+            if (!isAdmin) {  // reuse the isAdmin check from above
                 return ResponseEntity.status(403)
                         .body(Map.of("message", "Only admins can reschedule announcements"));
             }
@@ -279,12 +284,9 @@ public class PostController {
             }
         }
 
-
-
         posts.save(post);
         return ResponseEntity.ok(service.toFeedDto(post, username));
     }
-
 
     /* ===================== IMAGE SAVE ===================== */
 
