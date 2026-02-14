@@ -98,32 +98,26 @@ const tasks = [
 
     {
         id: 15,
-        title: "View Platform Analytics",
-        description: "Access system-wide usage statistics and reports.",
+        title: "Create Events/Communities ||  Note: DO NOT PROVIDE ANY PERSONAL/INAPPROPRIATE INFORMATION",
+        description: "Create and Publish Events and Communities with Different Responsibilities.",
         requiredRole: "Admin",
-        answer: "1. Click on 'Admin Panel' or 'Dashboard' in navigation\n2. Navigate to 'Analytics' or 'Reports' section\n3. View metrics like active users, event attendance, community growth\n4. Filter by date range or specific metrics\n5. Export reports if needed"
+        answer: "1. Navigate to home Page \n2. Try Creating a Clubs or Event by clicking the ADD button\n3. Fill in the details (e.g. title, category, description, date, location) \n4. Try out Different Variations of Clubs and Events.\n5. Play Around"
     },
     {
         id: 16,
         title: "Manage User Roles",
         description: "Assign or modify user permissions across the platform.",
         requiredRole: "Admin",
-        answer: "1. Access the Admin Panel\n2. Go to 'Users' section\n3. Search for or select a user\n4. Click 'Edit Roles' or 'Permissions'\n5. Assign roles (Admin, Student)\n6. Save changes"
+        answer: "1. Access the Admin Panel\n2. Go to 'Users' section\n3. Search for or select a user\n4. Click 'Edit Roles' or 'Permissions'\n5. Assign roles (Admin, Student)\n6. Go to a Community Page\n 7. Assign roles to members"
     },
     {
         id: 17,
         title: "Moderate Content",
-        description: "Moderate posts, comments, or events.",
+        description: "Moderate posts, comments, communities or events.",
         requiredRole: "Admin",
         answer: "1. Browse Through the platform\n 2. Review content: Threads/Posts/Clubs/Events \n3. Create Something Then Try Edit and Delete. \n4. Browse Events and Expose QR code for attendance. \n5. Browse Communities and Assign supervisor from the settings tab\n6. View the activity tab for Reports"
     },
-    {
-        id: 18,
-        title: "Configure System Settings",
-        description: "Modify platform-wide settings like email templates or features.",
-        requiredRole: "Admin",
-        answer: "1. Open Admin Panel\n2. Navigate to 'System Settings' or 'Configuration'\n3. Review available settings (notifications, features, integrations)\n4. Modify settings as needed\n5. Test changes and save configuration"
-    },
+
     {
         id: 19,
         title: "Compare With Current System.  (If Possible)",
@@ -149,7 +143,7 @@ export default function UsabilityTest() {
     const [completed, setCompleted] = useState([]);
     const [revealedAnswers, setRevealedAnswers] = useState([]);
 
-    const surveyUrl = "https://forms.gle/YOUR_FORM_LINK";
+    const surveyUrl = "https://forms.office.com/Pages/ResponsePage.aspx?id=sAafLmkWiUWHiRCgaTTcYS_VjBLWGjZNk_QHvbrz_V1UQldERUxDNUkwRk5JR1RFU1YxTVZYV0NWVS4u";
 
     const handleSurveyClick = () => {
         const confirmed = window.confirm(

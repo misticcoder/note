@@ -21,6 +21,7 @@ public class DataSeeder implements CommandLineRunner {
     private final PostSeeder postSeeder;
     private final NotificationSeeder notificationSeeder;
     private final ThreadSeeder threadSeeder;
+    private final UserLoginDocumentSeeder userLoginDocumentSeeder;
 
     public DataSeeder(
             UserSeeder userSeeder,
@@ -30,7 +31,8 @@ public class DataSeeder implements CommandLineRunner {
             EventRatingSeeder eventRatingSeeder,
             PostSeeder postSeeder,
             NotificationSeeder notificationSeeder,
-            ThreadSeeder threadSeeder) {
+            ThreadSeeder threadSeeder,
+            UserLoginDocumentSeeder userLoginDocumentSeeder) {
         this.userSeeder = userSeeder;
         this.clubSeeder = clubSeeder;
         this.eventSeeder = eventSeeder;
@@ -39,6 +41,7 @@ public class DataSeeder implements CommandLineRunner {
         this.postSeeder = postSeeder;
         this.notificationSeeder = notificationSeeder;
         this.threadSeeder = threadSeeder;
+        this.userLoginDocumentSeeder = userLoginDocumentSeeder;
     }
 
     @Override
@@ -59,6 +62,7 @@ public class DataSeeder implements CommandLineRunner {
         // ───────────── DEPENDENT / SIDE DATA ─────────────
         notificationSeeder.seed();
         threadSeeder.seed();//
+        userLoginDocumentSeeder.seed();
 
     }
 }
