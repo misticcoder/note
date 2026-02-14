@@ -20,7 +20,7 @@ public class ClubSeeder {
     private final ClubLinkRepository clubLinkRepo;
     private final UserRepository userRepo;
 
-    private final Random random = new Random();
+    private final Random random = new Random(42); // Fixed seed for reproducibility
 
     public ClubSeeder(
             ClubRepository clubRepo,
@@ -109,14 +109,18 @@ public class ClubSeeder {
 
     private void seedMembers(Club club, List<User> users) {
 
-        Collections.shuffle(users);
+        // Create a new list to avoid modifying the original
+        List<User> shuffledUsers = new ArrayList<>(users);
+
+        // Use seeded random for consistent shuffling based on club name
+        Collections.shuffle(shuffledUsers, new Random(club.getName().hashCode()));
 
         int memberCount = 10 + random.nextInt(15);
 
         // Leader
         ClubMember leader = new ClubMember();
         leader.setClub(club);
-        leader.setUser(users.get(0));
+        leader.setUser(shuffledUsers.get(0));
         leader.setRole(ClubMember.Role.LEADER);
         clubMemberRepo.save(leader);
 
@@ -124,16 +128,16 @@ public class ClubSeeder {
         for (int i = 1; i <= 2; i++) {
             ClubMember co = new ClubMember();
             co.setClub(club);
-            co.setUser(users.get(i));
+            co.setUser(shuffledUsers.get(i));
             co.setRole(ClubMember.Role.CO_LEADER);
             clubMemberRepo.save(co);
         }
 
         // Regular members
-        for (int i = 3; i < Math.min(memberCount, users.size()); i++) {
+        for (int i = 3; i < Math.min(memberCount, shuffledUsers.size()); i++) {
             ClubMember member = new ClubMember();
             member.setClub(club);
-            member.setUser(users.get(i));
+            member.setUser(shuffledUsers.get(i));
             member.setRole(ClubMember.Role.MEMBER);
             clubMemberRepo.save(member);
         }
