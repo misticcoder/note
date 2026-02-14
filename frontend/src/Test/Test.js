@@ -65,7 +65,7 @@ const tasks = [
         title: "Leave Feedback on an Event",
         description: "Submit a short rating or comment on an event.",
         requiredRole: null,
-        answer: "1. Go to an event page (preferably one that has already occurred)\n2. Look for 'Comments', and 'Rate' section\n3. Provide a rating and/or comment\n\n Note: Rating is only allowed by an Attendee. So You can go to your profile, in events tab you can find an event that you have attended and try adding rating on that event."
+        answer: "1. Go to an event page (preferably one that has already occurred)\n2. Look for 'Comments', and 'Rate' section\n3. Provide a rating and/or comment\n\n Note: Rating is only allowed by an Attendee. So You can go to your profile, in events tab you can find an event that you have attended and try adding rating on that event.\n\n Note: Only Admins can view the QR Code for confirming attendance. And Users can see the code box when the event is Live"
     },
     {
         id: 10,
@@ -95,13 +95,7 @@ const tasks = [
         requiredRole: "Community Leader",
         answer: "1. Access your community's admin panel\n2. Navigate to 'Members' or 'Membership Requests' section\n3. Review pending requests\n4. Approve or reject requests with optional messages\n5. Check the updated member list"
     },
-    {
-        id: 14,
-        title: "Edit Community Settings",
-        description: "Update your community's description, privacy settings, or tags.",
-        requiredRole: "Community Leader",
-        answer: "1. Go to your community page\n2. Click 'Settings' or 'Edit Community' button\n3. Update fields like description, privacy level, or tags\n4. Review community appearance settings\n5. Save changes"
-    },
+
     {
         id: 15,
         title: "View Platform Analytics",
@@ -121,7 +115,7 @@ const tasks = [
         title: "Moderate Content",
         description: "Moderate posts, comments, or events.",
         requiredRole: "Admin",
-        answer: "1.Browse Through the platform\n 2. \n3. Review reported items with reasons\n4. Take action: approve, remove, or warn user\n5. Document moderation decision"
+        answer: "1. Browse Through the platform\n 2. Review content: Threads/Posts/Clubs/Events \n3. Create Something Then Try Edit and Delete. \n4. Browse Events and Expose QR code for attendance. \n5. Browse Communities and Assign supervisor from the settings tab\n6. View the activity tab for Reports"
     },
     {
         id: 18,
