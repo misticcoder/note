@@ -336,29 +336,47 @@
 }
 
 
-.role-badge {
-    padding: 3px 8px;
-    border-radius: 999px;
-    font-size: 12px;
+/* ======================================================
+   CLUBS TABLE - ROLE BADGE FIX
+====================================================== */
+
+.clubs-row .role-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
 }
 
-.role-leader {
-    background: #fde68a;
-    color: #7c4a00;
+.clubs-row .role-leader {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
 }
 
-.role-co_leader {
+.clubs-row .role-co_leader {
     background: #dbeafe;
     color: #1e40af;
+    border: 1px solid #bfdbfe;
 }
 
-.role-member {
-    background: #eef2f7;
+.clubs-row .role-member {
+    background: #f3f4f6;
     color: #374151;
+    border: 1px solid #e5e7eb;
 }
 
-.role-supervisor {
-    background: #e9d5ff;
+.clubs-row .role-supervisor {
+    background: #f3e8ff;
     color: #6b21a8;
+    border: 1px solid #e9d5ff;
+}
+
+/* Ensure proper alignment in table cells */
+.clubs-row > div {
+    display: flex;
+    align-items: center;
 }

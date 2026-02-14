@@ -286,3 +286,104 @@
     font-size: 13px;
     font-style: italic;
 }
+
+/* ===============================
+   ROLE-BASED TASK SECTIONS
+================================ */
+
+.task-section-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 2rem 0 1rem 0;
+    color: #e0e0e0;
+    border-bottom: 2px solid #3a3a3a;
+    padding-bottom: 0.5rem;
+}
+
+.task-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    white-space: nowrap;
+}
+
+.role-requirement {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #9ca3af;
+    font-style: italic;
+}
+
+/* ===============================
+   PROGRESS SUMMARY
+================================ */
+
+.progress-summary {
+    display: flex;
+    gap: 2rem;
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    flex-wrap: wrap;
+}
+
+.progress-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.progress-label {
+    font-weight: 500;
+    color: #b0b0b0;
+}
+
+.progress-count {
+    font-weight: 600;
+    color: #66bb6a;
+}
+
+/* ===============================
+   RESPONSIVE DESIGN
+================================ */
+
+@media (max-width: 768px) {
+    .usability-card {
+        padding: 20px;
+    }
+
+    .task-section-title {
+        font-size: 1.1rem;
+        margin: 1.5rem 0 0.75rem 0;
+    }
+
+    .progress-summary {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .task-title-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .role-badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.6rem;
+    }
+}

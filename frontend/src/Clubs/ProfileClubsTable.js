@@ -26,9 +26,9 @@ export default function ProfileClubsTable({ clubs }) {
                     </div>
                     <div>
                         {cl.role ? (
-                            <span className={`role-badge role-${cl.role.toLowerCase()}`}>
-            {cl.role}
-        </span>
+                            <div className={`role-badge role-${cl.role.toLowerCase()}`}>
+                                {cl.role}
+        </div>
                         ) : (
                             <span className="muted">Member</span>
                         )}
