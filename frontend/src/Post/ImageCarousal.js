@@ -22,6 +22,8 @@ export default function ImageCarousel({ images }) {
                 src={images[index]}
                 alt=""
                 className="x-carousel-image"
+                loading="lazy"  // ✅ ADD THIS - Browser will lazy load images
+                decoding="async"  // ✅ ADD THIS - Non-blocking image decode
             />
 
             {images.length > 1 && (

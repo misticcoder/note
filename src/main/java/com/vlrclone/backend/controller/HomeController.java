@@ -5,10 +5,7 @@ import com.vlrclone.backend.dto.PostFeedDto;
 import com.vlrclone.backend.model.ClubNews;
 import com.vlrclone.backend.model.Thread;
 import com.vlrclone.backend.model.User;
-import com.vlrclone.backend.repository.ClubNewsRepository;
-import com.vlrclone.backend.repository.EventRepository;
-import com.vlrclone.backend.repository.ThreadRepository;
-import com.vlrclone.backend.repository.UserRepository;
+import com.vlrclone.backend.repository.*;
 import com.vlrclone.backend.service.ClubService;
 import com.vlrclone.backend.service.EventService;
 import com.vlrclone.backend.service.PostService;
@@ -53,14 +50,16 @@ public class HomeController {
                 ? users.findByEmail(requesterEmail).orElse(null)
                 : null;
 
+        boolean isAdmin = user != null && user.getRole() == User.Role.ADMIN;
+
         Map<String, Object> response = new HashMap<>();
 
         // Threads
         List<Thread> threadsList = threads.findAllByOrderByPublishedDesc();
         response.put("threads", threadsList);
 
-        // News
-        List<ClubNews> newsList = news.findTop10ByOrderByCreatedAtDesc();
+        // News - get recent club news
+        List<ClubNews> newsList = news.findTop20ByOrderByCreatedAtDesc();
         response.put("news", newsList);
 
         // Events
@@ -75,15 +74,15 @@ public class HomeController {
         List<ClubService.ClubWithCounts> clubsList = clubService.findAllWithCounts(null);
         response.put("clubs", clubsList);
 
-        // Posts
+        // Posts (limit to 10 for faster loading)
         List<PostFeedDto> postsList = postService.getFeed(
                 user != null ? user.getUsername() : null,
                 null
-        );
+        ).stream().limit(10).toList();  // ✅ Only first 10 posts
         response.put("posts", postsList);
 
-        // Users (for admin)
-        if (user != null && user.getRole() == User.Role.ADMIN) {
+        // Users (for admin only)
+        if (isAdmin) {
             response.put("users", users.findAll());
         }
 
