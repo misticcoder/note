@@ -5,8 +5,6 @@ import com.vlrclone.backend.Enums.EventVisibility;
 import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.model.Tag;
 import com.vlrclone.backend.model.User;
-import com.vlrclone.backend.Enums.Status;
-
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -40,7 +38,9 @@ public class EventUpdateDto {
 
     public EventUpdateDto() {}
 
-    // ADD this constructor (do not remove your existing one if other endpoints use it)
+    /* =====================================================
+       ENTITY CONSTRUCTOR (used when mapping full entity)
+    ===================================================== */
     public EventUpdateDto(Event e) {
         this.id = e.getId();
         this.title = e.getTitle();
@@ -75,6 +75,9 @@ public class EventUpdateDto {
         }
     }
 
+    /* =====================================================
+       JPQL PROJECTION CONSTRUCTOR (used in SELECT new ...)
+    ===================================================== */
     public EventUpdateDto(
             Long id,
             String title,
@@ -100,7 +103,6 @@ public class EventUpdateDto {
         this.startAt = startAt;
         this.endAt = endAt;
 
-        // Compute status manually (since it's @Transient in entity)
         this.status = computeStatus(startAt, endAt);
 
         this.averageRating = averageRating;
@@ -113,8 +115,9 @@ public class EventUpdateDto {
         this.category = category;
         this.externalUrl = externalUrl;
 
+        // Safe null handling (LEFT JOIN case)
         if (authorId != null) {
-            this.author = new AuthorDtoStub(authorId, authorName, authorEmail);
+            this.author = new AuthorDto(authorId, authorName, authorEmail);
         }
     }
 
@@ -130,28 +133,26 @@ public class EventUpdateDto {
         return "LIVE";
     }
 
-
-
-
+    /* =====================================================
+       AUTHOR DTO (SAFE)
+    ===================================================== */
     public static class AuthorDto {
         public Long id;
         public String name;
         public String email;
 
         public AuthorDto(User user) {
-            this.id = user.getId();
-            this.name = user.getUsername();
-            this.email = user.getEmail();
+            if (user != null) {
+                this.id = user.getId();
+                this.name = user.getUsername();
+                this.email = user.getEmail();
+            }
         }
-    }
 
-    public static class AuthorDtoStub extends AuthorDto {
-        public AuthorDtoStub(Long id, String name, String email) {
-            super(null);
+        public AuthorDto(Long id, String name, String email) {
             this.id = id;
             this.name = name;
             this.email = email;
         }
     }
-
 }

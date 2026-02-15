@@ -18,7 +18,7 @@ function Home() {
     const [users, setUsers] = useState([]); // for leader dropdown
     const [posts, setPosts] = useState([]); // NEW: posts state
 
-    const [isLoading, setIsLoading] = useState(true); // NEW: loading state
+    const [isLoading, setIsLoading] = useState(false); // NEW: loading state
 
     const { user } = useContext(AuthContext);
 
@@ -56,22 +56,21 @@ function Home() {
         apiFetch(url)
             .then(res => res.json())
             .then(data => {
-                setThreads(Array.isArray(data.threads) ? data.threads : []);
-                setNews(Array.isArray(data.news) ? data.news : []);
-                setEvents(Array.isArray(data.events) ? data.events : []);
-                setClubs(Array.isArray(data.clubs) ? data.clubs : []);
-                setPosts(Array.isArray(data.posts) ? data.posts : []);
-                if (isAdmin && data.users) {
+                setThreads(data.threads ?? []);
+                setNews(data.news ?? []);
+                setEvents(data.events ?? []);
+                setClubs(data.clubs ?? []);
+                setPosts(data.posts ?? []);
+                if (user?.role === "ADMIN" && data.users) {
                     setUsers(data.users);
                 }
             })
-            .catch(err => {
-                console.error("Load failed:", err);
-            })
-            .finally(() => {
-                setIsLoading(false);
-            });
-    }, [user, isAdmin]);
+            .catch(err => console.error("Load failed:", err))
+            .finally(() => setIsLoading(false));
+
+    }, [user]);
+
+
 
 
     // Group clubs by category and sort by member count
@@ -88,7 +87,7 @@ function Home() {
         // Sort each category by member count (descending)
         Object.keys(map).forEach(cat => {
             map[cat].sort(
-                (a, b) => (b.members?.length || 0) - (a.members?.length || 0)
+                (a, b) => (b.memberCount || 0) - (a.memberCount || 0)
             );
         });
 
