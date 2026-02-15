@@ -17,7 +17,7 @@
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },
-  "proxy": "https://note-np63.onrender.com",
+  "proxy": "https://zygotic-modestia-note7263-fe9aa608.koyeb.app",
   "browserslist": {
     "production": [
       ">0.2%",
