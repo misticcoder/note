@@ -167,11 +167,13 @@ public class ClubService {
        (No @Query. One clubs query + one events batch query.)
     ========================= */
 
+    @Transactional(readOnly = true)  // ← Add this annotation
     public List<ClubWithCounts> findAllWithCounts(ClubSort sort) {
         List<Club> clubs = clubRepo.findAll();
         return attachCountsAndSort(clubs, sort);
     }
 
+    @Transactional(readOnly = true)  // ← Add this annotation
     public List<ClubWithCounts> findByCategoryWithCounts(ClubCategory category, ClubSort sort) {
         List<Club> clubs = (category == null) ? clubRepo.findAll() : clubRepo.findByCategory(category);
         return attachCountsAndSort(clubs, sort);

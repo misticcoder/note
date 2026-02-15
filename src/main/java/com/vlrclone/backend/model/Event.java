@@ -11,10 +11,11 @@ import java.util.Set;
 
 @Entity
 @Table(name = "event", indexes = {
-        @Index(name = "idx_event_start_at", columnList = "startAt"),
+        @Index(name = "idx_event_start_at", columnList = "start_at"),
+        @Index(name = "idx_event_end_at", columnList = "end_at"),
         @Index(name = "idx_event_club_id", columnList = "club_id"),
-        @Index(name = "idx_event_status", columnList = "status"),
-        @Index(name = "idx_event_category", columnList = "category")
+        @Index(name = "idx_event_category", columnList = "category"),
+        @Index(name = "idx_event_visibility", columnList = "visibility")
 })
 public class Event {
 

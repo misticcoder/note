@@ -11,8 +11,8 @@ import java.util.*;
 public interface ClubRepository extends JpaRepository<Club, Long> {
     boolean existsByName(String name);
 
-    // Add @EntityGraph to prevent N+1 queries
-    @EntityGraph(attributePaths = {"members", "members.user", "links", "supervisor"})
+    // ✅ ADD THESE @EntityGraph ANNOTATIONS
+    @EntityGraph(attributePaths = {"members", "members.user"})
     @Override
     List<Club> findAll();
 
@@ -21,31 +21,16 @@ public interface ClubRepository extends JpaRepository<Club, Long> {
     Optional<Club> findById(Long id);
 
     @EntityGraph(attributePaths = {"members", "members.user"})
-    List<Club> findTop10ByNameContainingIgnoreCase(String name);
-
-    @EntityGraph(attributePaths = {"members", "members.user"})
     List<Club> findByCategory(ClubCategory category);
 
-    @EntityGraph(attributePaths = {"members", "members.user"})
+    // Keep all your other existing methods...
+    List<Club> findTop10ByNameContainingIgnoreCase(String name);
     List<Club> findByCategoryIn(List<ClubCategory> categories);
-
     Optional<Club> findByName(String name);
-
-    @EntityGraph(attributePaths = {"members", "members.user"})
     List<Club> findByNameContainingIgnoreCase(String name);
-
-    @EntityGraph(attributePaths = {"members", "members.user"})
     List<Club> findAllByOrderByCreatedAtDesc(Pageable pageable);
-
-    @EntityGraph(attributePaths = {"members", "members.user"})
     List<Club> findAllByOrderByCreatedAtDesc();
-
-    @EntityGraph(attributePaths = {"members", "members.user"})
     List<Club> findAllByOrderByNameAsc();
-
-    @EntityGraph(attributePaths = {"members", "members.user"})
     List<Club> findAllByOrderByNameDesc();
-
-    @EntityGraph(attributePaths = {"members", "members.user"})
     List<Club> findAllByOrderByNameAsc(Pageable pageable);
 }
