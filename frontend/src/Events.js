@@ -14,7 +14,7 @@ export default function Events() {
     const { user } = useContext(AuthContext);
     const isAdmin = String(user?.role || "").toUpperCase() === "ADMIN";
 
-    const [events, setEvents] = useState([]);
+    const [allEvents, setAllEvents] = useState([]); // ✅ Store ALL events
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState("");
 
@@ -26,7 +26,7 @@ export default function Events() {
         setEditingEvent,
         saveEvent,
         deleteEvent
-    } = useEventActions({ user, setEvents });
+    } = useEventActions({ user, setEvents: setAllEvents });
 
     const [clubs, setClubs] = useState([]);
 
@@ -47,7 +47,7 @@ export default function Events() {
     const [status, setStatus] = useState("all");
     const [timePeriod, setTimePeriod] = useState("all");
 
-    // OPTIMIZED: Load clubs and events in parallel
+    // ✅ FETCH ONCE - No dependencies on status/timePeriod
     useEffect(() => {
         document.title = "Events | InfCom";
 
@@ -55,21 +55,17 @@ export default function Events() {
             try {
                 setLoading(true);
 
+                // Fetch ALL events with status=all
                 const params = new URLSearchParams();
-                if (q.trim()) params.set("q", q.trim());
-                params.set("status", status);
-
-                if (timePeriod !== "all") {
-                    params.set("timePeriod", timePeriod);
-                }
+                params.set("status", "all"); // Always fetch all
 
                 let url = `/api/events?${params.toString()}`;
 
                 const finalUrl = user
-                    ? `${url}${url.includes("?") ? "&" : "?"}requesterEmail=${encodeURIComponent(user.email)}`
+                    ? `${url}&requesterEmail=${encodeURIComponent(user.email)}`
                     : url;
 
-                // CHANGED: Fetch clubs and events in parallel
+                // Fetch clubs and events in parallel
                 const [eventsRes, clubsRes] = await Promise.all([
                     apiFetch(finalUrl),
                     apiFetch("/api/clubs")
@@ -78,9 +74,8 @@ export default function Events() {
                 if (!eventsRes.ok) throw new Error("Failed to load events");
 
                 const eventsData = await eventsRes.json();
-                setEvents(Array.isArray(eventsData) ? eventsData : []);
+                setAllEvents(Array.isArray(eventsData) ? eventsData : []);
 
-                // Handle clubs response
                 if (clubsRes.ok) {
                     const clubsData = await clubsRes.json();
                     setClubs(Array.isArray(clubsData) ? clubsData : []);
@@ -95,7 +90,7 @@ export default function Events() {
                 setLoading(false);
             }
         })();
-    }, [q, status, timePeriod, user?.email]);
+    }, [user?.email]); // ✅ Only refetch when user changes
 
     // Auto-adjust visibility when club changes
     useEffect(() => {
@@ -104,21 +99,61 @@ export default function Events() {
         }
     }, [form.clubId]);
 
-    // Sort events
-    const visibleEvents = useMemo(() => {
-        if (status === "all") return events;
+    // ✅ CLIENT-SIDE FILTERING - Instant!
+    const filteredEvents = useMemo(() => {
+        let filtered = [...allEvents];
 
-        const map = {
-            upcoming: "UPCOMING",
-            ongoing: "LIVE",
-            past: "ENDED",
-        };
+        // Filter by search query
+        if (q.trim()) {
+            const query = q.toLowerCase();
+            filtered = filtered.filter(ev =>
+                ev.title?.toLowerCase().includes(query) ||
+                ev.content?.toLowerCase().includes(query) ||
+                ev.location?.toLowerCase().includes(query)
+            );
+        }
 
-        return events.filter(ev => ev.status === map[status]);
-    }, [events, status]);
+        // Filter by status
+        if (status !== "all") {
+            const statusMap = {
+                upcoming: "UPCOMING",
+                ongoing: "LIVE",
+                past: "ENDED",
+            };
+            filtered = filtered.filter(ev => ev.status === statusMap[status]);
+        }
 
+        // Filter by time period
+        if (timePeriod !== "all") {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const weekFromNow = new Date(today);
+            weekFromNow.setDate(weekFromNow.getDate() + 7);
+            const monthFromNow = new Date(today);
+            monthFromNow.setMonth(monthFromNow.getMonth() + 1);
+
+            filtered = filtered.filter(ev => {
+                const eventStart = new Date(ev.startAt);
+
+                switch (timePeriod) {
+                    case "today":
+                        return eventStart >= today && eventStart < new Date(today.getTime() + 86400000);
+                    case "week":
+                        return eventStart >= today && eventStart < weekFromNow;
+                    case "month":
+                        return eventStart >= today && eventStart < monthFromNow;
+                    default:
+                        return true;
+                }
+            });
+        }
+
+        return filtered;
+    }, [allEvents, q, status, timePeriod]);
+
+    // ✅ CLIENT-SIDE SORTING - Instant!
     const sorted = useMemo(() => {
-        const arr = [...visibleEvents];
+        const arr = [...filteredEvents];
 
         const STATUS_ORDER = {
             LIVE: 0,
@@ -140,7 +175,7 @@ export default function Events() {
         });
 
         return arr;
-    }, [visibleEvents, sort]);
+    }, [filteredEvents, sort]);
 
     // Form handler
     const handleChange = e => {
@@ -191,7 +226,7 @@ export default function Events() {
             const body = await res.json();
             if (!res.ok) throw new Error(body.message || "Create failed");
 
-            setEvents(prev => [body.event, ...prev]);
+            setAllEvents(prev => [body.event, ...prev]); // ✅ Add to allEvents
 
             setShowAdd(false);
             setForm({

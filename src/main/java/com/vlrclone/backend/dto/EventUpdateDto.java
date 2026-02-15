@@ -5,6 +5,8 @@ import com.vlrclone.backend.Enums.EventVisibility;
 import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.model.Tag;
 import com.vlrclone.backend.model.User;
+import com.vlrclone.backend.Enums.Status;
+
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -38,6 +40,7 @@ public class EventUpdateDto {
 
     public EventUpdateDto() {}
 
+    // ADD this constructor (do not remove your existing one if other endpoints use it)
     public EventUpdateDto(Event e) {
         this.id = e.getId();
         this.title = e.getTitle();
@@ -58,20 +61,77 @@ public class EventUpdateDto {
         if (e.getTags() != null) {
             for (Tag tag : e.getTags()) {
                 if (tag != null && tag.getName() != null) {
-                    tags.add(tag.getName());
+                    this.tags.add(tag.getName());
                 }
             }
         }
 
         this.visibility = e.getVisibility();
+        this.category = e.getCategory();
+        this.externalUrl = e.getExternalUrl();
 
         if (e.getAuthor() != null) {
             this.author = new AuthorDto(e.getAuthor());
         }
-
-        this.category = e.getCategory();
-        this.externalUrl = e.getExternalUrl();
     }
+
+    public EventUpdateDto(
+            Long id,
+            String title,
+            String content,
+            String location,
+            LocalDateTime startAt,
+            LocalDateTime endAt,
+            double averageRating,
+            int ratingCount,
+            Long clubId,
+            String clubName,
+            EventVisibility visibility,
+            EventCategory category,
+            String externalUrl,
+            Long authorId,
+            String authorName,
+            String authorEmail
+    ) {
+        this.id = id;
+        this.title = title;
+        this.content = content;
+        this.location = location;
+        this.startAt = startAt;
+        this.endAt = endAt;
+
+        // Compute status manually (since it's @Transient in entity)
+        this.status = computeStatus(startAt, endAt);
+
+        this.averageRating = averageRating;
+        this.ratingCount = ratingCount;
+
+        this.clubId = clubId;
+        this.clubName = clubName;
+
+        this.visibility = visibility;
+        this.category = category;
+        this.externalUrl = externalUrl;
+
+        if (authorId != null) {
+            this.author = new AuthorDtoStub(authorId, authorName, authorEmail);
+        }
+    }
+
+    private String computeStatus(LocalDateTime startAt, LocalDateTime endAt) {
+        if (startAt == null) return "UPCOMING";
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime effectiveEnd =
+                endAt != null ? endAt : startAt.plusHours(2);
+
+        if (now.isBefore(startAt)) return "UPCOMING";
+        if (now.isAfter(effectiveEnd)) return "ENDED";
+        return "LIVE";
+    }
+
+
+
 
     public static class AuthorDto {
         public Long id;
@@ -84,4 +144,14 @@ public class EventUpdateDto {
             this.email = user.getEmail();
         }
     }
+
+    public static class AuthorDtoStub extends AuthorDto {
+        public AuthorDtoStub(Long id, String name, String email) {
+            super(null);
+            this.id = id;
+            this.name = name;
+            this.email = email;
+        }
+    }
+
 }

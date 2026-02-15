@@ -1,5 +1,6 @@
 package com.vlrclone.backend.repository;
 
+import com.vlrclone.backend.dto.EventUpdateDto;
 import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.model.Tag;
 import org.springframework.data.domain.Pageable;
@@ -8,6 +9,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -175,4 +177,32 @@ public interface EventRepository
             List<Long> clubIds,
             LocalDateTime time
     );
+
+    @Query("""
+SELECT new com.vlrclone.backend.dto.EventUpdateDto(
+    e.id,
+    e.title,
+    e.content,
+    e.location,
+    e.startAt,
+    e.endAt,
+    e.averageRating,
+    e.ratingCount,
+    c.id,
+    c.name,
+    e.visibility,
+    e.category,
+    e.externalUrl,
+    a.id,
+    a.username,
+    a.email
+)
+FROM Event e
+LEFT JOIN e.club c
+LEFT JOIN e.author a
+ORDER BY e.startAt DESC
+""")
+    List<EventUpdateDto> findHomeEventDtos();
+
+
 }

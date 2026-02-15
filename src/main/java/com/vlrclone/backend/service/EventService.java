@@ -524,4 +524,11 @@ public class EventService {
     }
 
 
+    @Transactional(readOnly = true)
+    public List<EventUpdateDto> getHomeEvents() {
+        return eventRepo.findHomeEventDtos();
+    }
+
+
+
 }

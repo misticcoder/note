@@ -49,34 +49,24 @@ function Home() {
         document.title = "Home | InfCom";
         setIsLoading(true);
 
-        // Build URL with user email if logged in
         const url = user
             ? `/api/home?requesterEmail=${encodeURIComponent(user.email)}`
             : '/api/home';
 
-        // Single request fetches everything!
         apiFetch(url)
             .then(res => res.json())
             .then(data => {
-                // Set all state from single response
                 setThreads(Array.isArray(data.threads) ? data.threads : []);
                 setNews(Array.isArray(data.news) ? data.news : []);
                 setEvents(Array.isArray(data.events) ? data.events : []);
                 setClubs(Array.isArray(data.clubs) ? data.clubs : []);
                 setPosts(Array.isArray(data.posts) ? data.posts : []);
-
                 if (isAdmin && data.users) {
                     setUsers(data.users);
                 }
             })
             .catch(err => {
-                console.error("Failed to load home:", err);
-                // Set empty arrays so UI doesn't break
-                setThreads([]);
-                setNews([]);
-                setEvents([]);
-                setClubs([]);
-                setPosts([]);
+                console.error("Load failed:", err);
             })
             .finally(() => {
                 setIsLoading(false);

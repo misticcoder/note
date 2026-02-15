@@ -25,6 +25,7 @@ public class HomeController {
     private final ClubService clubService;
     private final PostService postService;
     private final UserRepository users;
+    private final EventRepository eventRepository;
 
     public HomeController(
             ThreadRepository threads,
@@ -32,14 +33,15 @@ public class HomeController {
             EventService eventService,
             ClubService clubService,
             PostService postService,
-            UserRepository users
-    ) {
+            UserRepository users,
+            EventRepository eventRepository) {
         this.threads = threads;
         this.news = news;
         this.eventService = eventService;
         this.clubService = clubService;
         this.postService = postService;
         this.users = users;
+        this.eventRepository = eventRepository;
     }
 
     @GetMapping
@@ -63,12 +65,9 @@ public class HomeController {
         response.put("news", newsList);
 
         // Events
-        List<EventUpdateDto> eventsList = eventService
-                .searchEventsEntities(null, null, "ALL", null, user)
-                .stream()
-                .map(EventUpdateDto::new)
-                .toList();
+        List<EventUpdateDto> eventsList = eventRepository.findHomeEventDtos();
         response.put("events", eventsList);
+
 
         // Clubs
         List<ClubService.ClubWithCounts> clubsList = clubService.findAllWithCounts(null);
