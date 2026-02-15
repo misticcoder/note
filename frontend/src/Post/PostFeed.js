@@ -9,11 +9,15 @@ import "../styles/Posts.css";
 
 import { apiFetch } from "../api";
 
-export default function PostFeed({eventId}) {
+export default function PostFeed({
+                                     eventId,
+                                     initialPosts, // CHANGED: receive initial posts from Home
+                                     setPosts: setParentPosts // CHANGED: receive setter from Home (optional)
+                                 }) {
     const { user } = useContext(AuthContext);
 
-    const [posts, setPosts] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [posts, setPosts] = useState(initialPosts || []); // CHANGED: initialize with props
+    const [loading, setLoading] = useState(false); // CHANGED: don't load if we have initial data
 
     const [newPost, setNewPost] = useState("");
     const [posting, setPosting] = useState(false);
@@ -71,7 +75,14 @@ export default function PostFeed({eventId}) {
 
             const res = await apiFetch(`/api/posts?${params.toString()}`);
             const data = await res.json();
-            setPosts(sortPosts(Array.isArray(data) ? data : []));
+            const sorted = sortPosts(Array.isArray(data) ? data : []);
+
+            setPosts(sorted);
+
+            // CHANGED: also update parent if setter provided
+            if (setParentPosts) {
+                setParentPosts(sorted);
+            }
 
         } catch (e) {
             console.error("Failed to load posts", e);
@@ -81,9 +92,22 @@ export default function PostFeed({eventId}) {
     };
 
 
+    // CHANGED: only fetch if we're in event context OR we don't have initial posts
     useEffect(() => {
-        fetchPosts();
-    }, [user?.username]);
+        if (isEventContext || !initialPosts) {
+            fetchPosts();
+        } else {
+            // We have initial posts from Home, just sort them
+            setPosts(sortPosts(initialPosts));
+        }
+    }, [user?.username, eventId]);
+
+    // CHANGED: sync with parent when initialPosts change
+    useEffect(() => {
+        if (initialPosts && !isEventContext) {
+            setPosts(sortPosts(initialPosts));
+        }
+    }, [initialPosts, isEventContext]);
 
     /* ===================== CLEANUP PREVIEWS ===================== */
 
@@ -159,13 +183,19 @@ export default function PostFeed({eventId}) {
 
         const liked = post.myLike;
 
-        setPosts(prev =>
+        const updater = prev =>
             prev.map(p =>
                 p.id === post.id
                     ? { ...p, myLike: !liked, likes: liked ? p.likes - 1 : p.likes + 1 }
                     : p
-            )
-        );
+            );
+
+        setPosts(updater);
+
+        // CHANGED: update parent too
+        if (setParentPosts) {
+            setParentPosts(updater);
+        }
 
         try {
             await apiFetch(
@@ -173,13 +203,17 @@ export default function PostFeed({eventId}) {
                 { method: liked ? "DELETE" : "POST" }
             );
         } catch {
-            setPosts(prev =>
+            // Revert on error
+            const reverter = prev =>
                 prev.map(p =>
                     p.id === post.id
                         ? { ...p, myLike: liked, likes: liked ? p.likes + 1 : p.likes - 1 }
                         : p
-                )
-            );
+                );
+            setPosts(reverter);
+            if (setParentPosts) {
+                setParentPosts(reverter);
+            }
         }
     };
 
@@ -188,7 +222,12 @@ export default function PostFeed({eventId}) {
     const requestDeletePost = (post) => {
         confirm(post, async (p) => {
             const snapshot = [...posts];
-            setPosts(prev => prev.filter(x => x.id !== p.id));
+
+            const updater = prev => prev.filter(x => x.id !== p.id);
+            setPosts(updater);
+            if (setParentPosts) {
+                setParentPosts(updater);
+            }
 
             try {
                 const res = await apiFetch(
@@ -200,6 +239,9 @@ export default function PostFeed({eventId}) {
                 if (!res.ok) throw new Error();
             } catch {
                 setPosts(snapshot);
+                if (setParentPosts) {
+                    setParentPosts(snapshot);
+                }
                 alert("Failed to delete post");
             }
         });
@@ -213,7 +255,7 @@ export default function PostFeed({eventId}) {
                                 newImages = [],
                                 imageOrder = [],
                                 references = [],
-                                publishAt, // ✅ ADD THIS
+                                publishAt,
                             }) => {
         const form = new FormData();
 
@@ -225,9 +267,7 @@ export default function PostFeed({eventId}) {
         newImages.forEach(file => form.append("images", file));
         form.append("references", JSON.stringify(references ?? []));
 
-        // ✅ SEND SCHEDULE
         if (publishAt !== undefined) {
-            // empty string => clear schedule
             form.append("publishAt", publishAt);
         }
 
@@ -248,9 +288,13 @@ export default function PostFeed({eventId}) {
 
         const updated = await res.json();
 
-        setPosts(prev =>
-            sortPosts(prev.map(p => (p.id === updated.id ? updated : p)))
-        );
+        const updater = prev =>
+            sortPosts(prev.map(p => (p.id === updated.id ? updated : p)));
+
+        setPosts(updater);
+        if (setParentPosts) {
+            setParentPosts(updater);
+        }
 
         setEditingPost(null);
     };
@@ -271,20 +315,28 @@ export default function PostFeed({eventId}) {
         }
 
         const updated = await res.json();
-        setPosts(prev =>
-            sortPosts(prev.map(p => (p.id === updated.id ? updated : p)))
-        );
 
+        const updater = prev =>
+            sortPosts(prev.map(p => (p.id === updated.id ? updated : p)));
+
+        setPosts(updater);
+        if (setParentPosts) {
+            setParentPosts(updater);
+        }
     };
 
     const incrementShareCount = (postId) => {
-        setPosts(prev =>
+        const updater = prev =>
             prev.map(p =>
                 p.id === postId
                     ? { ...p, shareCount: (p.shareCount || 0) + 1 }
                     : p
-            )
-        );
+            );
+
+        setPosts(updater);
+        if (setParentPosts) {
+            setParentPosts(updater);
+        }
     };
 
 
@@ -306,7 +358,7 @@ export default function PostFeed({eventId}) {
                     </div>
                     <div className="composer-body">
                         <textarea
-                            placeholder={user ? "What’s happening?" : "Log in to create a post"}
+                            placeholder={user ? "What's happening?" : "Log in to create a post"}
                             value={newPost}
                             onChange={e => setNewPost(e.target.value)}
 
@@ -368,7 +420,7 @@ export default function PostFeed({eventId}) {
                                 <input
                                     type="checkbox"
                                     checked={isAnnouncement}
-                                    onChange={e => setIsAnnouncement(e.target.checked)}
+                                    onChange={e => setIsAnnounce(e.target.checked)}
                                     disabled={posting}
                                 />
                                 Announcement

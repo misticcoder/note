@@ -184,3 +184,10 @@ body {
         max-width: 200px;
     }
 }
+
+/* Loading spinner animation - add this to your existing CSS file */
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

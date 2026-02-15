@@ -16,6 +16,9 @@ function Home() {
     const [events, setEvents] = useState([]);
     const [clubs, setClubs] = useState([]);
     const [users, setUsers] = useState([]); // for leader dropdown
+    const [posts, setPosts] = useState([]); // NEW: posts state
+
+    const [isLoading, setIsLoading] = useState(true); // NEW: loading state
 
     const { user } = useContext(AuthContext);
 
@@ -44,39 +47,55 @@ function Home() {
 
     useEffect(() => {
         document.title = "Home | InfCom";
-        apiFetch("/api/threads")
-            .then(res => res.json())
-            .then(data => {
-                const list = Array.isArray(data)
-                    ? data
-                    : Array.isArray(data.content)
-                        ? data.content
+        setIsLoading(true);
+
+        // Fetch ALL data in parallel (no sequential waiting!)
+        Promise.all([
+            apiFetch("/api/threads").then(res => res.json()).catch(() => []),
+            apiFetch("/api/news").then(res => res.json()).catch(() => []),
+            apiFetch("/api/events?status=all").then(res => res.json()).catch(() => []),
+            apiFetch("/api/clubs").then(res => res.json()).catch(() => []),
+            apiFetch("/api/posts").then(res => res.json()).catch(() => []), // NEW: fetch posts
+            isAdmin ? apiFetch("/api/users").then(res => res.json()).catch(() => []) : Promise.resolve([])
+        ])
+            .then(([threadsData, newsData, eventsData, clubsData, postsData, usersData]) => {
+                // Handle threads
+                const threadsList = Array.isArray(threadsData)
+                    ? threadsData
+                    : Array.isArray(threadsData?.content)
+                        ? threadsData.content
                         : [];
+                setThreads(threadsList);
 
-                setThreads(list);
-            })
-            .catch(() => setThreads([]));
-        apiFetch("/api/news").then(res => res.json()).then(setNews).catch(() => setNews([]));
-        apiFetch("/api/events?status=all")
-            .then(res => res.json())
-            .then(data => {
-                const list = Array.isArray(data)
-                    ? data
-                    : Array.isArray(data.content)
-                        ? data.content
+                // Handle news
+                setNews(Array.isArray(newsData) ? newsData : []);
+
+                // Handle events
+                const eventsList = Array.isArray(eventsData)
+                    ? eventsData
+                    : Array.isArray(eventsData?.content)
+                        ? eventsData.content
                         : [];
-                setEvents(list);
+                setEvents(eventsList);
+
+                // Handle clubs
+                setClubs(Array.isArray(clubsData) ? clubsData : []);
+
+                // Handle posts (NEW)
+                setPosts(Array.isArray(postsData) ? postsData : []);
+
+                // Handle users (admin only)
+                if (isAdmin) {
+                    setUsers(Array.isArray(usersData) ? usersData : []);
+                }
             })
-            .catch(() => setEvents([]));
-
-        apiFetch("/api/clubs").then(res => res.json()).then(data => {
-            setClubs(Array.isArray(data) ? data : []);
-        }).catch(() => setClubs([]));
-
-        // preload users for leader dropdown (admins only)
-        if (isAdmin) {
-            apiFetch("/api/users").then(r => r.json()).then(setUsers).catch(() => setUsers([]));
-        }
+            .catch(err => {
+                console.error("Failed to load home data:", err);
+                // Don't alert - just log. Data defaults to empty arrays.
+            })
+            .finally(() => {
+                setIsLoading(false);
+            });
 
     }, [isAdmin]);
 
@@ -252,6 +271,38 @@ function Home() {
     };
 
 
+    // NEW: Loading screen
+    if (isLoading) {
+        return (
+            <main className={"page"}>
+                <div className={"container"}>
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: '60vh',
+                        textAlign: 'center',
+                        gap: '1rem'
+                    }}>
+                        <h2>Loading InfCom...</h2>
+                        <p style={{color: '#666', maxWidth: '400px'}}>
+                            {/* Show helpful message on first load */}
+                        </p>
+                        <div style={{
+                            width: '50px',
+                            height: '50px',
+                            border: '4px solid #f3f3f3',
+                            borderTop: '4px solid #3498db',
+                            borderRadius: '50%',
+                            animation: 'spin 1s linear infinite'
+                        }}></div>
+                    </div>
+                </div>
+            </main>
+        );
+    }
+
 
     return (
         <main className={"page"}>
@@ -261,6 +312,8 @@ function Home() {
                     <aside className={"column threads-column"}>
                         <h3 className={"column-title"}>Discussion Threads</h3>
                         <ThreadSection
+                            threads={threads} // CHANGED: pass threads as prop
+                            setThreads={setThreads} // CHANGED: pass setter for new threads
                             showAddButton={isAdmin}
                             onAddThread={() => setShowThreadModal(true)}
                         />
@@ -269,7 +322,10 @@ function Home() {
                     {/* Daily News */}
                     <aside className="column news-column">
                         <h3 className={"column-title"}>Feed</h3>
-                        <PostFeed/>
+                        <PostFeed
+                            initialPosts={posts} // CHANGED: pass posts as prop
+                            setPosts={setPosts} // CHANGED: pass setter
+                        />
                     </aside>
 
                     {/* Clubs */}

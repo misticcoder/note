@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from "react";
+import { useState, useContext } from "react";
 import { AuthContext } from "../AuthContext";
 import "../styles/Threads.css";
 import {timeAgo} from "../components/timeAgo";
@@ -8,30 +8,17 @@ import {apiFetch} from "../api";
 export default function ThreadSection({
                                           title = "Threads",
                                           width,
-                                          showAddButton = false
+                                          showAddButton = false,
+                                          threads = [], // CHANGED: receive threads from parent
+                                          setThreads // CHANGED: receive setter from parent
                                       }) {
     const { user } = useContext(AuthContext);
-
-    const [threads, setThreads] = useState([]);
 
     // Modal state
     const [showModal, setShowModal] = useState(false);
     const [newThread, setNewThread] = useState({ title: "", content: "" });
 
-    useEffect(() => {
-        apiFetch("/api/threads")
-            .then(r => r.json())
-            .then(data => {
-                const list = Array.isArray(data)
-                    ? data
-                    : Array.isArray(data.content)
-                        ? data.content
-                        : [];
-
-                setThreads(list);
-            })
-            .catch(() => setThreads([]));
-    }, []);
+    // REMOVED: useEffect that fetched threads (now received as props)
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -63,7 +50,11 @@ export default function ThreadSection({
                 return;
             }
 
-            setThreads(prev => [saved, ...prev]);
+            // CHANGED: update parent state if setter is provided
+            if (setThreads) {
+                setThreads(prev => [saved, ...prev]);
+            }
+
             setNewThread({ title: "", content: "" });
             setShowModal(false);
         } catch {
