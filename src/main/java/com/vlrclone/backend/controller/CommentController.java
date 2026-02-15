@@ -121,12 +121,10 @@ public class CommentController {
     @GetMapping("/posts/{postId}/comments")
     public ResponseEntity<List<CommentResponseDto>> getPostComments(
             @PathVariable Long postId,
-            HttpServletRequest request
+            @RequestParam(required = false) String username  // ✅ Optional username
     ) {
-        User user = currentUserService.requireUser(request);
-
         return ResponseEntity.ok(
-                commentService.getPostComments(postId, user.getUsername())
+                commentService.getPostComments(postId, username)
         );
     }
 

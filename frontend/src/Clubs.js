@@ -25,14 +25,14 @@ export default function Clubs() {
     const { user } = useContext(AuthContext);
     const isAdmin = String(user?.role || "").toUpperCase() === "ADMIN";
 
-    const [clubs, setClubs] = useState([]);
+    const [allClubs, setAllClubs] = useState([]); // ✅ Store ALL clubs
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState("");
 
     const [q, setQ] = useState("");
-    const qDebounced = useDebounced(q);
+    const qDebounced = useDebounced(q, 300); // ✅ Keep debounce for search
 
-    // Filters
+    // Filters (now client-side only)
     const [category, setCategory] = useState("ALL");
     const [sortBy, setSortBy] = useState("NAME_ASC");
 
@@ -41,7 +41,7 @@ export default function Clubs() {
     const [editClub, setEditClub] = useState(null);
 
     /* =========================
-       FETCH CLUBS
+       FETCH ALL CLUBS ONCE
     ========================= */
     useEffect(() => {
         document.title = "Clubs Directory | InfCom";
@@ -50,16 +50,14 @@ export default function Clubs() {
             try {
                 setLoading(true);
 
-                const params = new URLSearchParams();
-                if (category !== "ALL") params.set("category", category);
-                if (sortBy && sortBy !== "EVENTS_DESC") params.set("sort", sortBy);
+                // ✅ Fetch ALL clubs without filters (server handles initial load only)
+                const res = await apiFetch('/api/clubs');
 
-                const res = await apiFetch(`/api/clubs?${params.toString()}`);
                 if (!res.ok) throw new Error(`Failed to load clubs (${res.status})`);
 
                 const data = await res.json();
 
-                setClubs(
+                setAllClubs(
                     (Array.isArray(data) ? data : []).map(c => ({
                         id: c.id,
                         name: c.name ?? "",
@@ -80,40 +78,56 @@ export default function Clubs() {
                 setLoading(false);
             }
         })();
-    }, [category, sortBy]);
+    }, []); // ✅ Only fetch once on mount
 
     /* =========================
-       FILTER + SORT (CLIENT)
+       CLIENT-SIDE FILTER + SORT - INSTANT!
     ========================= */
     const filtered = useMemo(() => {
-        const t = qDebounced.toLowerCase();
+        let result = [...allClubs];
 
-        let out = clubs.filter(cl =>
-            cl.name.toLowerCase().includes(t) ||
-            cl.description.toLowerCase().includes(t) ||
-            String(cl.id).includes(t)
-        );
-
-        switch (sortBy) {
-            case "NAME_DESC":
-                out.sort((a, b) => b.name.localeCompare(a.name));
-                break;
-            case "CREATED_NEW":
-                out.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
-                break;
-            case "CREATED_OLD":
-                out.sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
-                break;
-            case "MEMBERS_DESC":
-                out.sort((a, b) => b.memberCount - a.memberCount);
-                break;
-            case "EVENTS_DESC":
-                out.sort((a, b) => b.eventCount - a.eventCount);
-                break;
+        // ✅ Filter by category (instant)
+        if (category !== "ALL") {
+            result = result.filter(cl => cl.category === category);
         }
 
-        return out;
-    }, [clubs, qDebounced, sortBy]);
+        // ✅ Filter by search query (instant with debounce)
+        if (qDebounced.trim()) {
+            const searchTerm = qDebounced.toLowerCase();
+            result = result.filter(cl =>
+                cl.name.toLowerCase().includes(searchTerm) ||
+                cl.description.toLowerCase().includes(searchTerm) ||
+                String(cl.id).includes(searchTerm)
+            );
+        }
+
+        // ✅ Sort (instant)
+        switch (sortBy) {
+            case "NAME_ASC":
+                result.sort((a, b) => a.name.localeCompare(b.name));
+                break;
+            case "NAME_DESC":
+                result.sort((a, b) => b.name.localeCompare(a.name));
+                break;
+            case "CREATED_NEW":
+                result.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+                break;
+            case "CREATED_OLD":
+                result.sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
+                break;
+            case "MEMBERS_DESC":
+                result.sort((a, b) => b.memberCount - a.memberCount);
+                break;
+            case "EVENTS_DESC":
+                result.sort((a, b) => b.eventCount - a.eventCount);
+                break;
+            default:
+                // NAME_ASC by default
+                result.sort((a, b) => a.name.localeCompare(b.name));
+        }
+
+        return result;
+    }, [allClubs, category, qDebounced, sortBy]);
 
     /* =========================
        ADMIN ACTIONS
@@ -143,7 +157,8 @@ export default function Clubs() {
                 throw new Error(body.message || `Update failed (${res.status})`);
             }
 
-            setClubs(prev =>
+            // ✅ Update in allClubs
+            setAllClubs(prev =>
                 prev.map(c => (c.id === editClub.id ? { ...c, ...editClub } : c))
             );
 
@@ -164,7 +179,9 @@ export default function Clubs() {
                 const body = await res.json().catch(() => ({}));
                 throw new Error(body.message || `Delete failed (${res.status})`);
             }
-            setClubs(prev => prev.filter(c => c.id !== cl.id));
+
+            // ✅ Remove from allClubs
+            setAllClubs(prev => prev.filter(c => c.id !== cl.id));
         } catch (e) {
             alert(e.message || "Delete failed");
         }
@@ -181,7 +198,11 @@ export default function Clubs() {
                         <h2>Clubs</h2>
 
                         <div className={"events-controls"}>
-                            <select className={"sort-select"} value={category} onChange={e => setCategory(e.target.value)}>
+                            <select
+                                className={"sort-select"}
+                                value={category}
+                                onChange={e => setCategory(e.target.value)}
+                            >
                                 <option value="ALL">All categories</option>
                                 <option value="SPORTS">Sports</option>
                                 <option value="ACADEMIC">Academic</option>
@@ -191,7 +212,11 @@ export default function Clubs() {
                                 <option value="OTHER">Other</option>
                             </select>
 
-                            <select className={"sort-select"} value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                            <select
+                                className={"sort-select"}
+                                value={sortBy}
+                                onChange={e => setSortBy(e.target.value)}
+                            >
                                 <option value="NAME_ASC">Name (A–Z)</option>
                                 <option value="NAME_DESC">Name (Z–A)</option>
                                 <option value="CREATED_NEW">Newest first</option>
@@ -229,7 +254,7 @@ export default function Clubs() {
                             {filtered.map((cl, idx) => (
                                 <div key={cl.id} className="clubs-row">
                                     <div className="rank">{idx + 1}</div>
-                                    <div >{cl.category}</div>
+                                    <div>{cl.category}</div>
                                     <div>
                                         <a href={`#/clubs/${cl.id}`}>{cl.name}</a>
                                     </div>
@@ -286,10 +311,16 @@ export default function Clubs() {
                                         rows={6}
                                     />
                                     <div className="modal-actions">
-                                        <button type="button" onClick={() => setShowEdit(false)}>
+                                        <button
+                                            type="button"
+                                            className="cancelBtn"
+                                            onClick={() => setShowEdit(false)}
+                                        >
                                             Cancel
                                         </button>
-                                        <button type="submit">Save</button>
+                                        <button type="submit" className="saveBtn">
+                                            Save
+                                        </button>
                                     </div>
                                 </form>
                             </div>

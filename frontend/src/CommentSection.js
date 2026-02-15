@@ -74,22 +74,25 @@ export default function CommentSection({
     const tree = buildCommentTree(Array.isArray(comments) ? comments : []);
 
     /* ===============================
-       Reactions
-    ================================ */
+   Reactions
+================================ */
     async function toggleReaction(comment, type) {
-        if (!user) return;
+        if (!user || !user.email) return;  // ✅ Add email check
 
-        await apiFetch(`/api/comments/${comment.id}/reactions`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-User-Email": user.email   // 🔑 REQUIRED NOW
-            },
-            body: JSON.stringify({ type })
-        });
+        try {
+            await apiFetch(`/api/comments/${comment.id}/reactions`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-User-Email": user.email
+                },
+                body: JSON.stringify({ type })
+            });
 
-
-        refreshComments();
+            await refreshComments();
+        } catch (err) {
+            console.error("Failed to toggle reaction:", err);
+        }
     }
 
     /* ===============================

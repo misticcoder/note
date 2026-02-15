@@ -71,27 +71,27 @@ export default function PostDetailPage() {
     const fetchComments = useCallback(async () => {
         if (!postId) return;
 
-        const usernameParam = user?.username
-            ? `?username=${encodeURIComponent(user.username)}`
-            : "";
+        try {
+            const usernameParam = user?.username
+                ? `?username=${encodeURIComponent(user.username)}`
+                : "";
 
-        const res = await apiFetch(
-            `/api/posts/${postId}/comments${usernameParam}`,
-            {
-                headers: {
-                    "X-User-Email": user.email
-                }
+            const res = await apiFetch(
+                `/api/posts/${postId}/comments${usernameParam}`
+                // ✅ No headers needed anymore!
+            );
+
+            if (!res.ok) {
+                setComments([]);
+                return;
             }
-        );
 
-
-        if (!res.ok) {
+            const data = await res.json();
+            setComments(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error("Failed to fetch comments:", err);
             setComments([]);
-            return;
         }
-
-        const data = await res.json();
-        setComments(Array.isArray(data) ? data : []);
     }, [postId, user?.username]);
 
     /* ===================== INITIAL LOAD ===================== */

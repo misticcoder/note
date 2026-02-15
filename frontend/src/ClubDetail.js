@@ -235,14 +235,13 @@ export default function ClubDetail() {
 
 
 
-    // REPLACE THIS SECTION IN ClubDetail.jsx (around line 244)
-// Find the useEffect that starts with: useEffect(() => { if (!clubId) return;
-
+    // ✅ OPTIMIZED: FETCH ALL DATA ONCE - Including events for instant tab switching
     useEffect(() => {
         if (!clubId) return;
+
         (async () => {
             try {
-                // OPTIMIZED: Fetch all data in parallel
+                // Base requests (always fetch)
                 const requests = [
                     apiFetch(`/api/clubs/${clubId}`).then((r) => r.json()).catch(() => null),
                     apiFetch(`/api/clubs/${clubId}/news`).then((r) => r.json()).catch(() => []),
@@ -258,7 +257,7 @@ export default function ClubDetail() {
                             .catch(() => ({ isMember: false, hasPending: false, requestId: null }))
                     );
 
-                    if (canApproveRequests) {
+                    if (isAdmin) {
                         requests.push(
                             apiFetch(`/api/clubs/${clubId}/join-requests?requesterEmail=${encodeURIComponent(user.email)}`)
                                 .then((r) => r.ok ? r.json() : [])
@@ -267,7 +266,7 @@ export default function ClubDetail() {
                     }
                 }
 
-                // Wait for all requests to complete
+                // Wait for all base requests
                 const results = await Promise.all(requests);
 
                 // Destructure results
@@ -282,59 +281,47 @@ export default function ClubDetail() {
                     const statusData = results[4];
                     setMyStatus(statusData || { isMember: false, hasPending: false, requestId: null });
 
-                    if (canApproveRequests && results[5]) {
+                    if (isAdmin && results[5]) {
                         setPending(results[5]);
                     } else {
                         setPending([]);
                     }
+
+                    // ✅ FETCH EVENTS if user is logged in and has access
+                    // Determine if user can view events (after membership is loaded)
+                    const tempIsLeader = membersData.some((m) => m.user?.id === user.id && m.role === "LEADER");
+                    const tempIsCoLeader = membersData.some((m) => m.user?.id === user.id && m.role === "CO_LEADER");
+                    const tempIsMember = statusData?.isMember || membersData.some((m) => m.user?.id === user.id);
+
+                    const canViewEvents = isAdmin || tempIsLeader || tempIsCoLeader || tempIsMember;
+
+                    if (canViewEvents) {
+                        try {
+                            const eventsUrl = `/api/events/club/${clubId}?status=all&requesterEmail=${encodeURIComponent(user.email)}`;
+                            const eventsRes = await apiFetch(eventsUrl);
+
+                            if (eventsRes.ok) {
+                                const eventsData = await eventsRes.json();
+                                setEvents(Array.isArray(eventsData) ? eventsData : []);
+                            } else {
+                                setEvents([]);
+                            }
+                        } catch {
+                            setEvents([]);
+                        }
+                    } else {
+                        setEvents([]);
+                    }
                 } else {
                     setMyStatus({ isMember: false, hasPending: false, requestId: null });
                     setPending([]);
+                    setEvents([]);
                 }
             } catch (err) {
                 console.error("Failed to load club data:", err);
             }
         })();
-    }, [clubId, user?.email, canApproveRequests]);
-
-    useEffect(() => {
-        if (!clubId) return;
-        if (!user) return;
-
-        // Wait until role / membership is known
-        const roleResolved =
-            isAdmin ||
-            isLeader ||
-            isCoLeader ||
-            myStatus.isMember;
-
-        if (!roleResolved) return;
-
-        const load = async () => {
-            try {
-                const url =
-                    `/api/events/club/${clubId}?status=all` +
-                    `&requesterEmail=${encodeURIComponent(user.email)}`;
-
-                const res = await apiFetch(url);
-                if (!res.ok) throw new Error();
-
-                const data = await res.json();
-                setEvents(Array.isArray(data) ? data : []);
-            } catch {
-                setEvents([]);
-            }
-        };
-
-        load();
-    }, [
-        clubId,
-        user?.email,
-        isAdmin,
-        isLeader,
-        isCoLeader,
-        myStatus.isMember
-    ]);
+    }, [clubId, user?.email, isAdmin]);
 
     const decide = async (requestId, decision) => {
         const url = `/api/clubs/${clubId}/join-requests/${requestId}/decision?requesterEmail=${encodeURIComponent(
@@ -591,7 +578,7 @@ export default function ClubDetail() {
         );
 
     const userLabel = (uid) => {
-        if (!uid) return "Unknown User";  // Add this check
+        if (!uid) return "Unknown User";
         const u = userMap.get(uid);
         if (!u) return `User #${uid}`;
         return `${u.username} (${u.email})`;
@@ -627,7 +614,6 @@ export default function ClubDetail() {
             return;
         }
 
-        // ✅ update club.links locally
         setClub(prev => ({
             ...prev,
             links: [...(prev.links || []), body]
@@ -871,89 +857,89 @@ export default function ClubDetail() {
                                                 >
 
                                                     {!isEditing ? (
-                                                        <>
+                                                            <>
                                                             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                                                <a
-                                                                    href={link.url}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    className={`social-icon ${meta.className}`}
-                                                                    title={meta.label}
-                                                                    aria-label={meta.label}
-                                                                >
-                                                                    <i className={`fa ${meta.icon}`} />
-                                                                </a>
 
-                                                                <span style={{ fontWeight: 600, color: "black" }}>{meta.label}</span>
+                                                                href={link.url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className={`social-icon ${meta.className}`}
+                                                                title={meta.label}
+                                                                aria-label={meta.label}
+                                                                >
+                                                                <i className={`fa ${meta.icon}`} />
+                                                            </div>
+                                                            <div>
+                                                            <span style={{ fontWeight: 600, color: "black" }}>{meta.label}</span>
                                                             </div>
 
-                                                            {canManageLinks && (
-                                                                <button
-                                                                    onClick={() => setEditingLink({
-                                                                        ...link,
-                                                                        _original: { type: link.type, url: link.url }
-                                                                    })}
-                                                                    style={s.primaryBtnSm}
-                                                                >
-                                                                    Edit
-                                                                </button>
-                                                            )}
+                                                        {canManageLinks && (
+                                                            <button
+                                                                onClick={() => setEditingLink({
+                                                                    ...link,
+                                                                    _original: { type: link.type, url: link.url }
+                                                                })}
+                                                                style={s.primaryBtnSm}
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                        )}
                                                         </>
 
-                                                    ) : (
+                                                        ) : (
                                                         <form
-                                                            onSubmit={saveEditedLink}
-                                                            style={{
-                                                                display: "flex",
-                                                                gap: 8,
-                                                                width: "100%",
-                                                                alignItems: "center"
-                                                            }}
-                                                        >
-                                                            <select
-                                                                value={editingLink.type}
-                                                                onChange={e =>
-                                                                    setEditingLink(l => ({
-                                                                        ...l,
-                                                                        type: e.target.value
-                                                                    }))
-                                                                }
-                                                            >
-                                                                <option value="WHATSAPP">WhatsApp</option>
-                                                                <option value="DISCORD">Discord</option>
-                                                                <option value="INSTAGRAM">Instagram</option>
-                                                                <option value="TELEGRAM">Telegram</option>
-                                                                <option value="WEBSITE">Website</option>
-                                                            </select>
+                                                        onSubmit={saveEditedLink}
+                                                    style={{
+                                                        display: "flex",
+                                                        gap: 8,
+                                                        width: "100%",
+                                                        alignItems: "center"
+                                                    }}
+                                                >
+                                                    <select
+                                                        value={editingLink.type}
+                                                        onChange={e =>
+                                                            setEditingLink(l => ({
+                                                                ...l,
+                                                                type: e.target.value
+                                                            }))
+                                                        }
+                                                    >
+                                                        <option value="WHATSAPP">WhatsApp</option>
+                                                        <option value="DISCORD">Discord</option>
+                                                        <option value="INSTAGRAM">Instagram</option>
+                                                        <option value="TELEGRAM">Telegram</option>
+                                                        <option value="WEBSITE">Website</option>
+                                                    </select>
 
-                                                            <input
-                                                                type="url"
-                                                                value={editingLink.url}
-                                                                onChange={e =>
-                                                                    setEditingLink(l => ({
-                                                                        ...l,
-                                                                        url: e.target.value
-                                                                    }))
-                                                                }
-                                                                required
-                                                                style={{flex: 1}}
-                                                            />
+                                                    <input
+                                                        type="url"
+                                                        value={editingLink.url}
+                                                        onChange={e =>
+                                                            setEditingLink(l => ({
+                                                                ...l,
+                                                                url: e.target.value
+                                                            }))
+                                                        }
+                                                        required
+                                                        style={{flex: 1}}
+                                                    />
 
-                                                            <button type="submit" style={s.primaryBtnSm}>
-                                                                Save
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                onClick={cancelEditLink}
-                                                                style={s.dangerBtnSm}
-                                                            >
-                                                                Cancel
-                                                            </button>
+                                                    <button type="submit" style={s.primaryBtnSm}>
+                                                        Save
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={cancelEditLink}
+                                                        style={s.dangerBtnSm}
+                                                    >
+                                                        Cancel
+                                                    </button>
 
-                                                        </form>
-                                                    )}
-                                                </li>
-                                            );
+                                                </form>
+                                            )}
+                                        </li>
+                                        );
                                         })}
                                     </ul>
 
@@ -1042,13 +1028,11 @@ export default function ClubDetail() {
                                             <span style={s.badge}>MEMBER</span>
                                         );
 
-                                        // Permissions vs this target
                                         const canKickThisUser =
                                             isAdmin || (isLeader && !isThisLeader) || (isCoLeader && isThisMember);
 
                                         const canPromoteToCoLeader = (isLeader || isAdmin) && isThisMember;
 
-                                        // Admin can demote CO_LEADER; Leader can demote CO_LEADER
                                         const canDemoteToMember =
                                             (isLeader && isThisCoLeader) || (isAdmin && !isSelf && isThisCoLeader);
 
@@ -1077,7 +1061,6 @@ export default function ClubDetail() {
 
                                                 {canSeeActionMenu && !isSelf && menuOpen && (
                                                     <div style={s.menu}>
-                                                        {/* Admin: set sole LEADER */}
                                                         {isAdmin && !isThisLeader && (
                                                             <button
                                                                 style={s.menuItem}
@@ -1095,7 +1078,6 @@ export default function ClubDetail() {
                                                             </button>
                                                         )}
 
-                                                        {/* Leader/Admin: promote MEMBER -> CO_LEADER */}
                                                         {canPromoteToCoLeader && (
                                                             <button
                                                                 style={s.menuItem}
@@ -1105,7 +1087,6 @@ export default function ClubDetail() {
                                                             </button>
                                                         )}
 
-                                                        {/* Leader or Admin: CO_LEADER -> MEMBER */}
                                                         {canDemoteToMember && (
                                                             <button
                                                                 style={s.menuItem}
@@ -1115,7 +1096,6 @@ export default function ClubDetail() {
                                                             </button>
                                                         )}
 
-                                                        {/* Kick */}
                                                         {canKickThisUser && (
                                                             <button
                                                                 style={{...s.menuItem, color: "#b00020"}}
@@ -1217,7 +1197,6 @@ export default function ClubDetail() {
                 )}
 
 
-                {/* 🔔 Admin Settings Tab */}
                 {activeTab === "settings" && isAdmin && (
                     <div style={{margin: "15px"}}>
                         <div style={s.sectionHeader}>
@@ -1293,8 +1272,8 @@ export default function ClubDetail() {
                                         location: createForm.location.trim(),
                                         startAt: createForm.startAt,
                                         endAt: createForm.endAt || null,
-                                        clubId: clubId,                 // 🔒 locked
-                                        visibility: "CLUB_MEMBERS",     // 🔒 forced
+                                        clubId: clubId,
+                                        visibility: "CLUB_MEMBERS",
                                         tags: createForm.tags
                                             ? createForm.tags
                                                 .split(",")
@@ -1334,7 +1313,6 @@ export default function ClubDetail() {
                                     }
                                 }}
                             >
-                                {/* Club (locked, visible) */}
                                 <input
                                     value={club.name}
                                     disabled
@@ -1411,7 +1389,6 @@ export default function ClubDetail() {
 
                 {activeTab === "members" && (
                     <div style={{margin: "15px"}}>
-                        {/* Members & Pending */}
                         <div>
                             <div style={s.sectionHeader}>
                                 <h3 style={s.h3}>Members</h3>
@@ -1434,25 +1411,23 @@ export default function ClubDetail() {
                                             <span style={s.badge}>MEMBER</span>
                                         );
 
-                                        // Permissions vs this target
                                         const canKickThisUser =
                                             isAdmin || (isLeader && !isThisLeader) || (isCoLeader && isThisMember);
 
                                         const canPromoteToCoLeader = (isLeader || isAdmin) && isThisMember;
 
-                                        // Admin can demote CO_LEADER; Leader can demote CO_LEADER
                                         const canDemoteToMember =
                                             (isLeader && isThisCoLeader) || (isAdmin && !isSelf && isThisCoLeader);
 
 
                                         return (
                                             <li key={m.id} style={{...s.listItem, position: "relative"}}>
-                    <span
-                        onClick={() => setOpenMember(menuOpen ? null : m.user?.id)}
-                        style={{cursor: canSeeActionMenu ? "pointer" : "default"}}
-                    >
-                      {userLabel(m.user?.id)}
-                    </span>
+                                                <span
+                                                    onClick={() => setOpenMember(menuOpen ? null : m.user?.id)}
+                                                    style={{cursor: canSeeActionMenu ? "pointer" : "default"}}
+                                                >
+                                                    {userLabel(m.user?.id)}
+                                                </span>
 
                                                 <div style={{display: "flex", alignItems: "center", gap: 8}}>
                                                     {badge}
@@ -1469,7 +1444,6 @@ export default function ClubDetail() {
 
                                                 {canSeeActionMenu && !isSelf && menuOpen && (
                                                     <div style={s.menu}>
-                                                        {/* Admin: set sole LEADER */}
                                                         {isAdmin && !isThisLeader && (
                                                             <button
                                                                 style={s.menuItem}
@@ -1487,7 +1461,6 @@ export default function ClubDetail() {
                                                             </button>
                                                         )}
 
-                                                        {/* Leader/Admin: promote MEMBER -> CO_LEADER */}
                                                         {canPromoteToCoLeader && (
                                                             <button
                                                                 style={s.menuItem}
@@ -1497,7 +1470,6 @@ export default function ClubDetail() {
                                                             </button>
                                                         )}
 
-                                                        {/* Leader or Admin: CO_LEADER -> MEMBER */}
                                                         {canDemoteToMember && (
                                                             <button
                                                                 style={s.menuItem}
@@ -1507,7 +1479,6 @@ export default function ClubDetail() {
                                                             </button>
                                                         )}
 
-                                                        {/* Kick */}
                                                         {canKickThisUser && (
                                                             <button
                                                                 style={{...s.menuItem, color: "#b00020"}}
@@ -1560,9 +1531,17 @@ export default function ClubDetail() {
                         </div>
                     </div>
                 )}
+
+                {editingEvent && (
+                    <EditEventModal
+                        event={editingEvent}
+                        clubs={[club]}
+                        onSave={saveEvent}
+                        onClose={() => setEditingEvent(null)}
+                    />
+                )}
             </div>
 
-            {/* 🔔 Report Modal */}
             {showReportModal && (
                 <div className="modal-backdrop" onClick={() => setShowReportModal(false)}>
                     <div className="modal-card" onClick={(e) => e.stopPropagation()}>
@@ -1748,7 +1727,6 @@ const s = {
     },
     actions: {display: "flex", gap: 8},
 
-    // tiny absolute dropdown menu
     menu: {
         position: "absolute",
         right: 10,
@@ -1774,7 +1752,6 @@ const s = {
     },
 };
 
-// style helpers
 function button(bg, fg, small = false) {
     return {
         background: bg,

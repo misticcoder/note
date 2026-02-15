@@ -15,6 +15,7 @@ export default function ThreadPage() {
     const { user } = useContext(AuthContext);
 
     const [thread, setThread] = useState(null);
+    const [threads, setThreads] = useState([]); // ✅ ADD: threads list for sidebar
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState("");
     const [loading, setLoading] = useState(true);
@@ -29,7 +30,6 @@ export default function ThreadPage() {
     const isAdmin = role === "ADMIN";
 
     /* ===================== CONFIRM HOOK ===================== */
-
     const {
         confirmState,
         confirm,
@@ -38,26 +38,39 @@ export default function ThreadPage() {
     } = useConfirm();
 
     /* ===================== THREAD ID ===================== */
-
     const threadId = (() => {
         const m = (window.location.hash || "").match(/^#\/threads\/(\d+)/i);
         return m ? Number(m[1]) : null;
     })();
 
     /* ===================== PERMISSION CHECK ===================== */
-    // User can edit if they're admin OR author
     const canEdit = thread && user && (isAdmin || thread.author === user.username);
 
     /* ===================== DOCUMENT TITLE ===================== */
-
     useEffect(() => {
         document.title = thread?.title
             ? `${thread.title} | InfCom`
             : "InfCom";
     }, [thread]);
 
-    /* ===================== FETCH COMMENTS ===================== */
+    /* ===================== FETCH ALL THREADS FOR SIDEBAR ===================== */
+    useEffect(() => {
+        // Fetch threads list for sidebar
+        apiFetch("/api/threads")
+            .then(res => {
+                if (!res.ok) throw new Error();
+                return res.json();
+            })
+            .then(data => {
+                setThreads(Array.isArray(data) ? data : []);
+            })
+            .catch(err => {
+                console.error("Failed to load threads:", err);
+                setThreads([]);
+            });
+    }, []); // Only fetch once on mount
 
+    /* ===================== FETCH COMMENTS ===================== */
     const fetchComments = useCallback(
         async (signal) => {
             if (!threadId) return;
@@ -82,7 +95,6 @@ export default function ThreadPage() {
     );
 
     /* ===================== FETCH THREAD + COMMENTS ===================== */
-
     useEffect(() => {
         if (!threadId) return;
 
@@ -120,7 +132,6 @@ export default function ThreadPage() {
     }, [threadId, fetchComments]);
 
     /* ===================== EDIT THREAD ===================== */
-
     const openEditModal = () => {
         if (!canEdit) return;
         setEditTitle(thread.title);
@@ -157,6 +168,13 @@ export default function ThreadPage() {
                 content: editContent
             }));
 
+            // ✅ Also update in threads list
+            setThreads(prev => prev.map(t =>
+                t.id === threadId
+                    ? { ...t, title: editTitle, content: editContent }
+                    : t
+            ));
+
             setShowEditModal(false);
         } catch (e) {
             alert(e.message || "Failed to update thread");
@@ -164,7 +182,6 @@ export default function ThreadPage() {
     };
 
     /* ===================== DELETE THREAD ===================== */
-
     const requestDeleteThread = () => {
         if (!canEdit) return;
 
@@ -191,7 +208,6 @@ export default function ThreadPage() {
     };
 
     /* ===================== POST COMMENT ===================== */
-
     const postComment = async (e, parentId = null) => {
         e.preventDefault();
 
@@ -238,7 +254,6 @@ export default function ThreadPage() {
     };
 
     /* ===================== DELETE COMMENT (CONFIRMED) ===================== */
-
     const requestDeleteComment = (commentId) => {
         if (!user) {
             alert("You must be logged in.");
@@ -270,7 +285,6 @@ export default function ThreadPage() {
     };
 
     /* ===================== INVALID THREAD ===================== */
-
     if (!threadId) {
         return (
             <div className="wrap">
@@ -283,7 +297,6 @@ export default function ThreadPage() {
     }
 
     /* ===================== RENDER ===================== */
-
     return (
         <div className="page">
             <div className="container">
@@ -297,7 +310,11 @@ export default function ThreadPage() {
                     <div className="page-row">
                         {/* SIDEBAR */}
                         <aside className="thread-sidebar">
-                            <ThreadSection showAddButton={isAdmin} />
+                            <ThreadSection
+                                threads={threads}        // ✅ Pass threads
+                                setThreads={setThreads}  // ✅ Pass setter
+                                showAddButton={isAdmin}
+                            />
                         </aside>
 
                         {/* MAIN CONTENT */}
@@ -317,7 +334,6 @@ export default function ThreadPage() {
                                             {thread.title}
                                         </h2>
 
-                                        {/* ✅ DROPDOWN for admin or author */}
                                         {canEdit && (
                                             <Dropdown
                                                 onEdit={openEditModal}
