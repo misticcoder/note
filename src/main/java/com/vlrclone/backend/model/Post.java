@@ -6,7 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "posts")
+@Table(name = "posts", indexes = {
+        @Index(name = "idx_post_created_at", columnList = "createdAt"),
+        @Index(name = "idx_post_author", columnList = "author"),
+        @Index(name = "idx_post_event_id", columnList = "event_id"),
+        @Index(name = "idx_post_pinned", columnList = "pinned")
+})
 public class Post {
 
     @Id

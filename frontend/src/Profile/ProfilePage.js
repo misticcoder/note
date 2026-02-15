@@ -75,58 +75,35 @@ export default function ProfilePage() {
 
         const headers = { "X-User-Email": user.email };
 
+        // OPTIMIZED: All requests fire in parallel
         Promise.all([
             apiFetch(`/api/me/profile`, { headers })
-                .then(r => {
-                    if (!r.ok) throw new Error('Profile fetch failed');
-                    return r.json();
-                })
-                .catch(err => {
-                    console.error("Profile error:", err);
-                    return null;
-                }),
+                .then(r => r.ok ? r.json() : null)
+                .catch(() => null),
 
             apiFetch(`/api/me/events`, { headers })
-                .then(r => {
-                    if (!r.ok) throw new Error('Events fetch failed');
-                    return r.json();
-                })
-                .catch(err => {
-                    console.error("Events error:", err);
-                    return [];
-                }),
+                .then(r => r.ok ? r.json() : [])
+                .catch(() => []),
 
             apiFetch(`/api/me/clubs`, { headers })
-                .then(r => {
-                    if (!r.ok) throw new Error('Clubs fetch failed');
-                    return r.json();
-                })
-                .catch(err => {
-                    console.error("Clubs error:", err);
-                    return [];
-                }),
+                .then(r => r.ok ? r.json() : [])
+                .catch(() => []),
 
             apiFetch(`/api/me/recommendations`, { headers })
-                .then(r => {
-                    if (!r.ok) throw new Error('Recommendations fetch failed');
-                    return r.json();
-                })
-                .catch(err => {
-                    console.error("Recommendations error:", err);
-                    return [];
-                })
+                .then(r => r.ok ? r.json() : [])
+                .catch(() => [])
         ])
-            .then(([profileData, eventsData, clubsData, recommended]) => {
-                // Ensure we always have valid data
+            .then(([profileData, eventsData, clubsData, recommendedData]) => {
                 setProfile(profileData);
                 setEvents(Array.isArray(eventsData) ? eventsData : []);
                 setClubs(Array.isArray(clubsData) ? clubsData : []);
-                setRecommendedEvents(Array.isArray(recommended) ? recommended : []);
+                setRecommendedEvents(Array.isArray(recommendedData) ? recommendedData : []);
             })
             .catch((err) => {
-                console.error("Unexpected error:", err);
+                console.error("Critical profile load error:", err);
                 setError("Failed to load profile");
-                // Keep arrays initialized even on error
+                // Ensure arrays are always set
+                setProfile(null);
                 setEvents([]);
                 setClubs([]);
                 setRecommendedEvents([]);

@@ -5,10 +5,11 @@ import com.vlrclone.backend.Enums.Status;
 import jakarta.persistence.*;
 
 @Entity
-@Table(
-        name = "event_attendance",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"event_id", "user_id"})
-)
+@Table(name = "event_attendance", indexes = {
+        @Index(name = "idx_attendance_event_user", columnList = "event_id, user_id", unique = true),
+        @Index(name = "idx_attendance_user_id", columnList = "user_id"),
+        @Index(name = "idx_attendance_status", columnList = "status")
+})
 public class EventAttendance {
 
     @Id

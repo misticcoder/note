@@ -7,7 +7,9 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "threads")
+@Table(name = "threads", indexes = {
+        @Index(name = "idx_thread_published", columnList = "published")
+})
 public class Thread {
 
     @Id

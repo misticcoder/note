@@ -47,28 +47,7 @@ export default function Events() {
     const [status, setStatus] = useState("all");
     const [timePeriod, setTimePeriod] = useState("all");
 
-    // Load clubs
-    useEffect(() => {
-        (async () => {
-            try {
-                const res = await apiFetch("/api/clubs");
-                if (!res.ok) return;
-                const data = await res.json();
-                setClubs(Array.isArray(data) ? data : []);
-            } catch {
-                setClubs([]);
-            }
-        })();
-    }, []);
-
-    // Auto-adjust visibility when club changes
-    useEffect(() => {
-        if (!form.clubId) {
-            setForm(f => ({ ...f, visibility: "PUBLIC" }));
-        }
-    }, [form.clubId]);
-
-    // Load events
+    // OPTIMIZED: Load clubs and events in parallel
     useEffect(() => {
         document.title = "Events | InfCom";
 
@@ -90,11 +69,25 @@ export default function Events() {
                     ? `${url}${url.includes("?") ? "&" : "?"}requesterEmail=${encodeURIComponent(user.email)}`
                     : url;
 
-                const res = await apiFetch(finalUrl);
-                if (!res.ok) throw new Error("Failed to load events");
+                // CHANGED: Fetch clubs and events in parallel
+                const [eventsRes, clubsRes] = await Promise.all([
+                    apiFetch(finalUrl),
+                    apiFetch("/api/clubs")
+                ]);
 
-                const data = await res.json();
-                setEvents(Array.isArray(data) ? data : []);
+                if (!eventsRes.ok) throw new Error("Failed to load events");
+
+                const eventsData = await eventsRes.json();
+                setEvents(Array.isArray(eventsData) ? eventsData : []);
+
+                // Handle clubs response
+                if (clubsRes.ok) {
+                    const clubsData = await clubsRes.json();
+                    setClubs(Array.isArray(clubsData) ? clubsData : []);
+                } else {
+                    setClubs([]);
+                }
+
                 setErr("");
             } catch (e) {
                 setErr(e.message);
@@ -103,6 +96,13 @@ export default function Events() {
             }
         })();
     }, [q, status, timePeriod, user?.email]);
+
+    // Auto-adjust visibility when club changes
+    useEffect(() => {
+        if (!form.clubId) {
+            setForm(f => ({ ...f, visibility: "PUBLIC" }));
+        }
+    }, [form.clubId]);
 
     // Sort events
     const visibleEvents = useMemo(() => {

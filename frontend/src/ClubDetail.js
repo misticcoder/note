@@ -235,48 +235,55 @@ export default function ClubDetail() {
 
 
 
+    // REPLACE THIS SECTION IN ClubDetail.jsx (around line 244)
+// Find the useEffect that starts with: useEffect(() => { if (!clubId) return;
+
     useEffect(() => {
         if (!clubId) return;
         (async () => {
             try {
-                const [c, n, m] = await Promise.all([
-                    apiFetch(`/api/clubs/${clubId}`).then((r) => r.json()),
-                    apiFetch(`/api/clubs/${clubId}/news`).then((r) => r.json()),
-                    apiFetch(`/api/clubs/${clubId}/members`).then((r) => r.json()),
-                ]).catch(() => [null, [], []]);
+                // OPTIMIZED: Fetch all data in parallel
+                const requests = [
+                    apiFetch(`/api/clubs/${clubId}`).then((r) => r.json()).catch(() => null),
+                    apiFetch(`/api/clubs/${clubId}/news`).then((r) => r.json()).catch(() => []),
+                    apiFetch(`/api/clubs/${clubId}/members`).then((r) => r.json()).catch(() => []),
+                    apiFetch("/api/users").then((r) => r.ok ? r.json() : []).catch(() => []),
+                ];
 
-                setClub(c);
-                setNews(Array.isArray(n) ? n : []);
-                setMembers(Array.isArray(m) ? m : []);
+                // Add user-specific requests if logged in
+                if (user) {
+                    requests.push(
+                        apiFetch(`/api/clubs/${clubId}/status?requesterEmail=${encodeURIComponent(user.email)}`)
+                            .then((r) => r.ok ? r.json() : { isMember: false, hasPending: false, requestId: null })
+                            .catch(() => ({ isMember: false, hasPending: false, requestId: null }))
+                    );
 
-                // users (for labels)
-                const usersRes = await apiFetch("/api/users");
-                const usersBody = usersRes.ok ? await usersRes.json() : [];
-                setUsers(Array.isArray(usersBody) ? usersBody : usersBody.content || []);
+                    if (canApproveRequests) {
+                        requests.push(
+                            apiFetch(`/api/clubs/${clubId}/join-requests?requesterEmail=${encodeURIComponent(user.email)}`)
+                                .then((r) => r.ok ? r.json() : [])
+                                .catch(() => [])
+                        );
+                    }
+                }
+
+                // Wait for all requests to complete
+                const results = await Promise.all(requests);
+
+                // Destructure results
+                const [clubData, newsData, membersData, usersData] = results;
+
+                setClub(clubData);
+                setNews(Array.isArray(newsData) ? newsData : []);
+                setMembers(Array.isArray(membersData) ? membersData : []);
+                setUsers(Array.isArray(usersData) ? usersData : usersData?.content || []);
 
                 if (user) {
-                    // status for current user
-                    apiFetch(
-                        `/api/clubs/${clubId}/status?requesterEmail=${encodeURIComponent(user.email)}`
-                    )
-                        .then((r) =>
-                            r.ok ? r.json() : { isMember: false, hasPending: false, requestId: null }
-                        )
-                        .then(setMyStatus)
-                        .catch(() =>
-                            setMyStatus({ isMember: false, hasPending: false, requestId: null })
-                        );
+                    const statusData = results[4];
+                    setMyStatus(statusData || { isMember: false, hasPending: false, requestId: null });
 
-                    // only approvers (admin/leader) can see pending requests
-                    if (canApproveRequests) {
-                        apiFetch(
-                            `/api/clubs/${clubId}/join-requests?requesterEmail=${encodeURIComponent(
-                                user.email
-                            )}`
-                        )
-                            .then((r) => (r.ok ? r.json() : []))
-                            .then(setPending)
-                            .catch(() => setPending([]));
+                    if (canApproveRequests && results[5]) {
+                        setPending(results[5]);
                     } else {
                         setPending([]);
                     }
@@ -284,8 +291,8 @@ export default function ClubDetail() {
                     setMyStatus({ isMember: false, hasPending: false, requestId: null });
                     setPending([]);
                 }
-            } catch {
-                // noop
+            } catch (err) {
+                console.error("Failed to load club data:", err);
             }
         })();
     }, [clubId, user?.email, canApproveRequests]);

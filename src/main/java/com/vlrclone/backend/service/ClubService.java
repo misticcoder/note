@@ -9,6 +9,8 @@ import com.vlrclone.backend.model.Event;
 import com.vlrclone.backend.repository.ClubLinkRepository;
 import com.vlrclone.backend.repository.ClubRepository;
 import com.vlrclone.backend.repository.EventRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -42,19 +44,6 @@ public class ClubService {
 
     public List<Club> findByCategory(ClubCategory category) {
         return clubRepo.findByCategory(category);
-    }
-
-    @Transactional(readOnly = true)
-    public Club findById(Long id) {
-        Club club = clubRepo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Club not found"
-                ));
-
-        // Force initialization by touching it
-        club.getLinks().size();
-
-        return club;
     }
 
 
@@ -332,5 +321,20 @@ public class ClubService {
 
     public void deleteLink(ClubLink link) {
         linkRepo.delete(link);
+    }
+
+    @Cacheable(value = "clubs", key = "#id")
+    public Club findById(Long id) {
+        Club club = clubRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Club not found"
+                ));
+        club.getLinks().size();
+        return club;
+    }
+
+    @CacheEvict(value = "clubs", key = "#id")
+    public void evictClubCache(Long id) {
+        // Called when club is updated
     }
 }

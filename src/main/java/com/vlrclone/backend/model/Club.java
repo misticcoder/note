@@ -9,7 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "clubs")
+@Table(name = "clubs", indexes = {
+        @Index(name = "idx_club_category", columnList = "category"),
+        @Index(name = "idx_club_name", columnList = "name"),
+        @Index(name = "idx_club_created_at", columnList = "createdAt")
+})
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Club {
     @Id

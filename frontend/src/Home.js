@@ -49,55 +49,25 @@ function Home() {
         document.title = "Home | InfCom";
         setIsLoading(true);
 
-        // Fetch ALL data in parallel (no sequential waiting!)
-        Promise.all([
-            apiFetch("/api/threads").then(res => res.json()).catch(() => []),
-            apiFetch("/api/news").then(res => res.json()).catch(() => []),
-            apiFetch("/api/events?status=all").then(res => res.json()).catch(() => []),
-            apiFetch("/api/clubs").then(res => res.json()).catch(() => []),
-            apiFetch("/api/posts").then(res => res.json()).catch(() => []), // NEW: fetch posts
-            isAdmin ? apiFetch("/api/users").then(res => res.json()).catch(() => []) : Promise.resolve([])
-        ])
-            .then(([threadsData, newsData, eventsData, clubsData, postsData, usersData]) => {
-                // Handle threads
-                const threadsList = Array.isArray(threadsData)
-                    ? threadsData
-                    : Array.isArray(threadsData?.content)
-                        ? threadsData.content
-                        : [];
-                setThreads(threadsList);
+        const url = user
+            ? `/api/home?requesterEmail=${encodeURIComponent(user.email)}`
+            : '/api/home';
 
-                // Handle news
-                setNews(Array.isArray(newsData) ? newsData : []);
-
-                // Handle events
-                const eventsList = Array.isArray(eventsData)
-                    ? eventsData
-                    : Array.isArray(eventsData?.content)
-                        ? eventsData.content
-                        : [];
-                setEvents(eventsList);
-
-                // Handle clubs
-                setClubs(Array.isArray(clubsData) ? clubsData : []);
-
-                // Handle posts (NEW)
-                setPosts(Array.isArray(postsData) ? postsData : []);
-
-                // Handle users (admin only)
-                if (isAdmin) {
-                    setUsers(Array.isArray(usersData) ? usersData : []);
+        apiFetch(url)
+            .then(res => res.json())
+            .then(data => {
+                setThreads(Array.isArray(data.threads) ? data.threads : []);
+                setNews(Array.isArray(data.news) ? data.news : []);
+                setEvents(Array.isArray(data.events) ? data.events : []);
+                setClubs(Array.isArray(data.clubs) ? data.clubs : []);
+                setPosts(Array.isArray(data.posts) ? data.posts : []);
+                if (isAdmin && data.users) {
+                    setUsers(data.users);
                 }
             })
-            .catch(err => {
-                console.error("Failed to load home data:", err);
-                // Don't alert - just log. Data defaults to empty arrays.
-            })
-            .finally(() => {
-                setIsLoading(false);
-            });
-
-    }, [isAdmin]);
+            .catch(err => console.error("Load failed:", err))
+            .finally(() => setIsLoading(false));
+    }, [user, isAdmin]);
 
 
     // Group clubs by category and sort by member count

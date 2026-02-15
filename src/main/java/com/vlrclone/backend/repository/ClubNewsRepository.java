@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ClubNewsRepository extends JpaRepository<ClubNews, Long> {
     List<ClubNews> findByClubIdOrderByCreatedAtDesc(Long clubId);
+    List<ClubNews> findTop10ByOrderByCreatedAtDesc();
 }
