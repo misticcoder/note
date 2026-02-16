@@ -549,6 +549,7 @@ public class ClubController {
 
         String type = body.get("type");
         String url = body.get("url");
+        String displayName = body.get("displayName");
 
         if (type == null || url == null)
             return ResponseEntity.badRequest().body(Map.of("message", "type and url required"));
@@ -556,15 +557,18 @@ public class ClubController {
         Club club = clubs.findById(clubId)
                 .orElseThrow(() -> new RuntimeException("Club not found"));
 
-        return ResponseEntity.ok(
-                clubService.addLink(
-                        club,
-                        LinkType.valueOf(type.toUpperCase()),
-                        url
-                )
+        ClubLink savedLink = clubService.addLink(
+                club,
+                LinkType.valueOf(type.toUpperCase()),
+                url,
+                displayName
         );
-    }
 
+        // ⭐ NEW - Clear the cache so next request gets fresh data
+        clubService.evictClubCache(clubId);
+
+        return ResponseEntity.ok(savedLink);
+    }
 
     @DeleteMapping("/links/{linkId}")
     public ResponseEntity<?> deleteLink(
@@ -587,7 +591,12 @@ public class ClubController {
 
         if (!allowed) return ResponseEntity.status(403).body(Map.of("message", "Forbidden"));
 
+        // ⭐ Delete the link
         clubLinks.deleteById(linkId);
+
+        // ⭐ NEW - Clear the cache so next request gets fresh data
+        clubService.evictClubCache(clubId);
+
         return ResponseEntity.ok(Map.of("status", "deleted"));
     }
 
@@ -623,8 +632,19 @@ public class ClubController {
             }
             link.setUrl(url);
         }
+        if (body.containsKey("displayName")) {
+            String displayName = body.get("displayName");
+            link.setDisplayName(displayName != null && !displayName.trim().isEmpty()
+                    ? displayName.trim()
+                    : null);
+        }
 
-        return ResponseEntity.ok(clubLinks.save(link));
+        ClubLink savedLink = clubLinks.save(link);
+
+        // ⭐ NEW - Clear the cache so next request gets fresh data
+        clubService.evictClubCache(clubId);
+
+        return ResponseEntity.ok(savedLink);
     }
 
     @PostMapping("/{clubId}/supervisor")

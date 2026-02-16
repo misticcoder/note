@@ -17,13 +17,17 @@ public class ClubLink {
     @JsonBackReference
     private Club club;
 
-
     @Enumerated(EnumType.STRING)
     private LinkType type;
 
     @Column(nullable = false, length = 512)
     private String url;
 
+    // NEW FIELD
+    @Column(length = 100)
+    private String displayName;
+
+    // Existing getters/setters
     public Long getId() {
         return id;
     }
@@ -54,5 +58,14 @@ public class ClubLink {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    // NEW GETTER/SETTER
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 }

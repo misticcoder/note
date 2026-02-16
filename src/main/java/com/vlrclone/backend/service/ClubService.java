@@ -308,7 +308,7 @@ public class ClubService {
         return linkRepo.findByClubId(clubId);
     }
 
-    public ClubLink addLink(Club club, LinkType type, String url) {
+    public ClubLink addLink(Club club, LinkType type, String url, String displayName) {
         if (!url.startsWith("https://")) {
             throw new IllegalArgumentException("URL must start with https://");
         }
@@ -317,6 +317,9 @@ public class ClubService {
         link.setClub(club);
         link.setType(type);
         link.setUrl(url);
+        link.setDisplayName(displayName != null && !displayName.trim().isEmpty()
+                ? displayName.trim()
+                : null); // NEW
 
         return linkRepo.save(link);
     }
