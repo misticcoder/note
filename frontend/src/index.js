@@ -22,13 +22,17 @@ import UsabilityTest from "./Test/Test";
 import "./styles/badges.css";
 
 function App() {
-    const [route, setRoute] = useState(window.location.hash || "#/");
+    const [route, setRoute] = useState(() => {
+        // On hard refresh the full hash (including ?tab=...) is preserved in
+        // window.location.hash — use it directly if present, else land on "/"
+        return window.location.hash || "#/";
+    });
+
     const clubId = Clubs.id;
 
     useEffect(() => {
         const onHashChange = () => setRoute(window.location.hash || "#/");
         window.addEventListener("hashchange", onHashChange);
-        // ensure we always have a hash
         if (!window.location.hash) {
             window.location.hash = "#/";
         }
@@ -37,32 +41,25 @@ function App() {
 
     let Page = FrontPage;
 
-
     if (route === "#/home") Page = Home;
     else if (route.startsWith("#/post/")) Page = () => <PostDetailPage />;
-
     else if (route.startsWith("#/profile")) Page = ProfilePage;
     else if (route === "#/admin/users") Page = AdminUsers;
     else if (route === "#/threads") Page = ThreadList;
     else if (route === "#/admin/threads") Page = ThreadList;
-    else if (route.startsWith("#/threads/")) Page = () => <ThreadPage/>
+    else if (route.startsWith("#/threads/")) Page = () => <ThreadPage />;
     else if (route === "#/admin/clubs") Page = Clubs;
     else if (route === "#/clubs") Page = Clubs;
-    else if (route.startsWith("#/clubs/")) Page = () => <ClubDetail />
+    else if (route.startsWith("#/clubs/")) Page = () => <ClubDetail />;
     else if (route === "#/usability-tasks") Page = UsabilityTest;
-
-
-
     else if (route === "#/news") Page = NewsList;
     else if (route === "#/admin/news") Page = NewsList;
-    else if (route.startsWith("#/news/")) Page = () => <NewsPage/>
-
+    else if (route.startsWith("#/news/")) Page = () => <NewsPage />;
     else if (route === "#/admin/events") Page = Events;
     else if (route === "#/events") Page = Events;
-    else if (route.startsWith("#/events/")) Page = () => <EventPage />
-    else if (route.startsWith("#/tags/")) Page = () => <TagPage />
+    else if (route.startsWith("#/events/")) Page = () => <EventPage />;
+    else if (route.startsWith("#/tags/")) Page = () => <TagPage />;
     else if (route.startsWith("#/search")) Page = () => <SearchResultsPage />;
-
 
     return (
         <>

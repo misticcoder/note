@@ -29,6 +29,15 @@ function Home() {
     // News modal state
     const [showNewsModal, setShowNewsModal] = useState(false);
     const [newNews, setNewNews] = useState({ title: "", content: "" });
+    const [showColdStartMessage, setShowColdStartMessage] = useState(false);
+
+    useEffect(() => {
+        if (isLoading) {
+            const timer = setTimeout(() => setShowColdStartMessage(true), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [isLoading]);
+
 
 
     // Club modal state
@@ -260,7 +269,7 @@ function Home() {
                     }}>
                         <h2>Loading InfCom...</h2>
                         <p style={{color: '#666', maxWidth: '400px'}}>
-                            {/* Show helpful message on first load */}
+                            The server may take up to 20-60 seconds to wake up after periods of inactivity.
                         </p>
                         <div style={{
                             width: '50px',
@@ -287,7 +296,7 @@ function Home() {
                         <ThreadSection
                             threads={threads} // CHANGED: pass threads as prop
                             setThreads={setThreads} // CHANGED: pass setter for new threads
-                            showAddButton={isAdmin}
+                            showAddButton={!!user}
                             onAddThread={() => setShowThreadModal(true)}
                         />
                     </aside>

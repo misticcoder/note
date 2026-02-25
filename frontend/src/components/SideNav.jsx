@@ -31,7 +31,6 @@ export default function SideNav({ open, onClose }) {
                     <a href="#/">Home</a>
                     <a href="#/events">Events</a>
                     <a href="#/clubs">Clubs</a>
-                    <a href="#/news">News</a>
                     <a href="#/threads">Threads</a>
                     <a href="#/usability-tasks">🧪 Usability Tasks</a>
                     <button

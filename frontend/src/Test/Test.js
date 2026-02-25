@@ -6,126 +6,93 @@ import "./test.css";
 const tasks = [
     {
         id: 1,
-        title: "Explore This Week's Events",
-        description: "Navigate to Events Directory and Use filters",
+        title: "Find an Event Happening This Week",
+        description: "Locate an event taking place this week that matches your interests.",
         requiredRole: null,
-        answer: "1. Click on 'Events' in the navigation menu\n2. Look for the filter options\n3. Select 'This Week' or use the date filter to show only this week's events"
+        answer: "Navigate through the platform and apply relevant filters (such as date or category) to display events happening this week.\n\nSuccess: You are able to view at least one event scheduled for this week."
     },
     {
         id: 2,
-        title: "Browse a Community",
-        description: "Open a club page and explore join options.",
+        title: "Search for a Specific Topic",
+        description: "Use the search function to find a Hackathon or Machine Learning related event.",
         requiredRole: null,
-        answer: "1. Navigate to 'Communities' in Home page or click 'Clubs' section in the navigation bar\n2. Select any community from the list\n3. Look for the 'Join' or 'Request to Join' button on the community page\n4. Log in as an admin or the club leader to view you pending request inside club overview (Optional)"
+        answer: "Use the search bar to enter keywords such as 'Hackathon' or 'Machine Learning'.\n\nSuccess: Relevant events appear in the results."
     },
     {
         id: 3,
-        title: "Check Community Announcement/Members/Events/Social Groups/Report to Supervisor",
-        description: "Find the new news from the leader, and upcoming events from a specific club, and checks if it has existing social waypoints",
+        title: "Join an Event",
+        description: "Sign up or mark interest in an event.",
         requiredRole: null,
-        answer: "1. Open a specific community page\n2. Look for tabs like 'Announcements', 'Members', 'Events', and 'Social Groups'\n3. Click through each tab to view the content\n4. Check if social waypoints/groups are listed"
+        answer: "Open an event page and use the participation button (e.g. Going / Interested).\n\nSuccess: Your participation status updates and is reflected on the event page."
     },
     {
         id: 4,
-        title: "Review Notifications (Partially Implemented, may notice few bugs)" ,
-        description: "Visit your profile activity tab.",
+        title: "Explore a Community Page",
+        description: "Browse a community and review its announcements, members, and upcoming events.",
         requiredRole: null,
-        answer: "1. Click on your profile icon or avatar\n2. Navigate to the 'Activity' tab\n3. Review your recent notifications and activity"
+        answer: "Navigate to a community page and explore its different sections (Announcements, Members, Events, Social Groups).\n\nSuccess: You are able to view information across multiple tabs within the community."
     },
     {
         id: 5,
-        title: "View Your Profile",
-        description: "Review your profile overview.",
+        title: "Check Notifications",
+        description: "Review recent updates or activity notifications.",
         requiredRole: null,
-        answer: "1. Click on your profile icon/avatar in the navigation\n2. Select 'View Profile' or 'My Profile'\n3. Review your profile information, joined communities, and events, Edit Profile\n4. Try adding interest tags from the edit profile tab and see if you get recommended more events in the events tab or overview (optional)\n Note: You can find example Tags in the Events Directory under each event or the tag filter show all option. "
+        answer: "Access your profile and navigate to the Activity or Notifications section.\n\nSuccess: You can view recent updates or notifications."
     },
+
+    // Leader Tasks
+
     {
         id: 6,
-        title: "Search for a Specific Event",
-        description: "Use the search bar to find a Hackathon or ML-related event.",
-        requiredRole: null,
-        answer: "1. Locate the search bar (usually at the top of the page)\n2. Type keywords like 'Hackathon' or 'Machine Learning'\n3. Press Enter or click the search icon\n4. Browse through the search results"
+        title: "Create a Community Event",
+        description: "Create and publish a new event for your community.",
+        requiredRole: "Community Leader",
+        answer: "Navigate to a community where you have leader permissions and create a new event.\n\nSuccess: The event is successfully published and visible on the platform."
     },
     {
         id: 7,
-        title: "Filter Events by Tag",
-        description: "Filter events by a specific tag (e.g. Sports or Academic).",
-        requiredRole: null,
-        answer: "1. Go to the Events page\n2. Look for filter options or tags section\n3. Search/Click on a tag like 'Sports', 'Academic', or any other category\n4. View the filtered results"
+        title: "Manage Membership Requests",
+        description: "Review and approve or reject a pending join request.",
+        requiredRole: "Community Leader",
+        answer: "Access the community management section and review pending membership requests.\n\nSuccess: The membership status updates after approval or rejection."
     },
+
+    // Admin Tasks
+
     {
         id: 8,
-        title: "Sign Up for an Event",
-        description: "Open an event page and use the Join/Interest button.",
-        requiredRole: null,
-        answer: "1. Navigate to Events and select any event\n2. Open the event details page\n3. Look for 'going', 'maybe' button\n4. Click the button to sign up for the event\n5. Check the attendees tab in the Event Page and find yourself"
+        title: "Create a New Community",
+        description: "Create and publish a new community.",
+        requiredRole: "Admin",
+        answer: "Use administrator controls to create a new community.\n\nSuccess: The community is successfully created and appears in the directory."
     },
     {
         id: 9,
-        title: "Leave Feedback on an Event",
-        description: "Submit a short rating or comment on an event.",
-        requiredRole: null,
-        answer: "1. Go to an event page (preferably one that has already occurred)\n2. Look for 'Comments', and 'Rate' section\n3. Provide a rating and/or comment\n\n Note: Rating is only allowed by an Attendee. So You can go to your profile, in events tab you can find an event that you have attended and try adding rating on that event.\n\n Note: Only Admins can view the QR Code for confirming attendance. And Users can see the code box when the event is Live"
+        title: "Modify User Roles",
+        description: "Assign or change a user’s platform role.",
+        requiredRole: "Admin",
+        answer: "Access the admin user management panel and modify a user's role.\n\nSuccess: The user’s permissions update accordingly."
     },
     {
         id: 10,
-        title: "Explore Threads/Posts | P.S: DO NOT PROVIDE ANY PERSONAL/INAPPROPRIATE INFORMATION" ,
-        description: "Add/Review existing thread or post | Add reaction/comment/reply | Try the reference Tags",
+        title: "Personalise Your Interests",
+        description: "Add interest tags to your profile and check if event recommendations update accordingly.",
         requiredRole: null,
-        answer: "1. Navigate to 'Discussion Threads' or 'Feed' section on Home Page\n2. Open a Thread/Post of your choice\n3. Review the information: Reactions/Contents/Reference tags/ Comments\n4. Add Reaction/Comment/Reply\n5. Create Your own Thread/Post\n\n Note: Post is allowed by any user only for testing purposes, Actual System will only allow admin and community leaders to advertise/announce contents."
+        answer: "Navigate to your Profile and open the Edit Profile section.\n\nAdd one or more interest tags (e.g. Machine Learning, Sports, Hackathons).\n\nAfter saving, go to the Events Tab or Overview.\n\nSuccess: You can see events that match your selected interest tags appearing in recommendations or filtered views.\n\n Note: Refreshing in profile may result in blank screen. Try going back to the home and refresh again. "
     },
+
     {
         id: 11,
-        title: "Create a New Event",
-        description: "Create and publish a new event for your community.",
-        requiredRole: "Community Leader",
-        answer: "1. Navigate to your community page where you are a leader\n2. Look for 'Create Event' or '+' button\n3. Fill in event details (title, description, date, location)\n4. Set event visibility and registration options\n5. Click 'Publish' or 'Create Event'\n\n Note: You can find your clubs and role from the clubs tab of your profile page. If you dont have a club with the roles you want to explore, use a different login."
-    },
-    {
-        id: 12,
-        title: "Post a Community Announcement",
-        description: "Share important news with your community members.",
-        requiredRole: "Community Leader",
-        answer: "1. Go to your community page (where you have leader permissions)\n2. Navigate to the 'Announcements' section\n3. Click 'New Announcement' or similar button\n4. Write your announcement message\n5. Post the announcement\n6. You can login as a different member and check the activity tab to see if the members received a notification."
-    },
-    {
-        id: 13,
-        title: "Manage Community Membership Requests",
-        description: "Review and approve/reject pending join requests.",
-        requiredRole: "Community Leader",
-        answer: "1. Access your community's admin panel\n2. Navigate to 'Members' or 'Membership Requests' section\n3. Review pending requests\n4. Approve or reject requests with optional messages\n5. Check the updated member list"
-    },
+        title: "Confirm Attendance and Submit Event Feedback",
+        description: "Publish a live event as Admin, confirm attendance as a student, and submit a rating or comment.",
+        requiredRole: "Admin",
+        answer: "Log in as an Admin and create a new event.\n\nSet the event start time to the current time so that it becomes 'Live'.\n\nOnce the event is live, reveal the attendance QR/code from the event overview section.\n\nLog in using a Student account and open the same event page.\n\nEnter the attendance code provided by the Admin to confirm attendance.\n\nAfter confirming attendance, navigate to the feedback or rating section.\n\nSubmit a rating and/or comment for the event.\n\nSuccess: The student's attendance is recorded and the submitted rating/comment appears on the event page."
+    }
 
-    {
-        id: 15,
-        title: "Create Events/Communities ||  Note: DO NOT PROVIDE ANY PERSONAL/INAPPROPRIATE INFORMATION",
-        description: "Create and Publish Events and Communities with Different Responsibilities.",
-        requiredRole: "Admin",
-        answer: "1. Navigate to home Page \n2. Try Creating a Clubs or Event by clicking the ADD button\n3. Fill in the details (e.g. title, category, description, date, location) \n4. Try out Different Variations of Clubs and Events.\n5. Play Around"
-    },
-    {
-        id: 16,
-        title: "Manage User Roles",
-        description: "Assign or modify user permissions across the platform.",
-        requiredRole: "Admin",
-        answer: "1. Access the Admin Panel\n2. Go to 'Users' section\n3. Search for or select a user\n4. Click 'Edit Roles' or 'Permissions'\n5. Assign roles (Admin, Student)\n6. Go to a Community Page\n 7. Assign roles to members"
-    },
-    {
-        id: 17,
-        title: "Moderate Content",
-        description: "Moderate posts, comments, communities or events.",
-        requiredRole: "Admin",
-        answer: "1. Browse Through the platform\n 2. Review content: Threads/Posts/Clubs/Events \n3. Create Something Then Try Edit and Delete. \n4. Browse Events and Expose QR code for attendance. \n5. Browse Communities and Assign supervisor from the settings tab\n6. View the activity tab for Reports"
-    },
 
-    {
-        id: 19,
-        title: "Compare With Current System.  (If Possible)",
-        description: "Think about how you would normally find this information (WhatsApp/Email/etc).",
-        requiredRole: null,
-        answer: "Reflect on your usual process:\n- How many steps does it take in your current system?\n- Do you need to check multiple platforms (WhatsApp groups, emails, social media)?\n- How easy is it to find specific information?\n- Compare the convenience and efficiency with this system"
-    },
+
 ];
+
 
 const roleColors = {
     "Community Leader": "#3b82f6",
@@ -196,7 +163,8 @@ export default function UsabilityTest() {
         }
     };
 
-    const toggleRevealAnswer = (id) => {
+    const toggleRevealAnswer = (e, id) => {
+        e.preventDefault();
         setRevealedAnswers(prev =>
             prev.includes(id)
                 ? prev.filter(x => x !== id)
@@ -264,7 +232,7 @@ export default function UsabilityTest() {
 
                                 <button
                                     className="reveal-btn"
-                                    onClick={() => toggleRevealAnswer(task.id)}
+                                    onClick={(e) => toggleRevealAnswer(e, task.id)}
                                 >
                                     {revealedAnswers.includes(task.id) ? "Hide Answer" : "Reveal Answer"}
                                 </button>

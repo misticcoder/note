@@ -5,6 +5,13 @@ import GlobalSearch from "./GlobalSearch";
 import { apiFetch } from "./api";
 import "./styles/header.css";
 
+const TEST_LOGINS = [
+    { label: "Admin",      email: "admin1@uni.ac.uk",     password: "password" },
+    { label: "Leader",     email: "ellag6@uni.ac.uk",      password: "password" },
+    { label: "Co-Leader",  email: "isabellah3@uni.ac.uk",  password: "password" },
+    { label: "Member",     email: "liama0@uni.ac.uk",      password: "password" },
+];
+
 const Header = () => {
     const { user, login, logout, signup } = useContext(AuthContext);
     const [navOpen, setNavOpen] = useState(false);
@@ -15,6 +22,7 @@ const Header = () => {
     const [form, setForm] = useState({ email: "", password: "", username: "" });
     const [isSignup, setIsSignup] = useState(false);
     const [error, setError] = useState("");
+    const [showTestLogins, setShowTestLogins] = useState(false);
 
     const surveyUrl = "https://forms.office.com/Pages/ResponsePage.aspx?id=sAafLmkWiUWHiRCgaTTcYS_VjBLWGjZNk_QHvbrz_V1UQldERUxDNUkwRk5JR1RFU1YxTVZYV0NWVS4u";
 
@@ -22,7 +30,6 @@ const Header = () => {
         const confirmed = window.confirm(
             "You are about to open the usability survey in a new tab.\n\nContinue?"
         );
-
         if (confirmed) {
             window.open(surveyUrl, "_blank", "noopener,noreferrer");
         }
@@ -53,9 +60,7 @@ const Header = () => {
                 if (alive) setUnread(0);
             });
 
-        return () => {
-            alive = false;
-        };
+        return () => { alive = false; };
     }, [user]);
 
     /* ───────────────────────────── */
@@ -88,7 +93,13 @@ const Header = () => {
         setError("");
         setForm({ email: "", password: "", username: "" });
         setIsSignup(false);
+        setShowTestLogins(false);
         setShowModal(true);
+    };
+
+    const applyTestLogin = (entry) => {
+        setForm(prev => ({ ...prev, email: entry.email, password: entry.password }));
+        setShowTestLogins(false);
     };
 
     return (
@@ -121,11 +132,7 @@ const Header = () => {
                     <a href="#/clubs">Clubs</a>
                     <a href="#/events">Events</a>
                     <a href="#/usability-tasks">Tasks</a>
-                    <a onClick={handleSurveyClick}
-                       className="survey-btn"
-                    >
-                        Survey
-                    </a>
+                    <a onClick={handleSurveyClick} className="survey-btn">Survey</a>
                     {isAdmin && <a href="#/admin/users">Users</a>}
                 </nav>
 
@@ -141,9 +148,7 @@ const Header = () => {
                         >
                             🔔
                             {unread > 0 && (
-                                <span className="activity-badge">
-                                    {unread}
-                                </span>
+                                <span className="activity-badge">{unread}</span>
                             )}
                         </a>
 
@@ -169,12 +174,55 @@ const Header = () => {
                 )}
             </div>
 
-            {/* Login modal */}
+            {/* Login / Signup modal */}
             {showModal && (
                 <div style={styles.modalOverlay}>
                     <div style={styles.modalContent}>
-                        <h3>{isSignup ? "Sign Up" : "Login"}</h3>
-                        {error && <p style={{ color: "red" }}>{error}</p>}
+                        <h3 style={{ marginTop: 0, marginBottom: "16px" }}>
+                            {isSignup ? "Sign Up" : "Login"}
+                        </h3>
+
+                        {/* ── Test login hint ── */}
+                        {!isSignup && (
+                            <div style={styles.testLoginBox}>
+                                <button
+                                    type="button"
+                                    style={styles.testLoginToggle}
+                                    onClick={() => setShowTestLogins(v => !v)}
+                                >
+                                    <span style={styles.testLoginIcon}>🔑</span>
+                                    Use a test login
+                                    <span style={{ marginLeft: "auto", fontSize: "11px", opacity: 0.7 }}>
+                                        {showTestLogins ? "▲" : "▼"}
+                                    </span>
+                                </button>
+
+                                {showTestLogins && (
+                                    <div style={styles.testLoginList}>
+                                        <p style={styles.testLoginNote}>
+                                            All accounts use password: <code style={styles.code}>password</code>
+                                        </p>
+                                        {TEST_LOGINS.map((entry) => (
+                                            <button
+                                                key={entry.email}
+                                                type="button"
+                                                style={styles.testLoginEntry}
+                                                onClick={() => applyTestLogin(entry)}
+                                            >
+                                                <span style={styles.testLoginLabel}>{entry.label}</span>
+                                                <span style={styles.testLoginEmail}>{entry.email}</span>
+                                            </button>
+                                        ))}
+                                        <p style={styles.testLoginNote}>
+                                            More accounts in <strong>UserLogins.pdf</strong>
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        {/* ────────────────────── */}
+
+                        {error && <p style={{ color: "red", margin: "8px 0" }}>{error}</p>}
 
                         <form onSubmit={handleSubmit}>
                             {isSignup && (
@@ -206,7 +254,7 @@ const Header = () => {
                                 style={styles.input}
                             />
 
-                            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
                                 <button type="submit" style={styles.submitBtn}>
                                     {isSignup ? "Sign Up" : "Login"}
                                 </button>
@@ -234,10 +282,11 @@ const styles = {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        zIndex: 1000,
     },
     modalContent: {
         backgroundColor: "#fff",
-        padding: "20px",
+        padding: "24px",
         borderRadius: "6px",
         width: "400px",
         maxWidth: "90%",
@@ -248,10 +297,10 @@ const styles = {
         marginBottom: "10px",
         borderRadius: "4px",
         border: "1px solid #ccc",
+        boxSizing: "border-box",
     },
     submitBtn: {
         padding: "8px 12px",
-        marginRight: "10px",
         backgroundColor: "#D50032",
         color: "#fff",
         border: "none",
@@ -265,6 +314,72 @@ const styles = {
         border: "none",
         borderRadius: "4px",
         cursor: "pointer",
+    },
+    /* ── test login styles ── */
+    testLoginBox: {
+        border: "1px solid #e0e0e0",
+        borderRadius: "6px",
+        marginBottom: "16px",
+        overflow: "hidden",
+        backgroundColor: "#fafafa",
+    },
+    testLoginToggle: {
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        padding: "10px 12px",
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        fontSize: "13px",
+        fontWeight: "600",
+        color: "#333",
+        textAlign: "left",
+    },
+    testLoginIcon: {
+        fontSize: "15px",
+    },
+    testLoginList: {
+        borderTop: "1px solid #e0e0e0",
+        padding: "10px 12px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "6px",
+    },
+    testLoginNote: {
+        margin: "2px 0 6px",
+        fontSize: "12px",
+        color: "#666",
+    },
+    testLoginEntry: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "7px 10px",
+        borderRadius: "4px",
+        border: "1px solid #e0e0e0",
+        background: "#fff",
+        cursor: "pointer",
+        fontSize: "13px",
+        transition: "background 0.15s",
+        gap: "10px",
+    },
+    testLoginLabel: {
+        fontWeight: "600",
+        color: "#D50032",
+        minWidth: "70px",
+    },
+    testLoginEmail: {
+        color: "#555",
+        fontSize: "12px",
+        fontFamily: "monospace",
+    },
+    code: {
+        background: "#eee",
+        padding: "1px 5px",
+        borderRadius: "3px",
+        fontFamily: "monospace",
     },
 };
 

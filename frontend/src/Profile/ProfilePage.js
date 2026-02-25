@@ -10,8 +10,6 @@ import DashboardSection from "../components/DashboardSection";
 import {apiFetch} from "../api";
 import ActivityTab from "../Notifications/ActivityTab";
 
-
-
 export default function ProfilePage() {
     const { user, saveUser } = useContext(AuthContext);
 
@@ -182,7 +180,7 @@ export default function ProfilePage() {
                             active={activeTab === "edit"}
                         />
 
-                        {(profile.role === "ADMIN" || profile.role === "LEADER") && (
+                        {(profile?.role === "ADMIN" || profile?.role === "LEADER") && (
                             <TabButton
                                 label="Dashboard"
                                 tab={"dashboard"}
@@ -251,7 +249,7 @@ export default function ProfilePage() {
 
                         {activeTab === "dashboard" && (
                             <DashboardTab
-                                role={profile.role}
+                                role={profile?.role}
                                 onCreateEvent={() => setActiveTab("events")}
                                 onCreateClub={() => alert("Create club modal later")}
                                 onManageClubs={() => setActiveTab("clubs")}
@@ -282,7 +280,7 @@ function ProfileHeader({profile}) {
                 <div className="profile-avatar">
                     {profile?.avatarUrl ? (
                         <img
-                            src={profile.avatarUrl}
+                            src={profile?.avatarUrl}
                             alt="avatar"
                             style={{
                                 width: 80,
@@ -300,27 +298,27 @@ function ProfileHeader({profile}) {
 
                 <div className="profile-info">
                     <div>
-                        <h1>Display Name: {profile.displayName || profile.username}</h1>
+                        <h1>Display Name: {profile?.displayName || profile?.username}</h1>
 
 
-                        {profile.bio && <p className="profile-bio"> Bio: {profile.bio}</p>}
+                        {profile?.bio && <p className="profile-bio"> Bio: {profile?.bio}</p>}
 
                         <div className="profile-stats">
                             <div>
-                                <strong>{profile.eventsJoined}</strong>
+                                <strong>{profile?.eventsJoined}</strong>
                                 <span>Events</span>
                             </div>
                             <div>
-                                <strong>{profile.participationScore}</strong>
+                                <strong>{profile?.participationScore}</strong>
                                 <span>Score</span>
                             </div>
                         </div>
                         <br></br>
                         <div>
-                            {profile.tags?.length > 0 && (
+                            {profile?.tags?.length > 0 && (
                                 <div className="tag-editor">
                                     Interests:
-                                    {profile.tags.map(t => (
+                                    {profile?.tags.map(t => (
                                         <span key={t} className="badge post-reference badge--gray" >{t}</span>
                                     ))}
                                 </div>
@@ -329,7 +327,7 @@ function ProfileHeader({profile}) {
 
                     </div>
                     <div>
-                        <span className="user-badge">{profile.role}</span>
+                        <span className="user-badge">{profile?.role}</span>
                     </div>
                 </div>
             </div>
@@ -362,15 +360,15 @@ function OverviewTab({
             {/* ───── Identity ───── */}
             <div className={"overview-header"}>
 
-                <h2 className={"title"}>Welcome back, {profile.displayName || profile.username}</h2>
-                <div className="muted">@{profile.username}</div>
+                <h2 className={"title"}>Welcome back, {profile?.displayName || profile?.username}</h2>
+                <div className="muted">@{profile?.username}</div>
 
 
             </div>
 
             <div className={"title"}>
-                {profile.bio && (
-                    <p className="profile-bio">{profile.bio}</p>
+                {profile?.bio && (
+                    <p className="profile-bio">{profile?.bio}</p>
                 )}
             </div>
 
@@ -378,12 +376,12 @@ function OverviewTab({
             <div>
                 <div className="overview-stats">
                     <div className="stat-card">
-                        <strong>{profile.eventsJoined}</strong>
+                        <strong>{profile?.eventsJoined}</strong>
                         <span>Events Joined</span>
                     </div>
 
                     <div className="stat-card">
-                        <strong>{profile.participationScore}</strong>
+                        <strong>{profile?.participationScore}</strong>
                         <span>Participation Score</span>
                     </div>
 
@@ -564,8 +562,8 @@ function EditProfileTab({ profile, email, onSave, onAvatarUpdated, tags, setTags
     const [tagInput, setTagInput] = useState("");
 
     const [form, setForm] = useState({
-        displayName: profile.displayName || "",
-        bio: profile.bio || "",
+        displayName: profile?.displayName || "",
+        bio: profile?.bio || "",
     });
 
     const [saving, setSaving] = useState(false);
